@@ -5,6 +5,32 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-01-13
+
+### 🎯 Enhanced Collapse/Expand Functionality
+
+#### ✨ Improvements
+- **Ultra-Compact Collapsed View**
+  - When collapsed, OrderCard now shows only essential information:
+    - Product title (truncated if needed)
+    - Product variant (if available)
+    - Checkbox (in batch mode)
+    - Click hint text
+  - Significantly reduces card height for better mobile viewing
+  - Maintains all functionality in expanded view
+
+- **Better Mobile Experience**
+  - Collapsed cards take up minimal vertical space
+  - Easier to scan through multiple orders quickly
+  - Clear visual indication of collapsed vs expanded state
+  - Consistent behavior across mobile and desktop layouts
+
+#### 🐛 Bug Fixes
+- Fixed TypeScript compilation errors
+- Improved responsive design for collapsed state
+
+---
+
 ## [1.0.0] - 2025-01-13
 
 ### 🎉 Initial Release - Order To-Do App V1.0.0
