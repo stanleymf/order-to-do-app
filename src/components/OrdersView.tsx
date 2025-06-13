@@ -2,11 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarDays, Package, Users, CheckCircle, Search, X, UserPlus, UserMinus, Clock, UserCheck, Users2 } from 'lucide-react';
+import { CalendarDays, Package, CheckCircle, Clock, UserCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { OrderCard } from './OrderCard';
 import { useMobileView } from './Dashboard';
@@ -32,14 +31,13 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
   });
   const [calendarDate, setCalendarDate] = useState<Date | undefined>(new Date());
   const [selectedStore, setSelectedStore] = useState<string>('all');
-  const [selectedDifficultyLabel, setSelectedDifficultyLabel] = useState<string>('all');
-  const [selectedProductTypeLabel, setSelectedProductTypeLabel] = useState<string>('all');
+  const [selectedDifficultyLabel] = useState<string>('all');
+  const [selectedProductTypeLabel] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all'); // New status filter
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchQuery] = useState<string>('');
   const [orders, setOrders] = useState<Order[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
   const [florists, setFlorists] = useState<User[]>([]);
-  const [productLabels, setProductLabels] = useState<any[]>([]);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const [isBatchMode, setIsBatchMode] = useState<boolean>(false);
   const [orderCountsByStore, setOrderCountsByStore] = useState<Record<string, number>>({});
@@ -161,7 +159,6 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
     setOrders(filteredOrders);
     setStores(getStores());
     setFlorists(getFlorists());
-    setProductLabels(getProductLabels());
   }, [selectedDate, selectedStore, selectedDifficultyLabel, selectedProductTypeLabel, selectedStatus, searchQuery]);
 
   useEffect(() => {
@@ -173,28 +170,11 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
     updateFloristStats();
   };
 
-  // Handle status filter clicks
-  const handleStatusFilter = (status: string) => {
-    if (selectedStatus === status) {
-      // If already selected, reset to show all
-      setSelectedStatus('all');
-    } else {
-      // Select the new status
-      setSelectedStatus(status);
-    }
-  };
-
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setCalendarDate(date);
       setSelectedDate(date.toISOString().split('T')[0]);
     }
-  };
-
-  // Batch selection handlers
-  const toggleBatchMode = () => {
-    setIsBatchMode(!isBatchMode);
-    setSelectedOrderIds(new Set());
   };
 
   const toggleOrderSelection = (orderId: string) => {
@@ -205,31 +185,6 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
       newSelected.add(orderId);
     }
     setSelectedOrderIds(newSelected);
-  };
-
-  const selectAllOrders = () => {
-    const allOrderIds = new Set(orders.map(order => order.id));
-    setSelectedOrderIds(allOrderIds);
-  };
-
-  const clearSelection = () => {
-    setSelectedOrderIds(new Set());
-  };
-
-  const batchAssignToMe = () => {
-    selectedOrderIds.forEach(orderId => {
-      assignOrder(orderId, currentUser.id);
-    });
-    setSelectedOrderIds(new Set());
-    handleOrderUpdate();
-  };
-
-  const batchUnassign = () => {
-    selectedOrderIds.forEach(orderId => {
-      assignOrder(orderId, 'unassigned');
-    });
-    setSelectedOrderIds(new Set());
-    handleOrderUpdate();
   };
 
   // Calculate order statistics
