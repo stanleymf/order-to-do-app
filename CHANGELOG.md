@@ -5,6 +5,28 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.26] - 2025-06-13
+
+### Enhanced
+- **Delivery Type Container**: Added dedicated Delivery Type container in order cards
+  - **Consistent Layout**: Delivery Type now has its own dedicated container matching Timeslot and Assignment containers
+  - **Visual Integration**: Properly integrated into both mobile and desktop layouts
+  - **Responsive Grid**: Grid layout adapts from 2 columns to 3 columns when delivery type is present
+  - **Color Coding**: Maintains color-coded badges (green=delivery, blue=collection, red=express)
+  - **Settings Integration**: Tied to Delivery Type Mapping configuration in Settings
+
+### Improved
+- **Order Card Layout**: More organized and consistent container structure
+  - All essential information (Timeslot, Type, Florist) now have dedicated containers
+  - Better visual hierarchy and spacing
+  - Improved mobile and desktop responsiveness
+  - Cleaner separation of information types
+
+### Technical
+- **Layout Logic**: Dynamic grid column adjustment based on delivery type presence
+- **Component Structure**: Enhanced OrderCard component with better container organization
+- **Visual Consistency**: Unified styling across all information containers
+
 ## [1.0.25] - 2025-06-13
 
 ### Fixed
