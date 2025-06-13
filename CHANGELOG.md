@@ -274,4 +274,23 @@ node scripts/version.js set 1.5.0
   - Visual state indication for active filters
   - Smooth transitions and hover effects
 
-## [1.0.11] - 2025-06-13 
+## [1.0.13] - 2025-06-13
+
+### Verified
+- **Hierarchical Sorting Logic**: Confirmed that the 5-level priority sorting system is fully intact and working correctly
+  - **Level 1**: Assigned florist priority (current user first, unassigned second, others third)
+  - **Level 2**: Timeslot priority (earlier times first, parsed from "9:00 AM - 11:00 AM" format)
+  - **Level 3**: Product name priority (alphabetical sorting, same names grouped)
+  - **Level 4**: Difficulty priority (based on configured ProductLabel priorities)
+  - **Level 5**: Product type priority (based on configured ProductLabel priorities)
+  - All helper functions (`getFloristPriority`, `parseTimeSlot`, `getDifficultyPriority`, `getProductTypePriority`) are present
+  - Sorting is applied consistently in both single-store and multi-store views
+  - Documentation in ORDER_TODO_APP_MODULES.md matches implementation
+
+### Documentation
+- **Sorting Logic Reference**: Complete 5-level hierarchical sorting system documented in ORDER_TODO_APP_MODULES.md
+  - Clear explanation of each priority level
+  - Implementation details for time parsing and label priorities
+  - Business logic rationale for florist assignment ordering
+
+## [1.0.12] - 2025-06-13 
