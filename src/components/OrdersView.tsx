@@ -382,7 +382,12 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
 
       {/* Stats Overview */}
       <div className={`grid ${isMobileView ? 'grid-cols-1 gap-2 px-1' : 'grid-cols-3 gap-6'}`}>
-        <Card>
+        <Card 
+          className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+            selectedStatus === 'pending' ? 'ring-2 ring-orange-500 bg-orange-50' : ''
+          }`}
+          onClick={() => setSelectedStatus(selectedStatus === 'pending' ? 'all' : 'pending')}
+        >
           <CardContent className={`flex items-center ${isMobileView ? 'py-2 px-3' : 'py-6'}`}>
             <div className={`${isMobileView ? 'w-7 h-7' : 'w-12 h-12'} rounded-full bg-orange-100 flex items-center justify-center mr-3`}>
               <Clock className={`${isMobileView ? 'w-3.5 h-3.5' : 'w-6 h-6'} text-orange-600`} />
@@ -394,7 +399,12 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card 
+          className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+            selectedStatus === 'assigned' ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+          }`}
+          onClick={() => setSelectedStatus(selectedStatus === 'assigned' ? 'all' : 'assigned')}
+        >
           <CardContent className={`flex items-center ${isMobileView ? 'py-2 px-3' : 'py-6'}`}>
             <div className={`${isMobileView ? 'w-7 h-7' : 'w-12 h-12'} rounded-full bg-blue-100 flex items-center justify-center mr-3`}>
               <UserCheck className={`${isMobileView ? 'w-3.5 h-3.5' : 'w-6 h-6'} text-blue-600`} />
@@ -406,7 +416,12 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card 
+          className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+            selectedStatus === 'completed' ? 'ring-2 ring-green-500 bg-green-50' : ''
+          }`}
+          onClick={() => setSelectedStatus(selectedStatus === 'completed' ? 'all' : 'completed')}
+        >
           <CardContent className={`flex items-center ${isMobileView ? 'py-2 px-3' : 'py-6'}`}>
             <div className={`${isMobileView ? 'w-7 h-7' : 'w-12 h-12'} rounded-full bg-green-100 flex items-center justify-center mr-3`}>
               <CheckCircle className={`${isMobileView ? 'w-3.5 h-3.5' : 'w-6 h-6'} text-green-600`} />

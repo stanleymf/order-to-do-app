@@ -254,3 +254,24 @@ node scripts/version.js set 1.5.0
   - Positioned batch assign button below stats overview and before order cards
   - More intuitive placement that follows natural workflow
   - Cleaner header area without additional controls 
+
+## [1.0.12] - 2025-06-13
+
+### Added
+- **Clickable Stats Cards**: Stats overview cards are now interactive
+  - Click on "Pending Orders" card to filter by pending status
+  - Click on "Assigned Orders" card to filter by assigned status  
+  - Click on "Completed Orders" card to filter by completed status
+  - Click again on the same card to clear the filter (show all orders)
+  - Visual feedback with colored ring and background when selected
+  - Hover effects for better user interaction feedback
+  - Maintains existing dropdown status filter functionality
+
+### Enhanced
+- **Improved User Experience**: 
+  - More intuitive filtering workflow
+  - Quick access to status-based filtering
+  - Visual state indication for active filters
+  - Smooth transitions and hover effects
+
+## [1.0.11] - 2025-06-13 
