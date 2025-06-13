@@ -280,137 +280,110 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header Controls */}
-      <div className={`flex gap-4 items-start justify-between ${isMobileView ? 'flex-col space-y-4' : 'flex-col sm:flex-row sm:items-center'}`}>
-        <div>
-          <div className="flex items-center gap-3">
-            <h2 className={`font-bold text-gray-900 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>
-              {isMobileView ? 'Orders' : 'Orders Dashboard'}
-            </h2>
-            {selectedStatus !== 'all' && (
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  selectedStatus === 'pending' ? 'bg-orange-500' : 
-                  selectedStatus === 'assigned' ? 'bg-blue-500' : 
-                  'bg-green-500'
-                }`} />
-                <span className={`text-gray-600 capitalize ${isMobileView ? 'text-xs' : 'text-sm'}`}>
-                  Showing {selectedStatus} orders
-                </span>
-                <button 
-                  onClick={() => setSelectedStatus('all')}
-                  className="text-gray-400 hover:text-gray-600 ml-1"
-                  title="Clear filter"
-                >
-                  ✕
-                </button>
+      <div className="flex flex-col space-y-4">
+        <div className="flex flex-col space-y-4">
+          {/* Title and Description */}
+          <div>
+            <h1 className={`font-semibold ${isMobileView ? 'text-xl mb-1' : 'text-2xl mb-2'}`}>
+              Orders Dashboard
+            </h1>
+            <p className={`text-gray-600 ${isMobileView ? 'text-sm' : 'text-base'}`}>
+              Manage daily flower orders across all stores
+            </p>
+          </div>
+
+          {/* Filters Section */}
+          <div className={`
+            flex flex-col space-y-4 
+            ${isMobileView ? 'px-2' : ''}
+          `}>
+            {/* Filter Controls */}
+            <div className={`
+              ${isMobileView ? 'flex flex-col space-y-3 w-full' : 'flex items-center gap-4'}
+            `}>
+              {/* Date Selector */}
+              <div className={`${isMobileView ? 'w-full relative z-30' : ''}`}>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={`
+                        justify-start text-left font-normal
+                        ${isMobileView ? 'w-full h-9 text-sm' : 'w-[280px]'}
+                        ${!calendarDate && "text-muted-foreground"}
+                      `}
+                    >
+                      <CalendarDays className={`${isMobileView ? 'h-4 w-4 mr-2' : 'h-5 w-5 mr-2'}`} />
+                      {calendarDate ? format(calendarDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent 
+                    className={`p-0 ${isMobileView ? 'w-[calc(100vw-2rem)]' : 'w-auto'}`}
+                    align={isMobileView ? "start" : "center"}
+                    side={isMobileView ? "bottom" : "right"}
+                    sideOffset={5}
+                  >
+                    <Calendar
+                      mode="single"
+                      selected={calendarDate}
+                      onSelect={handleDateSelect}
+                      initialFocus
+                      className={isMobileView ? '[&_.rdp-caption]:text-sm [&_.rdp-cell]:text-sm' : ''}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
-            )}
-          </div>
-          {!isMobileView && selectedStatus === 'all' && (
-            <p className="text-gray-600">Manage daily flower orders across all stores</p>
-          )}
-        </div>
-        
-        {/* Filtering Controls Container */}
-        <div className={`${isMobileView ? 'w-full space-y-2 px-1' : 'flex items-center gap-4'}`}>
-          {/* Date Selector */}
-          <div className={`${isMobileView ? 'w-full' : ''}`}>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={`justify-start text-left font-normal ${isMobileView ? 'w-full h-8 text-xs' : 'w-[280px]'} ${!calendarDate && "text-muted-foreground"}`}
-                >
-                  <CalendarDays className={`${isMobileView ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'} text-gray-500`} />
-                  {calendarDate ? format(calendarDate, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className={`w-auto p-0 ${isMobileView ? 'max-w-[calc(100vw-1rem)]' : ''}`} align="start">
-                <Calendar
-                  mode="single"
-                  selected={calendarDate}
-                  onSelect={handleDateSelect}
-                  initialFocus
-                  className={`${isMobileView ? '[--day-size:2rem] text-sm' : '[--day-size:2.5rem] text-base'}`}
+
+              {/* Store Selector */}
+              <div className={`${isMobileView ? 'w-full relative z-20' : ''}`}>
+                <StoreSelector
+                  stores={stores}
+                  selectedStoreId={selectedStore}
+                  onStoreChange={handleStoreChange}
+                  showOrderCounts
+                  orderCounts={orderCountsByStore}
+                  isMobileView={isMobileView}
                 />
-              </PopoverContent>
-            </Popover>
-          </div>
+              </div>
 
-          {/* Store Selector */}
-          <div className={`${isMobileView ? 'w-full' : ''}`}>
-            <StoreSelector
-              stores={stores}
-              selectedStoreId={selectedStore}
-              onStoreChange={handleStoreChange}
-              showOrderCounts
-              orderCounts={orderCountsByStore}
-            />
+              {/* Status Filter */}
+              <div className={`${isMobileView ? 'w-full relative z-10' : ''}`}>
+                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                  <SelectTrigger className={`${isMobileView ? 'w-full h-9 text-sm' : 'w-[200px]'}`}>
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent 
+                    className={`${isMobileView ? 'w-[calc(100vw-2rem)]' : ''}`}
+                    position={isMobileView ? "popper" : "item-aligned"}
+                    side="bottom"
+                    align="start"
+                    alignOffset={0}
+                    sideOffset={5}
+                  >
+                    <SelectItem value="all">All Orders</SelectItem>
+                    <SelectItem value="pending">
+                      <div className="flex items-center gap-2">
+                        <div className={`${isMobileView ? 'w-2 h-2' : 'w-2.5 h-2.5'} rounded-full bg-orange-500`} />
+                        Pending
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="assigned">
+                      <div className="flex items-center gap-2">
+                        <div className={`${isMobileView ? 'w-2 h-2' : 'w-2.5 h-2.5'} rounded-full bg-blue-500`} />
+                        Assigned
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="completed">
+                      <div className="flex items-center gap-2">
+                        <div className={`${isMobileView ? 'w-2 h-2' : 'w-2.5 h-2.5'} rounded-full bg-green-500`} />
+                        Completed
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
-
-          {/* Status Filter */}
-          <div className={`${isMobileView ? 'w-full' : ''}`}>
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className={`${isMobileView ? 'w-full h-8 text-xs' : 'w-[200px]'}`}>
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent className={isMobileView ? 'text-xs' : ''}>
-                <SelectItem value="all">All Orders</SelectItem>
-                <SelectItem value="pending">
-                  <div className="flex items-center gap-2">
-                    <div className={`${isMobileView ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full bg-orange-500`} />
-                    Pending
-                  </div>
-                </SelectItem>
-                <SelectItem value="assigned">
-                  <div className="flex items-center gap-2">
-                    <div className={`${isMobileView ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full bg-blue-500`} />
-                    Assigned
-                  </div>
-                </SelectItem>
-                <SelectItem value="completed">
-                  <div className="flex items-center gap-2">
-                    <div className={`${isMobileView ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full bg-green-500`} />
-                    Completed
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Search Input */}
-          <div className={`relative ${isMobileView ? 'w-full' : 'flex-1'}`}>
-            <Search className={`absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 ${isMobileView ? 'h-3 w-3' : 'h-5 w-5'}`} />
-            <Input
-              type="text"
-              placeholder="Search orders..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={`pl-7 pr-7 ${isMobileView ? 'w-full h-8 text-xs' : ''}`}
-            />
-            {searchQuery && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSearchQuery('')}
-                className={`absolute right-1 top-1/2 transform -translate-y-1/2 p-0.5 ${isMobileView ? 'h-5 w-5' : 'h-7 w-7'}`}
-              >
-                <X className={`text-gray-400 ${isMobileView ? 'h-2.5 w-2.5' : 'h-4 w-4'}`} />
-              </Button>
-            )}
-          </div>
-
-          {/* Batch Select Button */}
-          <Button
-            variant="outline"
-            size={isMobileView ? "sm" : "default"}
-            onClick={toggleBatchMode}
-            className={`${isMobileView ? 'w-full h-8 text-xs' : ''} ${isBatchMode ? 'bg-accent' : ''}`}
-          >
-            <Users2 className={`${isMobileView ? 'h-3 w-3 mr-1' : 'h-5 w-5 mr-2'}`} />
-            {isBatchMode ? 'Exit Batch Select' : 'Batch Select'}
-          </Button>
         </div>
       </div>
 

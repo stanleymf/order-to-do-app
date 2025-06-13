@@ -7,6 +7,7 @@ import { Analytics } from './Analytics';
 import { ProductManagement } from './ProductManagement';
 import type { User } from '../types';
 import { logout } from '../utils/storage';
+import { NavLink } from 'react-router-dom';
 
 interface DashboardProps {
   user: User;
@@ -138,6 +139,43 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               </TabsContent>
             )}
           </Tabs>
+
+          {/* Navigation Menu */}
+          <nav className={`flex ${isMobileView ? 'flex-wrap gap-4 mt-4 px-4' : 'gap-8'}`}>
+            <NavLink 
+              to="/orders" 
+              className={({ isActive }) => `
+                flex items-center gap-2 px-4 py-2 rounded-lg
+                ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-100'}
+                ${isMobileView ? 'text-sm w-full' : ''}
+              `}
+            >
+              <Calendar className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
+              Orders
+            </NavLink>
+            <NavLink 
+              to="/analytics" 
+              className={({ isActive }) => `
+                flex items-center gap-2 px-4 py-2 rounded-lg
+                ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-100'}
+                ${isMobileView ? 'text-sm w-full' : ''}
+              `}
+            >
+              <BarChart3 className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
+              Analytics
+            </NavLink>
+            <NavLink 
+              to="/products" 
+              className={({ isActive }) => `
+                flex items-center gap-2 px-4 py-2 rounded-lg
+                ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-100'}
+                ${isMobileView ? 'text-sm w-full' : ''}
+              `}
+            >
+              <Package className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
+              Products
+            </NavLink>
+          </nav>
         </main>
       </div>
     </MobileViewContext.Provider>

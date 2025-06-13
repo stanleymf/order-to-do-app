@@ -8,7 +8,8 @@ interface StoreSelectorProps {
   selectedStoreId: string | null;
   onStoreChange: (storeId: string | null) => void;
   showOrderCounts?: boolean;
-  orderCounts?: { [storeId: string]: number };
+  orderCounts?: Record<string, number>;
+  isMobileView?: boolean;
 }
 
 export function StoreSelector({ 
@@ -16,19 +17,25 @@ export function StoreSelector({
   selectedStoreId, 
   onStoreChange, 
   showOrderCounts = false, 
-  orderCounts = {} 
+  orderCounts = {},
+  isMobileView = false
 }: StoreSelectorProps) {
-  const { isMobileView } = useMobileView();
-  
   return (
     <Select 
       value={selectedStoreId || 'all'} 
       onValueChange={(value) => onStoreChange(value === 'all' ? null : value)}
     >
-      <SelectTrigger className={`${isMobileView ? 'w-full' : 'w-[280px]'}`}>
+      <SelectTrigger className={`${isMobileView ? 'w-full h-8 text-xs' : 'w-[280px]'}`}>
         <SelectValue placeholder="Select store" />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent 
+        className={isMobileView ? 'text-xs' : ''}
+        position={isMobileView ? "popper" : "item-aligned"}
+        side={isMobileView ? "bottom" : "top"}
+        align={isMobileView ? "center" : "start"}
+        alignOffset={isMobileView ? -16 : 0}
+        sideOffset={isMobileView ? 5 : 0}
+      >
         <SelectItem value="all">
           <div className="flex items-center justify-between w-full">
             <span className={`${isMobileView ? 'text-sm' : ''}`}>All Stores</span>

@@ -108,12 +108,14 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
     const isInteractive = target.closest('button') || 
                          target.closest('input') || 
                          target.closest('select') || 
+                         target.closest('textarea') ||
                          target.closest('[role="button"]') ||
                          target.closest('.select-trigger') ||
                          target.closest('.select-content') ||
                          target.closest('.checkbox') ||
                          target.closest('.dialog') ||
-                         target.closest('.modal');
+                         target.closest('.modal') ||
+                         target.closest('[data-interactive]');
     
     if (!isInteractive) {
       setIsCollapsed(!isCollapsed);
