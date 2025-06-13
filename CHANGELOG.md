@@ -5,6 +5,15 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2025-06-13
+
+### Fixed
+- Improved mobile responsiveness for iPhone and other mobile devices:
+  - Fixed squeezed header content and optimized layout
+  - Prevented stat cards from being cut off
+  - Fixed filtering controls going off-screen
+  - Adjusted text and component sizes for better mobile visibility
+
 ## [1.0.4] - 2025-01-13
 
 ### 🎯 Enhanced Filtering Dropdown Container

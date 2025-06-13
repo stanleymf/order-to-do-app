@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarDays, Package, Users, CheckCircle, Search, X, UserPlus, UserMinus } from 'lucide-react';
+import { CalendarDays, Package, Users, CheckCircle, Search, X, UserPlus, UserMinus, Clock, UserCheck, Users2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { OrderCard } from './OrderCard';
 import { useMobileView } from './Dashboard';
@@ -19,6 +19,7 @@ import {
   updateFloristStats,
   assignOrder
 } from '../utils/storage';
+import { StoreSelector } from '@/components/StoreSelector';
 
 interface OrdersViewProps {
   currentUser: User;
@@ -41,6 +42,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
   const [productLabels, setProductLabels] = useState<any[]>([]);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const [isBatchMode, setIsBatchMode] = useState<boolean>(false);
+  const [orderCountsByStore, setOrderCountsByStore] = useState<Record<string, number>>({});
   
   // Get mobile view context
   const { isMobileView } = useMobileView();
@@ -265,10 +267,21 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
 
   const totalStats = getOrderStats(unfilteredOrders);
 
+  // Update the store selection handler
+  const handleStoreChange = (storeId: string | null) => {
+    setSelectedStore(storeId || 'all');
+    // Update order counts if needed
+    const counts = stores.reduce((acc, store) => {
+      acc[store.id] = orders.filter(order => order.storeId === store.id).length;
+      return acc;
+    }, {} as Record<string, number>);
+    setOrderCountsByStore(counts);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Controls */}
-      <div className={`flex gap-4 items-start justify-between ${isMobileView ? 'flex-col' : 'flex-col sm:flex-row sm:items-center'}`}>
+      <div className={`flex gap-4 items-start justify-between ${isMobileView ? 'flex-col space-y-4' : 'flex-col sm:flex-row sm:items-center'}`}>
         <div>
           <div className="flex items-center gap-3">
             <h2 className={`font-bold text-gray-900 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>
@@ -300,324 +313,184 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
         </div>
         
         {/* Filtering Controls Container */}
-        <Card className={`${isMobileView ? 'w-full' : ''}`}>
-          <CardContent className={`${isMobileView ? 'p-3' : 'p-4'}`}>
-            <div className={`flex ${isMobileView ? 'flex-col gap-2' : 'gap-3'}`}>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={`justify-start text-left font-normal ${isMobileView ? 'w-full' : 'w-[280px]'} ${!calendarDate && "text-muted-foreground"}`}
-                  >
-                    <CalendarDays className="mr-2 h-4 w-4 text-gray-500" />
-                    {calendarDate ? format(calendarDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-4" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={calendarDate}
-                    onSelect={handleDateSelect}
-                    initialFocus
-                    className="[--cell-size:3.5rem] text-base"
-                  />
-                </PopoverContent>
-              </Popover>
-              
-              <Select value={selectedStore} onValueChange={setSelectedStore}>
-                <SelectTrigger className={`${isMobileView ? 'w-full' : 'w-48'}`}>
-                  <SelectValue placeholder="Select store" />
-                </SelectTrigger>
-                <SelectContent className={`${isMobileView ? 'w-[calc(100vw-2rem)] max-w-full' : ''}`}>
-                  <SelectItem value="all">All Stores</SelectItem>
-                  {stores.map(store => (
-                    <SelectItem key={store.id} value={store.id}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: store.color }}
-                        />
-                        {store.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <div className={`${isMobileView ? 'w-full space-y-3' : 'flex items-center gap-4'}`}>
+          {/* Date Selector */}
+          <div className={`${isMobileView ? 'w-full' : ''}`}>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={`justify-start text-left font-normal ${isMobileView ? 'w-full' : 'w-[280px]'} ${!calendarDate && "text-muted-foreground"}`}
+                >
+                  <CalendarDays className="mr-2 h-4 w-4 text-gray-500" />
+                  {calendarDate ? format(calendarDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-4" align="start">
+                <Calendar
+                  mode="single"
+                  selected={calendarDate}
+                  onSelect={handleDateSelect}
+                  initialFocus
+                  className="[--cell-size:3.5rem] text-base"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
 
-              <Select value={selectedDifficultyLabel} onValueChange={setSelectedDifficultyLabel}>
-                <SelectTrigger className={`${isMobileView ? 'w-full' : 'w-48'}`}>
-                  <SelectValue placeholder="Select difficulty" />
-                </SelectTrigger>
-                <SelectContent className={`${isMobileView ? 'w-[calc(100vw-2rem)] max-w-full' : ''}`}>
-                  <SelectItem value="all">All Difficulties</SelectItem>
-                  {productLabels.filter(label => label.category === 'difficulty').sort((a, b) => a.priority - b.priority).map(label => (
-                    <SelectItem key={label.id} value={label.name}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: label.color }}
-                        />
-                        {label.name} (Priority: {label.priority})
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {/* Store Selector */}
+          <div className={`${isMobileView ? 'w-full' : ''}`}>
+            <StoreSelector
+              stores={stores}
+              selectedStoreId={selectedStore}
+              onStoreChange={handleStoreChange}
+              showOrderCounts
+              orderCounts={orderCountsByStore}
+            />
+          </div>
 
-              <Select value={selectedProductTypeLabel} onValueChange={setSelectedProductTypeLabel}>
-                <SelectTrigger className={`${isMobileView ? 'w-full' : 'w-48'}`}>
-                  <SelectValue placeholder="Select product type" />
-                </SelectTrigger>
-                <SelectContent className={`${isMobileView ? 'w-[calc(100vw-2rem)] max-w-full' : ''}`}>
-                  <SelectItem value="all">All Product Types</SelectItem>
-                  {productLabels.filter(label => label.category === 'productType').sort((a, b) => a.priority - b.priority).map(label => (
-                    <SelectItem key={label.id} value={label.name}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: label.color }}
-                        />
-                        {label.name} (Priority: {label.priority})
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {/* Status Filter */}
+          <div className={`${isMobileView ? 'w-full' : ''}`}>
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger className={`${isMobileView ? 'w-full text-sm' : 'w-[200px]'}`}>
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Orders</SelectItem>
+                <SelectItem value="pending">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-orange-500" />
+                    Pending
+                  </div>
+                </SelectItem>
+                <SelectItem value="assigned">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                    Assigned
+                  </div>
+                </SelectItem>
+                <SelectItem value="completed">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500" />
+                    Completed
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className={`${isMobileView ? 'w-full' : 'w-48'}`}>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent className={`${isMobileView ? 'w-[calc(100vw-2rem)] max-w-full' : ''}`}>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="pending">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-orange-500" />
-                      Pending
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="assigned">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-blue-500" />
-                      Assigned
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="completed">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500" />
-                      Completed
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Search Input */}
+          <div className={`relative ${isMobileView ? 'w-full' : 'flex-1'}`}>
+            <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 ${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
+            <Input
+              type="text"
+              placeholder="Search orders by ID, product, or variant..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`pl-10 pr-10 ${isMobileView ? 'w-full text-sm' : ''}`}
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchQuery('')}
+                className={`absolute right-1 top-1/2 transform -translate-y-1/2 p-1 h-auto ${isMobileView ? 'w-6 h-6' : 'w-8 h-8'}`}
+              >
+                <X className={`text-gray-400 ${isMobileView ? 'h-3 w-3' : 'h-4 w-4'}`} />
+              </Button>
+            )}
+          </div>
+
+          {/* Batch Select Button */}
+          <Button
+            variant="outline"
+            size={isMobileView ? "sm" : "default"}
+            onClick={toggleBatchMode}
+            className={`${isMobileView ? 'w-full text-sm h-9' : ''} ${isBatchMode ? 'bg-accent' : ''}`}
+          >
+            <Users2 className={`${isMobileView ? 'h-4 w-4 mr-2' : 'h-5 w-5 mr-2'}`} />
+            {isBatchMode ? 'Exit Batch Select' : 'Batch Select'}
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats Overview */}
+      <div className={`grid ${isMobileView ? 'grid-cols-1 gap-3' : 'grid-cols-3 gap-6'}`}>
+        <Card>
+          <CardContent className={`flex items-center ${isMobileView ? 'py-3 px-4' : 'py-6'}`}>
+            <div className={`${isMobileView ? 'w-8 h-8' : 'w-12 h-12'} rounded-full bg-orange-100 flex items-center justify-center mr-4`}>
+              <Clock className={`${isMobileView ? 'w-4 h-4' : 'w-6 h-6'} text-orange-600`} />
+            </div>
+            <div>
+              <div className={`font-bold text-orange-600 ${isMobileView ? 'text-xl' : 'text-2xl'}`}>{totalStats.pending}</div>
+              <p className={`text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>Pending Orders</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className={`flex items-center ${isMobileView ? 'py-3 px-4' : 'py-6'}`}>
+            <div className={`${isMobileView ? 'w-8 h-8' : 'w-12 h-12'} rounded-full bg-blue-100 flex items-center justify-center mr-4`}>
+              <UserCheck className={`${isMobileView ? 'w-4 h-4' : 'w-6 h-6'} text-blue-600`} />
+            </div>
+            <div>
+              <div className={`font-bold text-blue-600 ${isMobileView ? 'text-xl' : 'text-2xl'}`}>{totalStats.assigned}</div>
+              <p className={`text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>Assigned Orders</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className={`flex items-center ${isMobileView ? 'py-3 px-4' : 'py-6'}`}>
+            <div className={`${isMobileView ? 'w-8 h-8' : 'w-12 h-12'} rounded-full bg-green-100 flex items-center justify-center mr-4`}>
+              <CheckCircle className={`${isMobileView ? 'w-4 h-4' : 'w-6 h-6'} text-green-600`} />
+            </div>
+            <div>
+              <div className={`font-bold text-green-600 ${isMobileView ? 'text-xl' : 'text-2xl'}`}>{totalStats.completed}</div>
+              <p className={`text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>Completed Orders</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Overall Stats (when viewing all stores) */}
-      {selectedStore === 'all' && (
-        <div className={`grid gap-4 mb-6 ${isMobileView ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-4'}`}>
-          <Card 
-            className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-              selectedStatus === 'all' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'
-            }`}
-            onClick={() => handleStatusFilter('all')}
-          >
-            <CardContent className={`${isMobileView ? 'p-2' : 'p-4'}`}>
-              <div className={`flex items-center ${isMobileView ? 'gap-1' : 'gap-3'}`}>
-                <Package className={`${isMobileView ? 'h-4 w-4' : 'h-8 w-8'} text-blue-600`} />
-                <div className="min-w-0 flex-1">
-                  <p className={`font-medium text-gray-600 ${isMobileView ? 'text-[10px]' : 'text-sm'} truncate`}>Total Orders</p>
-                  <p className={`font-bold text-gray-900 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.total}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card 
-            className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-              selectedStatus === 'pending' ? 'ring-2 ring-orange-500 bg-orange-50' : 'hover:bg-gray-50'
-            }`}
-            onClick={() => handleStatusFilter('pending')}
-          >
-            <CardContent className={`${isMobileView ? 'p-2' : 'p-4'}`}>
-              <div className={`flex items-center ${isMobileView ? 'gap-1' : 'gap-3'}`}>
-                <Users className={`${isMobileView ? 'h-4 w-4' : 'h-8 w-8'} text-orange-600`} />
-                <div className="min-w-0 flex-1">
-                  <p className={`font-medium text-gray-600 ${isMobileView ? 'text-[10px]' : 'text-sm'} truncate`}>Pending</p>
-                  <p className={`font-bold text-orange-600 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.pending}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card 
-            className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-              selectedStatus === 'assigned' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'
-            }`}
-            onClick={() => handleStatusFilter('assigned')}
-          >
-            <CardContent className={`${isMobileView ? 'p-2' : 'p-4'}`}>
-              <div className={`flex items-center ${isMobileView ? 'gap-1' : 'gap-3'}`}>
-                <Users className={`${isMobileView ? 'h-4 w-4' : 'h-8 w-8'} text-blue-600`} />
-                <div className="min-w-0 flex-1">
-                  <p className={`font-medium text-gray-600 ${isMobileView ? 'text-[10px]' : 'text-sm'} truncate`}>Assigned</p>
-                  <p className={`font-bold text-blue-600 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.assigned}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card 
-            className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-              selectedStatus === 'completed' ? 'ring-2 ring-green-500 bg-green-50' : 'hover:bg-gray-50'
-            }`}
-            onClick={() => handleStatusFilter('completed')}
-          >
-            <CardContent className={`${isMobileView ? 'p-2' : 'p-4'}`}>
-              <div className={`flex items-center ${isMobileView ? 'gap-1' : 'gap-3'}`}>
-                <CheckCircle className={`${isMobileView ? 'h-4 w-4' : 'h-8 w-8'} text-green-600`} />
-                <div className="min-w-0 flex-1">
-                  <p className={`font-medium text-gray-600 ${isMobileView ? 'text-[10px]' : 'text-sm'} truncate`}>Completed</p>
-                  <p className={`font-bold text-green-600 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.completed}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Search Bar */}
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search orders by ID, product, variant, remarks, or labels..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-10"
-          />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSearchQuery('')}
-              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          )}
-        </div>
-        {searchQuery && (
-          <p className="text-sm text-gray-500 mt-2">
-            {orders.length} order{orders.length !== 1 ? 's' : ''} found for "{searchQuery}"
-          </p>
-        )}
-      </div>
-
-      {/* Batch Controls */}
-      {orders.length > 0 && (
-        <div className="mb-6">
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant={isBatchMode ? "default" : "outline"}
-              size="sm"
-              onClick={toggleBatchMode}
-              className="flex items-center gap-2"
-            >
-              <Users className="h-4 w-4" />
-              {isBatchMode ? 'Exit Batch Mode' : 'Batch Select'}
-            </Button>
-            
-            {isBatchMode && (
-              <>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={selectAllOrders}
-                    disabled={selectedOrderIds.size === orders.length}
-                  >
-                    Select All ({orders.length})
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={clearSelection}
-                    disabled={selectedOrderIds.size === 0}
-                  >
-                    Clear
-                  </Button>
-                </div>
-                
-                {selectedOrderIds.size > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">
-                      {selectedOrderIds.size} selected
-                    </span>
-                    <Button
-                      size="sm"
-                      onClick={batchAssignToMe}
-                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-                    >
-                      <UserPlus className="h-3 w-3" />
-                      Assign to Me
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={batchUnassign}
-                      className="flex items-center gap-2"
-                    >
-                      <UserMinus className="h-3 w-3" />
-                      Unassign
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Multi-Store View */}
       {selectedStore === 'all' ? (
         <div className="space-y-8">
           {Object.values(ordersByStore).map(({ store, orders: storeOrders, stats }) => (
-            <Card key={store.id} className="overflow-hidden">
-              <CardHeader className={`${isMobileView ? 'pb-2' : 'pb-4'}`}>
-                <div className={`${isMobileView ? 'space-y-3' : 'flex items-center justify-between'}`}>
-                  <CardTitle className={`flex items-center gap-3 ${isMobileView ? 'text-base' : ''}`}>
+            <Card key={store.id} className={`${isMobileView ? 'mb-3' : 'mb-4'}`}>
+              <CardHeader className={`${isMobileView ? 'pb-2 px-3' : 'pb-4'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
                     <div 
-                      className={`${isMobileView ? 'w-3 h-3' : 'w-4 h-4'} rounded-full`} 
+                      className={`${isMobileView ? 'w-2 h-2' : 'w-3 h-3'} rounded-full`} 
                       style={{ backgroundColor: store.color }}
                     />
-                    <span>{store.name}</span>
-                    <Badge variant="outline" className={`ml-2 ${isMobileView ? 'text-xs' : ''}`}>
-                      {stats.total} orders
+                    <h3 className={`font-medium ${isMobileView ? 'text-sm' : 'text-base'}`}>
+                      {store.name}
+                    </h3>
+                    <Badge variant="outline" className={`${isMobileView ? 'text-xs px-1.5' : ''}`}>
+                      {storeOrders.length} orders
                     </Badge>
-                  </CardTitle>
-                  
-                  {/* Store-specific stats */}
-                  <div className={`flex ${isMobileView ? 'gap-2 flex-wrap' : 'gap-4'} ${isMobileView ? 'text-xs' : 'text-sm'}`}>
-                    <div className="flex items-center gap-1">
-                      <div className={`${isMobileView ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full bg-orange-500`} />
-                      <span className="text-orange-600 font-medium">{stats.pending} Pending</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className={`${isMobileView ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full bg-blue-500`} />
-                      <span className="text-blue-600 font-medium">{stats.assigned} Assigned</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className={`${isMobileView ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full bg-green-500`} />
-                      <span className="text-green-600 font-medium">{stats.completed} Completed</span>
-                    </div>
+                  </div>
+                </div>
+
+                <div className={`flex ${isMobileView ? 'gap-2 flex-wrap mt-1' : 'gap-4 mt-2'} ${isMobileView ? 'text-xs' : 'text-sm'}`}>
+                  <div className="flex items-center gap-1">
+                    <div className={`${isMobileView ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full bg-orange-500`} />
+                    <span className="text-orange-600 font-medium">{stats.pending} Pending</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className={`${isMobileView ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full bg-blue-500`} />
+                    <span className="text-blue-600 font-medium">{stats.assigned} Assigned</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className={`${isMobileView ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full bg-green-500`} />
+                    <span className="text-green-600 font-medium">{stats.completed} Completed</span>
                   </div>
                 </div>
               </CardHeader>
-              
-              <CardContent className={`${isMobileView ? 'pt-1' : 'pt-0'}`}>
+
+              <CardContent className={`${isMobileView ? 'pt-1 px-3' : 'pt-0'}`}>
                 {storeOrders.length > 0 ? (
                   <div className={`${isMobileView ? 'space-y-2' : 'space-y-3'}`}>
                     {storeOrders.map(order => (
@@ -635,7 +508,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
                   </div>
                 ) : (
                   <div className={`text-center text-gray-500 ${isMobileView ? 'py-6 text-sm' : 'py-8'}`}>
-                    No orders for this store on {selectedDate}
+                    No orders for this store on {format(calendarDate || new Date(), 'PPP')}
                   </div>
                 )}
               </CardContent>
