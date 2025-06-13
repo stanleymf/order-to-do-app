@@ -1,10 +1,11 @@
 import { useState, createContext, useContext } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Calendar, BarChart3, Package, Smartphone, Monitor } from 'lucide-react';
+import { LogOut, Calendar, BarChart3, Package, Smartphone, Monitor, Settings } from 'lucide-react';
 import { OrdersView } from './OrdersView';
 import { Analytics } from './Analytics';
 import { ProductManagement } from './ProductManagement';
+import { Settings as SettingsComponent } from './Settings';
 import type { User } from '../types';
 import { logout } from '../utils/storage';
 import { NavLink } from 'react-router-dom';
@@ -113,14 +114,24 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   Products
                 </TabsTrigger>
               )}
+              {user.role === 'admin' && !isMobileView && (
+                <TabsTrigger value="settings" className="flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  Settings
+                </TabsTrigger>
+              )}
             </TabsList>
 
             {/* Admin Products Tab for Mobile - Show as separate row */}
             {user.role === 'admin' && isMobileView && (
-              <TabsList className="grid w-full grid-cols-1 h-10">
+              <TabsList className="grid w-full grid-cols-2 h-10">
                 <TabsTrigger value="products" className="flex items-center gap-2 text-xs px-2">
                   <Package className="h-3 w-3" />
                   Products
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="flex items-center gap-2 text-xs px-2">
+                  <Settings className="h-3 w-3" />
+                  Settings
                 </TabsTrigger>
               </TabsList>
             )}
@@ -136,6 +147,12 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             {user.role === 'admin' && (
               <TabsContent value="products">
                 <ProductManagement />
+              </TabsContent>
+            )}
+
+            {user.role === 'admin' && (
+              <TabsContent value="settings">
+                <SettingsComponent currentUser={user} />
               </TabsContent>
             )}
           </Tabs>

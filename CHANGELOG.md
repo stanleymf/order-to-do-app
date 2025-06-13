@@ -436,4 +436,51 @@ node scripts/version.js set 1.5.0
 - **Format Conversion**: Added utility function for 24-hour to 12-hour conversion
 - **Backward Compatibility**: Maintains support for existing AM/PM formats
 
-## [1.0.18] - 2025-06-13 
+## [1.0.20] - 2025-06-13
+
+### Added
+- **Admin Settings Menu**: New settings interface for admin users
+  - **Access Control**: Admin-only access with role-based permissions
+  - **Settings Tab**: Added to Dashboard navigation for admin users
+  - **Mobile Support**: Responsive design for mobile and desktop views
+  - **Configuration Persistence**: Settings saved to localStorage
+
+### Enhanced
+- **Shopify Order Mapping Configuration**: Comprehensive mapping customization
+  - **Date Mapping**: Configure date source, pattern, and format
+    - Sources: Order tags, created date, custom field
+    - Patterns: Custom regex patterns for date extraction
+    - Formats: DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD
+  - **Timeslot Mapping**: Configure timeslot source and format
+    - Sources: Order tags, line item properties, order note
+    - Patterns: Custom regex patterns for time extraction
+    - Formats: HH:MM-HH:MM, HH:MM AM/PM-HH:MM AM/PM, HAM/PM-HAM/PM
+  - **Delivery Type Mapping**: Configure delivery type detection
+    - Sources: Order tags, line item properties, order note
+    - Keywords: Customizable keywords for delivery, collection, express
+  - **Instructions Mapping**: Configure special instructions extraction
+    - Sources: Line item properties, order note, both
+    - Property names: Customizable property name for instructions
+    - Keywords: Customizable keywords for instruction detection
+  - **Customizations Mapping**: Configure product customizations
+    - Sources: Line item properties, order note, both
+    - Exclude properties: Customizable list of properties to exclude
+  - **Customer Info Mapping**: Configure customer data extraction
+    - Name format: First Last, Last First, Full Name
+    - Include options: Phone number, email address
+
+### Technical Implementation
+- **Configuration Interface**: TypeScript interface for mapping configuration
+- **Dynamic Loading**: Real-time configuration loading in Shopify API
+- **Fallback Support**: Default configuration when no custom settings exist
+- **Validation**: Input validation and error handling
+- **Toast Notifications**: Success/error feedback for configuration changes
+
+### UI/UX Features
+- **Intuitive Interface**: Organized sections with clear labels and icons
+- **Real-time Updates**: Configuration changes apply immediately
+- **Reset Functionality**: Reset to default configuration
+- **Save/Load**: Persistent configuration storage
+- **Responsive Design**: Mobile-friendly interface with adaptive layouts
+
+## [1.0.19] - 2025-06-13 

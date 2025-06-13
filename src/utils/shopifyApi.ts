@@ -1,5 +1,87 @@
 import type { Product, ProductVariant, ProductImage, ProductMetafield, Store, Order } from '../types';
 
+// Shopify mapping configuration interface
+interface ShopifyMappingConfig {
+  // Date mapping
+  dateSource: 'tags' | 'created_at' | 'custom_field';
+  dateTagPattern: string;
+  dateFormat: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
+  
+  // Timeslot mapping
+  timeslotSource: 'tags' | 'line_item_properties' | 'order_note';
+  timeslotTagPattern: string;
+  timeslotFormat: 'HH:MM-HH:MM' | 'HH:MM AM/PM-HH:MM AM/PM' | 'HAM/PM-HAM/PM';
+  
+  // Delivery type mapping
+  deliveryTypeSource: 'tags' | 'line_item_properties' | 'order_note';
+  deliveryTypeKeywords: {
+    delivery: string[];
+    collection: string[];
+    express: string[];
+  };
+  
+  // Instructions mapping
+  instructionsSource: 'line_item_properties' | 'order_note' | 'both';
+  instructionsPropertyName: string;
+  instructionsKeywords: string[];
+  
+  // Customizations mapping
+  customizationsSource: 'line_item_properties' | 'order_note' | 'both';
+  excludeProperties: string[];
+  
+  // Customer info mapping
+  customerNameFormat: 'first_last' | 'last_first' | 'full_name';
+  includeCustomerPhone: boolean;
+  includeCustomerEmail: boolean;
+}
+
+// Utility function to load mapping configuration
+export function loadMappingConfig(): ShopifyMappingConfig {
+  try {
+    const savedConfig = localStorage.getItem('shopify-mapping-config');
+    if (savedConfig) {
+      return JSON.parse(savedConfig);
+    }
+  } catch (error) {
+    console.error('Error loading mapping config:', error);
+  }
+  
+  // Return default configuration
+  return {
+    // Date mapping
+    dateSource: 'tags',
+    dateTagPattern: '(\\d{1,2})[/\\-](\\d{1,2})[/\\-](\\d{2,4})',
+    dateFormat: 'DD/MM/YYYY',
+    
+    // Timeslot mapping
+    timeslotSource: 'tags',
+    timeslotTagPattern: '(\\d{1,2}):(\\d{2})-(\\d{1,2}):(\\d{2})',
+    timeslotFormat: 'HH:MM-HH:MM',
+    
+    // Delivery type mapping
+    deliveryTypeSource: 'tags',
+    deliveryTypeKeywords: {
+      delivery: ['delivery', 'deliver'],
+      collection: ['collection', 'pickup', 'collect'],
+      express: ['express', 'urgent', 'rush']
+    },
+    
+    // Instructions mapping
+    instructionsSource: 'line_item_properties',
+    instructionsPropertyName: 'Special Instructions',
+    instructionsKeywords: ['instruction', 'note', 'special', 'request', 'preference'],
+    
+    // Customizations mapping
+    customizationsSource: 'line_item_properties',
+    excludeProperties: ['Delivery Time', 'Special Instructions', 'delivery', 'time', 'instruction', 'note', 'special'],
+    
+    // Customer info mapping
+    customerNameFormat: 'first_last',
+    includeCustomerPhone: true,
+    includeCustomerEmail: true
+  };
+}
+
 // Shopify API configuration
 interface ShopifyConfig {
   storeDomain: string;
@@ -424,24 +506,26 @@ export class ShopifyApiService {
     // Get the first line item (assuming single product orders for florist business)
     const lineItem = shopifyOrder.line_items[0];
     
+    // Load mapping configuration
+    const config = loadMappingConfig();
+    
     // Extract order tags
     const orderTags = shopifyOrder.tags ? shopifyOrder.tags.split(',').map(tag => tag.trim()) : [];
     
-    // Extract delivery information from order tags
-    const deliveryInfo = this.extractDeliveryInfoFromTags(orderTags);
+    // Extract delivery information based on configuration
+    const deliveryInfo = this.extractDeliveryInfoFromTags(orderTags, config);
     
-    // Extract special instructions from order note or line item properties
-    const specialInstructionsProperty = lineItem.properties?.find(prop => 
-      prop.name.toLowerCase().includes('instruction') || 
-      prop.name.toLowerCase().includes('note') ||
-      prop.name.toLowerCase().includes('special')
-    );
+    // Extract special instructions based on configuration
+    const remarks = this.extractInstructions(lineItem, shopifyOrder.note, config);
     
-    const remarks = specialInstructionsProperty?.value || 
-                   this.extractInstructionsFromNote(shopifyOrder.note) || '';
+    // Extract customizations based on configuration
+    const customizations = this.extractCustomizations(lineItem, shopifyOrder.note, config);
 
     // Create order ID from Shopify order name
     const orderId = shopifyOrder.name.replace('#', '');
+
+    // Format customer name based on configuration
+    const customerName = this.formatCustomerName(shopifyOrder.customer, config);
 
     return {
       id: orderId,
@@ -453,16 +537,16 @@ export class ShopifyApiService {
       difficultyLabel: 'Medium', // Will be updated from product sync
       productTypeLabel: 'Bouquet', // Will be updated from product sync
       remarks,
-      productCustomizations: this.extractCustomizationsFromProperties(lineItem.properties),
+      productCustomizations: customizations,
       assignedFloristId: undefined, // Will be assigned by florist
       assignedAt: undefined,
       completedAt: undefined,
       status: 'pending',
       date: deliveryInfo.date || new Date(shopifyOrder.created_at).toISOString().split('T')[0],
       storeId: '', // Will be set by the calling function
-      customerEmail: shopifyOrder.email,
-      customerPhone: shopifyOrder.phone,
-      customerName: `${shopifyOrder.customer.first_name} ${shopifyOrder.customer.last_name}`,
+      customerEmail: config.includeCustomerEmail ? shopifyOrder.email : undefined,
+      customerPhone: config.includeCustomerPhone ? shopifyOrder.phone : undefined,
+      customerName,
       totalPrice: shopifyOrder.total_price,
       currency: shopifyOrder.currency,
       fulfillmentStatus: shopifyOrder.fulfillment_status,
@@ -474,7 +558,7 @@ export class ShopifyApiService {
   }
 
   // Extract delivery information from order tags
-  private extractDeliveryInfoFromTags(tags: string[]): {
+  private extractDeliveryInfoFromTags(tags: string[], config: ShopifyMappingConfig): {
     date?: string;
     timeslot?: string;
     deliveryType?: 'delivery' | 'collection' | 'express';
@@ -535,6 +619,27 @@ export class ShopifyApiService {
   }
 
   // Extract special instructions from order note
+  private extractInstructions(lineItem: ShopifyLineItemResponse, note: string, config: ShopifyMappingConfig): string {
+    if (!note) return '';
+    
+    // Load instructions from line item properties
+    const lineItemInstructions = lineItem.properties?.find(prop => 
+      config.instructionsPropertyName.toLowerCase() === prop.name.toLowerCase()
+    );
+    
+    // Load instructions from order note
+    const orderInstructions = this.extractInstructionsFromNote(note);
+    
+    // Combine instructions
+    const instructions = [
+      lineItemInstructions?.value,
+      orderInstructions
+    ].filter(Boolean).join(', ');
+
+    return instructions;
+  }
+
+  // Extract special instructions from order note
   private extractInstructionsFromNote(note: string): string | null {
     if (!note) return null;
     
@@ -553,20 +658,30 @@ export class ShopifyApiService {
   }
 
   // Extract customizations from line item properties
-  private extractCustomizationsFromProperties(properties: ShopifyLineItemResponse['properties']): string {
-    if (!properties) return '';
+  private extractCustomizations(lineItem: ShopifyLineItemResponse, note: string, config: ShopifyMappingConfig): string {
+    if (!lineItem.properties) return '';
     
-    const customizationProperties = properties.filter(prop => 
-      !prop.name.toLowerCase().includes('delivery') &&
-      !prop.name.toLowerCase().includes('time') &&
-      !prop.name.toLowerCase().includes('instruction') &&
-      !prop.name.toLowerCase().includes('note') &&
-      !prop.name.toLowerCase().includes('special')
+    const customizationProperties = lineItem.properties.filter(prop => 
+      !config.excludeProperties.includes(prop.name.toLowerCase())
     );
     
     return customizationProperties
       .map(prop => `${prop.name}: ${prop.value}`)
       .join(', ');
+  }
+
+  // Format customer name based on configuration
+  private formatCustomerName(customer: { first_name: string; last_name: string }, config: ShopifyMappingConfig): string {
+    switch (config.customerNameFormat) {
+      case 'first_last':
+        return `${customer.first_name} ${customer.last_name}`;
+      case 'last_first':
+        return `${customer.last_name}, ${customer.first_name}`;
+      case 'full_name':
+        return `${customer.first_name} ${customer.last_name}`;
+      default:
+        return `${customer.first_name} ${customer.last_name}`;
+    }
   }
 
   // Convert 24-hour format to 12-hour format with AM/PM
