@@ -5,6 +5,31 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.23] - 2025-06-13
+
+### Changed
+- **Real-Time Order Fetching**: Replaced manual sync buttons with automatic order fetching
+  - **Auto-Fetch on Load**: Orders are automatically fetched when the component loads
+  - **Auto-Refresh**: Orders are refreshed every 5 minutes automatically
+  - **Date-Based Fetching**: Orders are re-fetched when the selected date changes
+  - **Background Sync**: All stores are synced in the background without user intervention
+  - **Error Handling**: Individual store failures don't prevent other stores from syncing
+
+### Removed
+- **Manual Sync Buttons**: Removed individual store sync buttons from the UI
+- **Manual Sync State**: Removed `isSyncingOrders` state management
+- **Manual Sync Function**: Removed `handleShopifyOrderSync` function
+
+### Added
+- **Loading Indicator**: Added "Auto-syncing..." indicator in the header during fetch operations
+- **Toast Notifications**: Success/error notifications for auto-sync operations
+- **Automatic Updates**: Orders are automatically updated in the UI after successful sync
+
+### Enhanced
+- **User Experience**: No manual intervention required for order synchronization
+- **Real-Time Data**: Orders are always up-to-date with the latest Shopify data
+- **Seamless Operation**: Users can focus on order management without worrying about data sync
+
 ## [1.0.22] - 2025-06-13
 
 ### Fixed

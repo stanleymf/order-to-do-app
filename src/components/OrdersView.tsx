@@ -43,10 +43,60 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const [isBatchMode, setIsBatchMode] = useState<boolean>(false);
   const [orderCountsByStore, setOrderCountsByStore] = useState<Record<string, number>>({});
-  const [isSyncingOrders, setIsSyncingOrders] = useState<Record<string, boolean>>({});
+  const [isLoadingOrders, setIsLoadingOrders] = useState<boolean>(false);
   
   // Get mobile view context
   const { isMobileView } = useMobileView();
+
+  // Auto-fetch orders on component mount and date change
+  useEffect(() => {
+    fetchOrdersForAllStores();
+  }, [selectedDate]);
+
+  // Auto-refresh orders every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchOrdersForAllStores();
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(interval);
+  }, [selectedDate]);
+
+  const fetchOrdersForAllStores = async () => {
+    setIsLoadingOrders(true);
+    try {
+      const allStores = getStores();
+      let allSyncedOrders: Order[] = [];
+
+      for (const store of allStores) {
+        try {
+          // In a real implementation, you would get the access token from secure storage
+          const accessToken = 'your-shopify-access-token'; // This should come from secure storage
+          
+          const syncedOrders = await syncOrdersFromShopifyToStorage(store, accessToken, selectedDate);
+          allSyncedOrders = [...allSyncedOrders, ...syncedOrders];
+        } catch (error) {
+          console.error(`Error syncing orders from ${store.name}:`, error);
+          // Continue with other stores even if one fails
+        }
+      }
+
+      if (allSyncedOrders.length > 0) {
+        toast.success(`Auto-synced ${allSyncedOrders.length} orders from all stores`, {
+          description: `Orders updated automatically`
+        });
+      }
+      
+      handleOrderUpdate();
+    } catch (error) {
+      console.error('Error auto-syncing orders:', error);
+      toast.error('Error auto-syncing orders', {
+        description: error instanceof Error ? error.message : 'Unknown error'
+      });
+    } finally {
+      setIsLoadingOrders(false);
+    }
+  };
 
   // Sorting function with hierarchical order
   const sortOrders = (orders: Order[]) => {
@@ -227,30 +277,6 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
     });
   };
 
-  // Handle Shopify order sync for a specific store
-  const handleShopifyOrderSync = async (store: Store) => {
-    setIsSyncingOrders(prev => ({ ...prev, [store.id]: true }));
-    
-    try {
-      // In a real implementation, you would get the access token from secure storage
-      const accessToken = 'your-shopify-access-token'; // This should come from secure storage
-      
-      const syncedOrders = await syncOrdersFromShopifyToStorage(store, accessToken, selectedDate);
-      
-      handleOrderUpdate();
-      toast.success(`Successfully synced ${syncedOrders.length} orders from ${store.name}`, {
-        description: `Orders have been updated and are ready for assignment`
-      });
-    } catch (error) {
-      console.error('Error syncing orders:', error);
-      toast.error(`Error syncing orders from ${store.name}`, {
-        description: error instanceof Error ? error.message : 'Unknown error'
-      });
-    } finally {
-      setIsSyncingOrders(prev => ({ ...prev, [store.id]: false }));
-    }
-  };
-
   // Calculate order statistics
   const getOrderStats = (storeOrders: Order[]) => {
     const pending = storeOrders.filter(order => order.status === 'pending').length;
@@ -303,9 +329,17 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
         <div className="flex flex-col space-y-4">
           {/* Title and Description */}
           <div>
-            <h1 className={`font-semibold ${isMobileView ? 'text-xl mb-1' : 'text-2xl mb-2'}`}>
-              Orders Dashboard
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className={`font-semibold ${isMobileView ? 'text-xl mb-1' : 'text-2xl mb-2'}`}>
+                Orders Dashboard
+              </h1>
+              {isLoadingOrders && (
+                <div className="flex items-center gap-1 text-blue-600">
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  <span className="text-sm">Auto-syncing...</span>
+                </div>
+              )}
+            </div>
             <p className={`text-gray-600 ${isMobileView ? 'text-sm' : 'text-base'}`}>
               Manage daily flower orders across all stores
             </p>
@@ -491,23 +525,6 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
         </Button>
       </div>
 
-      {/* Shopify Order Sync Buttons */}
-      <div className={`flex ${isMobileView ? 'flex-col gap-2 px-1' : 'justify-end gap-2'}`}>
-        {stores.map(store => (
-          <Button
-            key={store.id}
-            variant="outline"
-            size={isMobileView ? "default" : "sm"}
-            onClick={() => handleShopifyOrderSync(store)}
-            disabled={isSyncingOrders[store.id]}
-            className={`${isMobileView ? 'w-full' : ''}`}
-          >
-            <RefreshCw className={`mr-2 ${isSyncingOrders[store.id] ? 'animate-spin' : ''} ${isMobileView ? 'h-4 w-4' : 'h-3 w-3'}`} />
-            {isSyncingOrders[store.id] ? 'Syncing...' : `Sync ${store.name} Orders`}
-          </Button>
-        ))}
-      </div>
-
       {/* Batch Mode Controls */}
       {isBatchMode && (
         <div className={`mb-4 ${isMobileView ? 'px-1' : ''}`}>
@@ -563,14 +580,6 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
                     className={`${isMobileView ? 'h-7 text-xs px-2' : 'h-8'}`}
                   >
                     Unassign All
-                  </Button>
-                  <Button
-                    size={isMobileView ? "sm" : "default"}
-                    variant="outline"
-                    onClick={toggleBatchMode}
-                    className={`${isMobileView ? 'h-7 text-xs px-2' : 'h-8'}`}
-                  >
-                    Exit Batch Mode
                   </Button>
                 </div>
               </div>
