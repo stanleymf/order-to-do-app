@@ -16,8 +16,14 @@ app.get('/healthz', (req, res) => {
   res.status(200).send('OK');
 });
 
-// Serve index.html for all other routes (SPA routing)
-app.get('*', (req, res) => {
+// Use a simple middleware to handle all other routes for SPA
+app.use((req, res, next) => {
+  // Skip if it's the healthcheck or static files
+  if (req.path === '/healthz' || req.path.startsWith('/assets/') || req.path === '/') {
+    return next();
+  }
+  
+  // For all other routes, serve index.html
   res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
 
