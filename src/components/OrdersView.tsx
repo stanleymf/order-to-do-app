@@ -299,7 +299,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
           )}
         </div>
         
-        <div className={`flex ${isMobileView ? 'flex-col gap-2' : 'gap-3'}`}>
+        <div className={`flex ${isMobileView ? 'flex-col gap-2 w-full' : 'gap-3'}`}>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -412,19 +412,19 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
 
       {/* Overall Stats (when viewing all stores) */}
       {selectedStore === 'all' && (
-        <div className={`grid gap-4 mb-6 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-4'}`}>
+        <div className={`grid gap-4 mb-6 ${isMobileView ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-4'}`}>
           <Card 
             className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
               selectedStatus === 'all' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'
             }`}
             onClick={() => handleStatusFilter('all')}
           >
-            <CardContent className={`${isMobileView ? 'p-3' : 'p-4'}`}>
-              <div className={`flex items-center ${isMobileView ? 'gap-2' : 'gap-3'}`}>
-                <Package className={`${isMobileView ? 'h-6 w-6' : 'h-8 w-8'} text-blue-600`} />
-                <div>
-                  <p className={`font-medium text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>Total Orders</p>
-                  <p className={`font-bold text-gray-900 ${isMobileView ? 'text-xl' : 'text-2xl'}`}>{totalStats.total}</p>
+            <CardContent className={`${isMobileView ? 'p-2' : 'p-4'}`}>
+              <div className={`flex items-center ${isMobileView ? 'gap-1' : 'gap-3'}`}>
+                <Package className={`${isMobileView ? 'h-4 w-4' : 'h-8 w-8'} text-blue-600`} />
+                <div className="min-w-0 flex-1">
+                  <p className={`font-medium text-gray-600 ${isMobileView ? 'text-[10px]' : 'text-sm'} truncate`}>Total Orders</p>
+                  <p className={`font-bold text-gray-900 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.total}</p>
                 </div>
               </div>
             </CardContent>
@@ -436,12 +436,12 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
             }`}
             onClick={() => handleStatusFilter('pending')}
           >
-            <CardContent className={`${isMobileView ? 'p-3' : 'p-4'}`}>
-              <div className={`flex items-center ${isMobileView ? 'gap-2' : 'gap-3'}`}>
-                <Users className={`${isMobileView ? 'h-6 w-6' : 'h-8 w-8'} text-orange-600`} />
-                <div>
-                  <p className={`font-medium text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>Pending</p>
-                  <p className={`font-bold text-orange-600 ${isMobileView ? 'text-xl' : 'text-2xl'}`}>{totalStats.pending}</p>
+            <CardContent className={`${isMobileView ? 'p-2' : 'p-4'}`}>
+              <div className={`flex items-center ${isMobileView ? 'gap-1' : 'gap-3'}`}>
+                <Users className={`${isMobileView ? 'h-4 w-4' : 'h-8 w-8'} text-orange-600`} />
+                <div className="min-w-0 flex-1">
+                  <p className={`font-medium text-gray-600 ${isMobileView ? 'text-[10px]' : 'text-sm'} truncate`}>Pending</p>
+                  <p className={`font-bold text-orange-600 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.pending}</p>
                 </div>
               </div>
             </CardContent>
@@ -453,12 +453,12 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
             }`}
             onClick={() => handleStatusFilter('assigned')}
           >
-            <CardContent className={`${isMobileView ? 'p-3' : 'p-4'}`}>
-              <div className={`flex items-center ${isMobileView ? 'gap-2' : 'gap-3'}`}>
-                <Users className={`${isMobileView ? 'h-6 w-6' : 'h-8 w-8'} text-blue-600`} />
-                <div>
-                  <p className={`font-medium text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>Assigned</p>
-                  <p className={`font-bold text-blue-600 ${isMobileView ? 'text-xl' : 'text-2xl'}`}>{totalStats.assigned}</p>
+            <CardContent className={`${isMobileView ? 'p-2' : 'p-4'}`}>
+              <div className={`flex items-center ${isMobileView ? 'gap-1' : 'gap-3'}`}>
+                <Users className={`${isMobileView ? 'h-4 w-4' : 'h-8 w-8'} text-blue-600`} />
+                <div className="min-w-0 flex-1">
+                  <p className={`font-medium text-gray-600 ${isMobileView ? 'text-[10px]' : 'text-sm'} truncate`}>Assigned</p>
+                  <p className={`font-bold text-blue-600 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.assigned}</p>
                 </div>
               </div>
             </CardContent>
@@ -470,12 +470,12 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
             }`}
             onClick={() => handleStatusFilter('completed')}
           >
-            <CardContent className={`${isMobileView ? 'p-3' : 'p-4'}`}>
-              <div className={`flex items-center ${isMobileView ? 'gap-2' : 'gap-3'}`}>
-                <CheckCircle className={`${isMobileView ? 'h-6 w-6' : 'h-8 w-8'} text-green-600`} />
-                <div>
-                  <p className={`font-medium text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>Completed</p>
-                  <p className={`font-bold text-green-600 ${isMobileView ? 'text-xl' : 'text-2xl'}`}>{totalStats.completed}</p>
+            <CardContent className={`${isMobileView ? 'p-2' : 'p-4'}`}>
+              <div className={`flex items-center ${isMobileView ? 'gap-1' : 'gap-3'}`}>
+                <CheckCircle className={`${isMobileView ? 'h-4 w-4' : 'h-8 w-8'} text-green-600`} />
+                <div className="min-w-0 flex-1">
+                  <p className={`font-medium text-gray-600 ${isMobileView ? 'text-[10px]' : 'text-sm'} truncate`}>Completed</p>
+                  <p className={`font-bold text-green-600 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.completed}</p>
                 </div>
               </div>
             </CardContent>

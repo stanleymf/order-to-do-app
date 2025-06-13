@@ -5,6 +5,38 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2025-01-13
+
+### 🎯 Mobile Formatting Fixes
+
+#### 🐛 Bug Fixes
+- **Fixed Header Menu Layout**
+  - Logout container no longer goes off screen on mobile
+  - Adjusted flex layout with proper flex-shrink properties
+  - Reduced button sizes and spacing for mobile
+  - Added truncation for long text elements
+
+- **Fixed Filtering Dropdowns**
+  - Filtering dropdowns now stack vertically on mobile
+  - Added full width to dropdown containers
+  - Improved spacing and layout for mobile screens
+  - Prevented dropdowns from extending off screen
+
+- **Fixed Breakdown Numbers (Stats Cards)**
+  - Stats cards now display in 2x2 grid on mobile instead of 4 columns
+  - Reduced padding and icon sizes for mobile
+  - Added text truncation to prevent overflow
+  - Improved responsive layout for better mobile viewing
+
+#### ✨ Improvements
+- **Better Mobile Responsiveness**
+  - All UI elements now properly contained within mobile viewport
+  - Improved touch targets and spacing
+  - Better text sizing and readability on mobile
+  - Consistent mobile-first design approach
+
+---
+
 ## [1.0.2] - 2025-01-13
 
 ### 🎯 Default Collapsed State
