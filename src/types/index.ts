@@ -118,6 +118,7 @@ export interface Order {
   status: 'pending' | 'assigned' | 'completed';
   date: string; // YYYY-MM-DD format
   storeId: string;
+  deliveryType?: 'delivery' | 'collection' | 'express'; // Delivery method from Shopify tags
   
   // Shopify-specific fields
   shopifyId?: string; // Shopify's order ID

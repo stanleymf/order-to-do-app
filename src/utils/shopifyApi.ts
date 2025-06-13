@@ -424,14 +424,11 @@ export class ShopifyApiService {
     // Get the first line item (assuming single product orders for florist business)
     const lineItem = shopifyOrder.line_items[0];
     
-    // Extract delivery time from order properties or note
-    const deliveryTimeProperty = lineItem.properties?.find(prop => 
-      prop.name.toLowerCase().includes('delivery') || 
-      prop.name.toLowerCase().includes('time') ||
-      prop.name.toLowerCase().includes('slot')
-    );
+    // Extract order tags
+    const orderTags = shopifyOrder.tags ? shopifyOrder.tags.split(',').map(tag => tag.trim()) : [];
     
-    const timeslot = deliveryTimeProperty?.value || this.extractTimeslotFromNote(shopifyOrder.note) || '10:00 AM - 02:00 PM';
+    // Extract delivery information from order tags
+    const deliveryInfo = this.extractDeliveryInfoFromTags(orderTags);
     
     // Extract special instructions from order note or line item properties
     const specialInstructionsProperty = lineItem.properties?.find(prop => 
@@ -452,7 +449,7 @@ export class ShopifyApiService {
       productId: `shopify-${lineItem.product_id}`,
       productName: lineItem.title,
       productVariant: lineItem.variant_title || '',
-      timeslot,
+      timeslot: deliveryInfo.timeslot || '10:00 AM - 02:00 PM',
       difficultyLabel: 'Medium', // Will be updated from product sync
       productTypeLabel: 'Bouquet', // Will be updated from product sync
       remarks,
@@ -461,7 +458,7 @@ export class ShopifyApiService {
       assignedAt: undefined,
       completedAt: undefined,
       status: 'pending',
-      date: new Date(shopifyOrder.created_at).toISOString().split('T')[0],
+      date: deliveryInfo.date || new Date(shopifyOrder.created_at).toISOString().split('T')[0],
       storeId: '', // Will be set by the calling function
       customerEmail: shopifyOrder.email,
       customerPhone: shopifyOrder.phone,
@@ -472,28 +469,58 @@ export class ShopifyApiService {
       financialStatus: shopifyOrder.financial_status,
       createdAt: shopifyOrder.created_at,
       updatedAt: shopifyOrder.updated_at,
+      deliveryType: deliveryInfo.deliveryType || 'delivery', // New field for delivery type
     };
   }
 
-  // Extract timeslot from order note
-  private extractTimeslotFromNote(note: string): string | null {
-    if (!note) return null;
-    
-    // Common timeslot patterns
-    const timeslotPatterns = [
-      /(\d{1,2}:\d{2}\s*(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s*(?:AM|PM))/i,
-      /delivery.*?(\d{1,2}:\d{2}\s*(?:AM|PM))/i,
-      /time.*?(\d{1,2}:\d{2}\s*(?:AM|PM))/i,
-    ];
-    
-    for (const pattern of timeslotPatterns) {
-      const match = note.match(pattern);
-      if (match) {
-        return match[1];
+  // Extract delivery information from order tags
+  private extractDeliveryInfoFromTags(tags: string[]): {
+    date?: string;
+    timeslot?: string;
+    deliveryType?: 'delivery' | 'collection' | 'express';
+  } {
+    const result: {
+      date?: string;
+      timeslot?: string;
+      deliveryType?: 'delivery' | 'collection' | 'express';
+    } = {};
+
+    for (const tag of tags) {
+      const lowerTag = tag.toLowerCase();
+      
+      // Extract delivery type
+      if (lowerTag.includes('delivery') || lowerTag.includes('deliver')) {
+        result.deliveryType = 'delivery';
+      } else if (lowerTag.includes('collection') || lowerTag.includes('pickup') || lowerTag.includes('collect')) {
+        result.deliveryType = 'collection';
+      } else if (lowerTag.includes('express') || lowerTag.includes('urgent') || lowerTag.includes('rush')) {
+        result.deliveryType = 'express';
+      }
+      
+      // Extract date (various formats)
+      const dateMatch = tag.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+      if (dateMatch) {
+        const [, day, month, year] = dateMatch;
+        const fullYear = year.length === 2 ? `20${year}` : year;
+        result.date = `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+      
+      // Extract timeslot (various formats)
+      const timeMatch = tag.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+      if (timeMatch) {
+        const [, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = timeMatch;
+        result.timeslot = `${startHour}:${startMin} ${startPeriod.toUpperCase()} - ${endHour}:${endMin} ${endPeriod.toUpperCase()}`;
+      }
+      
+      // Alternative time formats
+      const timeRangeMatch = tag.match(/(\d{1,2})(AM|PM)\s*-\s*(\d{1,2})(AM|PM)/i);
+      if (timeRangeMatch) {
+        const [, startTime, startPeriod, endTime, endPeriod] = timeRangeMatch;
+        result.timeslot = `${startTime} ${startPeriod.toUpperCase()} - ${endTime} ${endPeriod.toUpperCase()}`;
       }
     }
-    
-    return null;
+
+    return result;
   }
 
   // Extract special instructions from order note

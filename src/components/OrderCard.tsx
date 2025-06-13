@@ -287,6 +287,25 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
                     </div>
                   </div>
 
+                  {/* Delivery Type */}
+                  {order.deliveryType && (
+                    <div className="flex-shrink-0 bg-gray-50 rounded px-2 py-1 min-w-fit">
+                      <div className="flex items-center gap-1">
+                        <Package className="h-2 w-2 text-gray-500" />
+                        <span className="text-[10px] text-gray-600">Type</span>
+                      </div>
+                      <div className={`text-[10px] font-medium px-1 rounded text-white mt-0.5 ${
+                        order.deliveryType === 'express' 
+                          ? 'bg-red-500' 
+                          : order.deliveryType === 'collection'
+                          ? 'bg-blue-500'
+                          : 'bg-green-500'
+                      }`}>
+                        {order.deliveryType.charAt(0).toUpperCase() + order.deliveryType.slice(1)}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Assignment Card */}
                   <div className={`flex-shrink-0 rounded px-2 py-1 min-w-fit ${
                     assignedFlorist?.id === currentUser.id 
@@ -544,6 +563,25 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
                       {order.timeslot}
                     </Badge>
                   </div>
+
+                  {/* Delivery Type */}
+                  {order.deliveryType && (
+                    <div className="flex-shrink-0 bg-gray-50 rounded px-2 py-1 min-w-fit">
+                      <div className="flex items-center gap-1">
+                        <Package className="h-2 w-2 text-gray-500" />
+                        <span className="text-[10px] text-gray-600">Type</span>
+                      </div>
+                      <div className={`text-[10px] font-medium px-1 rounded text-white mt-0.5 ${
+                        order.deliveryType === 'express' 
+                          ? 'bg-red-500' 
+                          : order.deliveryType === 'collection'
+                          ? 'bg-blue-500'
+                          : 'bg-green-500'
+                      }`}>
+                        {order.deliveryType.charAt(0).toUpperCase() + order.deliveryType.slice(1)}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Assignment */}
                   <div>

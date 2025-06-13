@@ -362,4 +362,36 @@ node scripts/version.js set 1.5.0
 - **Responsive Design**: Mobile-friendly sync interface
 - **Loading States**: Visual feedback during sync operations
 
-## [1.0.15] - 2025-06-13 
+## [1.0.17] - 2025-06-13
+
+### Enhanced
+- **Tag-Based Smart Extraction**: Improved order data extraction from Shopify order tags
+  - **Date Extraction**: Extract delivery dates from order tags (06/13/2025, 13/06/25, 6-13-2025)
+  - **Timeslot Extraction**: Extract delivery times from order tags (9:00 AM - 2:00 PM, 9AM - 2PM)
+  - **Delivery Type Extraction**: Extract delivery method from order tags (delivery, collection, express)
+  - **Visual Indicators**: Color-coded delivery type badges (green=delivery, blue=collection, red=express)
+  - **Mobile Support**: Delivery type display in mobile card layout
+
+### Added
+- **Delivery Type Field**: New `deliveryType` field in Order interface
+  - Supports: `'delivery' | 'collection' | 'express'`
+  - Automatic detection from order tags
+  - Visual display in order cards with color coding
+
+### Updated
+- **Order Card UI**: Enhanced with delivery type display
+  - Desktop: Badge-style delivery type indicator
+  - Mobile: Compact delivery type card
+  - Color coding: Green (delivery), Blue (collection), Red (express)
+- **Testing Guide**: Updated with tag-based extraction examples
+  - New test orders using order tags
+  - Comprehensive troubleshooting for tag extraction
+  - Multiple date and time format examples
+
+### Technical Improvements
+- **Extraction Logic**: Replaced note/property parsing with tag-based extraction
+- **Date Parsing**: Support for multiple date formats (MM/DD/YYYY, DD/MM/YY, M-D-YYYY)
+- **Time Parsing**: Support for multiple time formats (HH:MM AM/PM, HAM/PM)
+- **Delivery Type Detection**: Intelligent keyword matching for delivery methods
+
+## [1.0.16] - 2025-06-13 

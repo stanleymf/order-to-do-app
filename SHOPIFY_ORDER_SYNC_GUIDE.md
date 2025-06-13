@@ -39,20 +39,29 @@ Update your store configuration in the app:
 | `order.name` | `Order ID` | `#1001` → `1001` |
 | `line_items[0].title` | `Product Name` | Direct mapping |
 | `line_items[0].variant_title` | `Product Variant` | Direct mapping |
-| `line_items[0].properties` | `Timeslot` | Property: "Delivery Time" |
-| `order.note` | `Timeslot` | Regex: `9:00 AM - 2:00 PM` |
+| `order.tags` | `Timeslot` | Tag: `"9:00 AM - 2:00 PM"` |
+| `order.tags` | `Date` | Tag: `"06/13/2025"` or `"13/06/25"` |
+| `order.tags` | `Delivery Type` | Tag: `"delivery"`, `"collection"`, `"express"` |
 | `line_items[0].properties` | `Remarks` | Property: "Special Instructions" |
 | `order.note` | `Remarks` | Keywords: instruction, note, special |
 | `line_items[0].properties` | `Customizations` | Other properties |
-| `order.created_at` | `Date` | `2025-06-13` |
 | `order.customer` | `Customer Info` | Name, email, phone |
 
-### **Smart Data Extraction**
+### **Smart Data Extraction from Tags**
 
-#### **Timeslot Extraction Priority:**
-1. **Line Item Property**: `"Delivery Time": "9:00 AM - 2:00 PM"`
-2. **Order Note**: `"Please deliver between 9:00 AM - 2:00 PM"`
-3. **Default**: `"10:00 AM - 02:00 PM"`
+#### **Date Extraction from Tags:**
+- **Format 1**: `"06/13/2025"` → `"2025-06-13"`
+- **Format 2**: `"13/06/25"` → `"2025-06-13"`
+- **Format 3**: `"6-13-2025"` → `"2025-06-13"`
+
+#### **Timeslot Extraction from Tags:**
+- **Format 1**: `"9:00 AM - 2:00 PM"` → `"9:00 AM - 2:00 PM"`
+- **Format 2**: `"9AM - 2PM"` → `"9 AM - 2 PM"`
+
+#### **Delivery Type Extraction from Tags:**
+- **Delivery**: `"delivery"`, `"deliver"` → `"Delivery"`
+- **Collection**: `"collection"`, `"pickup"`, `"collect"` → `"Collection"`
+- **Express**: `"express"`, `"urgent"`, `"rush"` → `"Express"`
 
 #### **Instructions Extraction Priority:**
 1. **Line Item Property**: `"Special Instructions": "Handle with care"`
@@ -72,11 +81,11 @@ Update your store configuration in the app:
 {
   "order": {
     "name": "#1001",
+    "tags": "delivery, 06/13/2025, 9:00 AM - 11:00 AM",
     "line_items": [{
       "title": "Rose Bouquet",
       "variant_title": "Red Roses",
       "properties": [
-        {"name": "Delivery Time", "value": "9:00 AM - 11:00 AM"},
         {"name": "Special Instructions", "value": "Handle with extra care"}
       ]
     }],
@@ -95,16 +104,16 @@ Update your store configuration in the app:
 {
   "order": {
     "name": "#1002",
+    "tags": "delivery, 06/13/2025, 2:00 PM - 6:00 PM",
     "line_items": [{
       "title": "Mixed Flower Arrangement",
       "variant_title": "Premium Collection",
       "properties": [
         {"name": "Color Preference", "value": "Pink and White"},
-        {"name": "Vase Style", "value": "Modern Glass"},
-        {"name": "Delivery Time", "value": "2:00 PM - 6:00 PM"}
+        {"name": "Vase Style", "value": "Modern Glass"}
       ]
     }],
-    "note": "Special request: Include care instructions\nDelivery preference: Afternoon\nFragile items - handle carefully",
+    "note": "Special request: Include care instructions\nFragile items - handle carefully",
     "customer": {
       "first_name": "Jane",
       "last_name": "Smith",
@@ -114,20 +123,41 @@ Update your store configuration in the app:
 }
 ```
 
-#### **Test Order 3: Order with Note-Only Timeslot**
+#### **Test Order 3: Express Order**
 ```json
 {
   "order": {
     "name": "#1003",
+    "tags": "express, 06/13/2025, 6:00 PM - 8:00 PM",
     "line_items": [{
       "title": "Sunflower Bundle",
       "variant_title": "Summer Collection"
     }],
-    "note": "Please deliver between 6:00 PM - 8:00 PM\nSpecial instructions: Keep in cool place",
+    "note": "Special instructions: Keep in cool place",
     "customer": {
       "first_name": "Mike",
       "last_name": "Johnson",
       "email": "mike@example.com"
+    }
+  }
+}
+```
+
+#### **Test Order 4: Collection Order**
+```json
+{
+  "order": {
+    "name": "#1004",
+    "tags": "collection, 06/14/2025, 10:00 AM - 12:00 PM",
+    "line_items": [{
+      "title": "Tulip Arrangement",
+      "variant_title": "Spring Collection"
+    }],
+    "note": "Customer will collect in person",
+    "customer": {
+      "first_name": "Sarah",
+      "last_name": "Wilson",
+      "email": "sarah@example.com"
     }
   }
 }
@@ -173,10 +203,11 @@ const handleShopifyOrderSync = async (store: Store) => {
 ## 🔍 Expected Results
 
 ### **Order Card Display**
-- **Order ID**: `1001`, `1002`, `1003`
-- **Product Name**: `Rose Bouquet`, `Mixed Flower Arrangement`, `Sunflower Bundle`
-- **Timeslot**: `9:00 AM - 11:00 AM`, `2:00 PM - 6:00 PM`, `6:00 PM - 8:00 PM`
-- **Remarks**: `Handle with extra care`, `Special request: Include care instructions`, `Keep in cool place`
+- **Order ID**: `1001`, `1002`, `1003`, `1004`
+- **Product Name**: `Rose Bouquet`, `Mixed Flower Arrangement`, `Sunflower Bundle`, `Tulip Arrangement`
+- **Timeslot**: `9:00 AM - 11:00 AM`, `2:00 PM - 6:00 PM`, `6:00 PM - 8:00 PM`, `10:00 AM - 12:00 PM`
+- **Delivery Type**: `Delivery` (green), `Delivery` (green), `Express` (red), `Collection` (blue)
+- **Remarks**: `Handle with extra care`, `Special request: Include care instructions`, `Keep in cool place`, `Customer will collect in person`
 - **Customizations**: `Color: Pink and White, Vase Style: Modern Glass` (for Order 2)
 
 ### **Sorting Behavior**
@@ -202,10 +233,20 @@ Orders will be sorted according to the 5-level hierarchy:
 
 #### **3. "Timeslot not extracted"**
 - **Solution**: 
-  - Use line item property: `"Delivery Time": "9:00 AM - 2:00 PM"`
-  - Or include in order note: `"deliver between 9:00 AM - 2:00 PM"`
+  - Use order tag: `"9:00 AM - 2:00 PM"`
+  - Or alternative format: `"9AM - 2PM"`
 
-#### **4. "Instructions not showing"**
+#### **4. "Date not extracted"**
+- **Solution**: 
+  - Use order tag: `"06/13/2025"` or `"13/06/25"`
+  - Or alternative format: `"6-13-2025"`
+
+#### **5. "Delivery type not showing"**
+- **Solution**:
+  - Use order tag: `"delivery"`, `"collection"`, or `"express"`
+  - Or alternative keywords: `"pickup"`, `"urgent"`, `"rush"`
+
+#### **6. "Instructions not showing"**
 - **Solution**:
   - Use line item property: `"Special Instructions": "Your instructions"`
   - Or include keywords in order note: `"Special request: ..."`
