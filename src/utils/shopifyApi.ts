@@ -513,13 +513,13 @@ export class ShopifyApiService {
     const orderTags = shopifyOrder.tags ? shopifyOrder.tags.split(',').map(tag => tag.trim()) : [];
     
     // Extract delivery information based on configuration
-    const deliveryInfo = this.extractDeliveryInfoFromTags(orderTags, config);
+    const deliveryInfo = this.extractDeliveryInfoFromTags(orderTags);
     
     // Extract special instructions based on configuration
     const remarks = this.extractInstructions(lineItem, shopifyOrder.note, config);
     
     // Extract customizations based on configuration
-    const customizations = this.extractCustomizations(lineItem, shopifyOrder.note, config);
+    const customizations = this.extractCustomizations(lineItem, config);
 
     // Create order ID from Shopify order name
     const orderId = shopifyOrder.name.replace('#', '');
@@ -558,7 +558,7 @@ export class ShopifyApiService {
   }
 
   // Extract delivery information from order tags
-  private extractDeliveryInfoFromTags(tags: string[], config: ShopifyMappingConfig): {
+  private extractDeliveryInfoFromTags(tags: string[]): {
     date?: string;
     timeslot?: string;
     deliveryType?: 'delivery' | 'collection' | 'express';
@@ -658,7 +658,7 @@ export class ShopifyApiService {
   }
 
   // Extract customizations from line item properties
-  private extractCustomizations(lineItem: ShopifyLineItemResponse, note: string, config: ShopifyMappingConfig): string {
+  private extractCustomizations(lineItem: ShopifyLineItemResponse, config: ShopifyMappingConfig): string {
     if (!lineItem.properties) return '';
     
     const customizationProperties = lineItem.properties.filter(prop => 

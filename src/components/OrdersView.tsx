@@ -21,7 +21,6 @@ import {
 } from '../utils/storage';
 import { StoreSelector } from '@/components/StoreSelector';
 import { toast } from 'sonner';
-import { syncOrdersFromShopify } from '../utils/shopifyApi';
 
 interface OrdersViewProps {
   currentUser: User;
