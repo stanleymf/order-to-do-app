@@ -102,6 +102,24 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't toggle if clicking on interactive elements
+    const target = e.target as HTMLElement;
+    const isInteractive = target.closest('button') || 
+                         target.closest('input') || 
+                         target.closest('select') || 
+                         target.closest('[role="button"]') ||
+                         target.closest('.select-trigger') ||
+                         target.closest('.select-content') ||
+                         target.closest('.checkbox') ||
+                         target.closest('.dialog') ||
+                         target.closest('.modal');
+    
+    if (!isInteractive) {
+      setIsCollapsed(!isCollapsed);
+    }
+  };
+
   // Determine card background color based on status
   const getCardClassName = () => {
     if (isCompleted) {
@@ -114,12 +132,15 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
   };
 
   return (
-    <Card className={getCardClassName()}>
+    <Card 
+      className={`${getCardClassName()} cursor-pointer hover:shadow-md transition-all duration-200`}
+      onClick={handleCardClick}
+    >
       <CardContent className={`${isMobileView ? 'p-2' : 'p-3'}`}>
         {isMobileView ? (
           /* Mobile Compact Horizontal Scrollable Layout */
           <div className="space-y-2">
-            {/* Header Row - Order ID, Complete Button, and Collapse Toggle */}
+            {/* Header Row - Order ID and Complete Button */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
                 {isBatchMode && (
@@ -131,34 +152,23 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
                 )}
                 <Package className="h-3 w-3 text-gray-500" />
                 <span className="text-xs font-mono text-gray-700 font-medium">#{order.id}</span>
+                <span className="text-xs text-gray-400 ml-1">
+                  {isCollapsed ? '(Click to expand)' : '(Click to collapse)'}
+                </span>
               </div>
               
-              <div className="flex items-center gap-1">
-                <Button
-                  size="sm"
-                  onClick={handleToggleComplete}
-                  className={`h-6 w-6 rounded-full p-0 transition-all duration-200 ${
-                    isCompleted
-                      ? 'bg-green-600 shadow-lg hover:bg-green-700'
-                      : 'bg-green-600 hover:bg-green-700 shadow-lg hover:shadow-xl'
-                  }`}
-                  aria-label={isCompleted ? 'Mark order as incomplete' : 'Mark order as completed'}
-                >
-                  <Check className="h-3 w-3 text-white" />
-                </Button>
-                
-                <button
-                  onClick={() => setIsCollapsed(!isCollapsed)}
-                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                  aria-label={isCollapsed ? 'Expand order details' : 'Collapse order details'}
-                >
-                  {isCollapsed ? (
-                    <ChevronRight className="h-3 w-3 text-gray-500" />
-                  ) : (
-                    <ChevronDown className="h-3 w-3 text-gray-500" />
-                  )}
-                </button>
-              </div>
+              <Button
+                size="sm"
+                onClick={handleToggleComplete}
+                className={`h-6 w-6 rounded-full p-0 transition-all duration-200 ${
+                  isCompleted
+                    ? 'bg-green-600 shadow-lg hover:bg-green-700'
+                    : 'bg-green-600 hover:bg-green-700 shadow-lg hover:shadow-xl'
+                }`}
+                aria-label={isCompleted ? 'Mark order as incomplete' : 'Mark order as completed'}
+              >
+                <Check className="h-3 w-3 text-white" />
+              </Button>
             </div>
 
             {/* Product Name with Customizations */}
@@ -297,7 +307,7 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
           /* Desktop Layout - More Concise */
           <div className="space-y-3">
             
-            {/* Header Row - Order ID, Complete Button, and Collapse Toggle */}
+            {/* Header Row - Order ID and Complete Button */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {isBatchMode && (
@@ -309,34 +319,23 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
                 )}
                 <Package className="h-4 w-4 text-gray-500" />
                 <span className="text-sm font-mono text-gray-700 font-medium">#{order.id}</span>
+                <span className="text-xs text-gray-400 ml-2">
+                  {isCollapsed ? '(Click to expand)' : '(Click to collapse)'}
+                </span>
               </div>
               
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  onClick={handleToggleComplete}
-                  className={`h-8 w-8 rounded-full p-0 transition-all duration-200 ${
-                    isCompleted
-                      ? 'bg-green-600 shadow-lg hover:bg-green-700'
-                      : 'bg-green-600 hover:bg-green-700 shadow-lg hover:shadow-xl'
-                  }`}
-                  aria-label={isCompleted ? 'Mark order as incomplete' : 'Mark order as completed'}
-                >
-                  <Check className="h-4 w-4 text-white" />
-                </Button>
-                
-                <button
-                  onClick={() => setIsCollapsed(!isCollapsed)}
-                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                  aria-label={isCollapsed ? 'Expand order details' : 'Collapse order details'}
-                >
-                  {isCollapsed ? (
-                    <ChevronRight className="h-4 w-4 text-gray-500" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 text-gray-500" />
-                  )}
-                </button>
-              </div>
+              <Button
+                size="sm"
+                onClick={handleToggleComplete}
+                className={`h-8 w-8 rounded-full p-0 transition-all duration-200 ${
+                  isCompleted
+                    ? 'bg-green-600 shadow-lg hover:bg-green-700'
+                    : 'bg-green-600 hover:bg-green-700 shadow-lg hover:shadow-xl'
+                }`}
+                aria-label={isCompleted ? 'Mark order as incomplete' : 'Mark order as completed'}
+              >
+                <Check className="h-4 w-4 text-white" />
+              </Button>
             </div>
 
             {/* Product Information - Compact */}
