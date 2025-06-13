@@ -210,4 +210,18 @@ node scripts/version.js set 1.5.0
 
 ### 🐛 Bug Fixes
 - Fixed: Order card no longer collapses when typing in the product customizations textarea in desktop view (robust event forwarding and logic).
-- Ensured version history is updated with every change. 
+- Ensured version history is updated with every change.
+
+## [1.0.9] - 2025-06-13
+
+### ✨ New Features
+- Added toast notifications for order assignments and completions
+- Users now receive popup notifications when:
+  - Assigning an order to themselves
+  - Assigning/unassigning orders (admin)
+  - Completing or uncompleting orders
+- Notifications include order ID, product name, and timeslot details
+
+### 🐛 Bug Fixes
+- Fixed TypeScript build errors by removing unused imports and variables
+- Ensured version history is updated with every change 

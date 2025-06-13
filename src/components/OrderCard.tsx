@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Check, Clock, User as UserIcon, Package, FileText, Tag, Eye } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 import { type Order, type User } from '../types';
 import { assignOrder, completeOrder, updateOrderRemarks, updateProductCustomizations, getProductLabels } from '../utils/storage';
 import { useMobileView } from './Dashboard';
@@ -64,16 +65,42 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
   const handleAssignSelf = () => {
     assignOrder(order.id, currentUser.id);
     onOrderUpdate();
+    toast.success(`Order ${order.id} assigned to you successfully!`, {
+      description: `${order.productName} - ${order.timeslot}`
+    });
   };
 
   const handleAdminAssign = (floristId: string) => {
+    const assignedFlorist = florists.find(f => f.id === floristId);
+    const floristName = assignedFlorist ? assignedFlorist.name : 'Unassigned';
+    
     assignOrder(order.id, floristId);
     onOrderUpdate();
+    
+    if (floristId === 'unassigned') {
+      toast.info(`Order ${order.id} unassigned`, {
+        description: `${order.productName} - ${order.timeslot}`
+      });
+    } else {
+      toast.success(`Order ${order.id} assigned to ${floristName}`, {
+        description: `${order.productName} - ${order.timeslot}`
+      });
+    }
   };
 
   const handleToggleComplete = () => {
     completeOrder(order.id);
     onOrderUpdate();
+    
+    if (order.status === 'completed') {
+      toast.info(`Order ${order.id} marked as incomplete`, {
+        description: `${order.productName} - ${order.timeslot}`
+      });
+    } else {
+      toast.success(`Order ${order.id} completed!`, {
+        description: `${order.productName} - ${order.timeslot}`
+      });
+    }
   };
 
   const handleRemarksSubmit = () => {

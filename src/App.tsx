@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Login } from './components/Login';
 import { Dashboard } from './components/Dashboard';
+import { Toaster } from './components/ui/sonner';
 import type { User } from './types';
 import { getAuthState, initializeStorage, refreshMockData } from './utils/storage';
 
@@ -30,10 +31,20 @@ function App() {
   };
 
   if (!user) {
-    return <Login onLogin={handleLogin} />;
+    return (
+      <>
+        <Login onLogin={handleLogin} />
+        <Toaster />
+      </>
+    );
   }
 
-  return <Dashboard user={user} onLogout={handleLogout} />;
+  return (
+    <>
+      <Dashboard user={user} onLogout={handleLogout} />
+      <Toaster />
+    </>
+  );
 }
 
 export default App;
