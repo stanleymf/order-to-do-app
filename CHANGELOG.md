@@ -204,4 +204,10 @@ node scripts/version.js set 1.5.0
 
 ### 🐛 Bug Fixes
 - Fixed: Order card no longer collapses when typing in the product customizations textarea in desktop view.
-- Versioning is now updated with every change. 
+- Versioning is now updated with every change.
+
+## [1.0.8] - 2025-06-13
+
+### 🐛 Bug Fixes
+- Fixed: Order card no longer collapses when typing in the product customizations textarea in desktop view (robust event forwarding and logic).
+- Ensured version history is updated with every change. 
