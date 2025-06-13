@@ -5,8 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, Clock, User as UserIcon, Package, FileText, Tag } from 'lucide-react';
+import { Check, Clock, User as UserIcon, Package, FileText, Tag, Eye } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { type Order, type User } from '../types';
 import { assignOrder, completeOrder, updateOrderRemarks, updateProductCustomizations, getProductLabels } from '../utils/storage';
 import { useMobileView } from './Dashboard';
@@ -26,6 +27,7 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
   const [remarksValue, setRemarksValue] = useState(order.remarks || '');
   const [isEditingProduct, setIsEditingProduct] = useState(false);
   const [productCustomizationsValue, setProductCustomizationsValue] = useState(order.productCustomizations || '');
+  const [showImagePreview, setShowImagePreview] = useState(false);
   
   // Get mobile view context to force mobile styling when toggle is active
   const { isMobileView } = useMobileView();
@@ -39,6 +41,22 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
   // Get the label for this order's difficulty
   const labels = getProductLabels();
   const currentLabel = labels.find(label => label.name === order.difficultyLabel);
+
+  // Mock function to get product image - will be replaced with Shopify integration
+  const getProductImage = (productName: string) => {
+    // For now, return a placeholder image based on product type
+    const productType = order.productTypeLabel?.toLowerCase() || 'bouquet';
+    const imageMap: { [key: string]: string } = {
+      'bouquet': 'https://images.unsplash.com/photo-1562690868-60bbe7293e94?w=400&h=400&fit=crop&crop=center',
+      'vase': 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=400&h=400&fit=crop&crop=center',
+      'arrangement': 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=400&fit=crop&crop=center',
+      'centerpiece': 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=400&h=400&fit=crop&crop=center',
+      'corsage': 'https://images.unsplash.com/photo-1582793988951-9e6c4c0e8a5c?w=400&h=400&fit=crop&crop=center',
+      'boutonniere': 'https://images.unsplash.com/photo-1582793988951-9e6c4c0e8a5c?w=400&h=400&fit=crop&crop=center'
+    };
+    
+    return imageMap[productType] || imageMap['bouquet'];
+  };
 
   const handleAssignSelf = () => {
     assignOrder(order.id, currentUser.id);
@@ -131,8 +149,15 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
             {/* Product Name with Customizations */}
             <div className="text-sm font-medium text-gray-900">
               <div className="leading-snug">
-                <div className="overflow-x-auto scrollbar-hide whitespace-nowrap pb-1">
-                  {order.productName}
+                <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide whitespace-nowrap pb-1">
+                  <span>{order.productName}</span>
+                  <button
+                    onClick={() => setShowImagePreview(true)}
+                    className="flex-shrink-0 p-1 hover:bg-gray-100 rounded transition-colors"
+                    aria-label="View product image"
+                  >
+                    <Eye className="h-3 w-3 text-gray-500 hover:text-blue-600" />
+                  </button>
                 </div>
               </div>
               {order.productVariant && (
@@ -321,10 +346,24 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
                   role={isAdmin && !isCompleted ? 'button' : undefined}
                 >
                   <div className="font-medium text-gray-900 text-sm leading-tight">
-                    {order.productName}
-                    {order.productVariant && (
-                      <span className="text-gray-600 ml-2 text-xs">({order.productVariant})</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <span>
+                        {order.productName}
+                        {order.productVariant && (
+                          <span className="text-gray-600 ml-2 text-xs">({order.productVariant})</span>
+                        )}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowImagePreview(true);
+                        }}
+                        className="flex-shrink-0 p-1 hover:bg-gray-100 rounded transition-colors"
+                        aria-label="View product image"
+                      >
+                        <Eye className="h-4 w-4 text-gray-500 hover:text-blue-600" />
+                      </button>
+                    </div>
                   </div>
                   {order.productCustomizations && (
                     <div className="text-xs text-blue-700 mt-1 bg-blue-50 p-2 rounded border border-blue-200">
@@ -486,6 +525,89 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
           </div>
         )}
       </CardContent>
+
+      {/* Product Image Preview Dialog */}
+      <Dialog open={showImagePreview} onOpenChange={setShowImagePreview}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              {order.productName}
+              {order.productVariant && (
+                <span className="text-gray-600 text-sm font-normal">({order.productVariant})</span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="relative">
+              <img
+                src={getProductImage(order.productName)}
+                alt={`${order.productName} preview`}
+                className="w-full h-auto rounded-lg shadow-lg object-cover"
+                style={{ maxHeight: '500px' }}
+              />
+              <div className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
+                {order.productTypeLabel || 'Product'}
+              </div>
+            </div>
+            
+            {/* Product Details */}
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-gray-700">Difficulty:</span>
+                <div className="mt-1">
+                  {currentLabel ? (
+                    <Badge 
+                      style={{ backgroundColor: currentLabel.color, color: 'white' }}
+                      className="text-white text-xs"
+                    >
+                      {currentLabel.name}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs">
+                      {order.difficultyLabel}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">Timeslot:</span>
+                <div className="mt-1">
+                  <Badge variant="outline" className="text-xs">
+                    {order.timeslot}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            {/* Customizations if any */}
+            {order.productCustomizations && (
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <div className="flex items-start gap-2">
+                  <FileText className="h-4 w-4 mt-0.5 text-blue-600 flex-shrink-0" />
+                  <div>
+                    <div className="font-medium text-blue-900 text-sm mb-1">Customizations</div>
+                    <div className="text-blue-800 text-sm">{order.productCustomizations}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Remarks if any */}
+            {order.remarks && (
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <div className="flex items-start gap-2">
+                  <FileText className="h-4 w-4 mt-0.5 text-gray-600 flex-shrink-0" />
+                  <div>
+                    <div className="font-medium text-gray-900 text-sm mb-1">Remarks</div>
+                    <div className="text-gray-700 text-sm">{order.remarks}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
