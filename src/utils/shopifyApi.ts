@@ -1,4 +1,4 @@
-import type { Product, ProductVariant, ProductImage, ProductMetafield, Store } from '../types';
+import type { Product, ProductVariant, ProductImage, ProductMetafield, Store, Order } from '../types';
 
 // Shopify API configuration
 interface ShopifyConfig {
@@ -68,6 +68,63 @@ interface ShopifyMetafieldResponse {
 
 interface ShopifyProductsResponse {
   products: ShopifyProductResponse['product'][];
+}
+
+// Shopify order response types
+interface ShopifyOrderResponse {
+  order: {
+    id: number;
+    name: string; // Order name (e.g., "#1001")
+    email: string;
+    phone: string;
+    created_at: string;
+    updated_at: string;
+    processed_at: string;
+    fulfillment_status: string;
+    financial_status: string;
+    total_price: string;
+    subtotal_price: string;
+    total_tax: string;
+    currency: string;
+    customer: {
+      id: number;
+      first_name: string;
+      last_name: string;
+      email: string;
+    };
+    line_items: ShopifyLineItemResponse[];
+    shipping_address?: {
+      address1: string;
+      address2: string;
+      city: string;
+      province: string;
+      country: string;
+      zip: string;
+    };
+    note: string;
+    tags: string;
+  };
+}
+
+interface ShopifyLineItemResponse {
+  id: number;
+  product_id: number;
+  variant_id: number;
+  title: string;
+  variant_title: string;
+  quantity: number;
+  sku: string;
+  price: string;
+  total_discount: string;
+  fulfillment_status: string;
+  properties: Array<{
+    name: string;
+    value: string;
+  }>;
+}
+
+interface ShopifyOrdersResponse {
+  orders: ShopifyOrderResponse['order'][];
 }
 
 // Shopify API service class
@@ -316,6 +373,163 @@ export class ShopifyApiService {
     );
     return productTypeTags.length > 0 ? productTypeTags[0] : null;
   }
+
+  // Fetch orders from Shopify
+  async fetchOrders(limit: number = 250, status: string = 'open'): Promise<Order[]> {
+    try {
+      const url = `${this.getBaseUrl()}/orders.json?limit=${limit}&status=${status}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Shopify API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data: ShopifyOrdersResponse = await response.json();
+      return data.orders.map(this.mapShopifyOrderToLocal);
+    } catch (error) {
+      console.error('Error fetching orders from Shopify:', error);
+      throw error;
+    }
+  }
+
+  // Fetch a single order by Shopify ID
+  async fetchOrder(shopifyId: string): Promise<Order | null> {
+    try {
+      const url = `${this.getBaseUrl()}/orders/${shopifyId}.json`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null;
+        }
+        throw new Error(`Shopify API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data: ShopifyOrderResponse = await response.json();
+      return this.mapShopifyOrderToLocal(data.order);
+    } catch (error) {
+      console.error('Error fetching order from Shopify:', error);
+      throw error;
+    }
+  }
+
+  // Map Shopify order response to local Order interface
+  private mapShopifyOrderToLocal(shopifyOrder: ShopifyOrderResponse['order']): Order {
+    // Get the first line item (assuming single product orders for florist business)
+    const lineItem = shopifyOrder.line_items[0];
+    
+    // Extract delivery time from order properties or note
+    const deliveryTimeProperty = lineItem.properties?.find(prop => 
+      prop.name.toLowerCase().includes('delivery') || 
+      prop.name.toLowerCase().includes('time') ||
+      prop.name.toLowerCase().includes('slot')
+    );
+    
+    const timeslot = deliveryTimeProperty?.value || this.extractTimeslotFromNote(shopifyOrder.note) || '10:00 AM - 02:00 PM';
+    
+    // Extract special instructions from order note or line item properties
+    const specialInstructionsProperty = lineItem.properties?.find(prop => 
+      prop.name.toLowerCase().includes('instruction') || 
+      prop.name.toLowerCase().includes('note') ||
+      prop.name.toLowerCase().includes('special')
+    );
+    
+    const remarks = specialInstructionsProperty?.value || 
+                   this.extractInstructionsFromNote(shopifyOrder.note) || '';
+
+    // Create order ID from Shopify order name
+    const orderId = shopifyOrder.name.replace('#', '');
+
+    return {
+      id: orderId,
+      shopifyId: shopifyOrder.id.toString(),
+      productId: `shopify-${lineItem.product_id}`,
+      productName: lineItem.title,
+      productVariant: lineItem.variant_title || '',
+      timeslot,
+      difficultyLabel: 'Medium', // Will be updated from product sync
+      productTypeLabel: 'Bouquet', // Will be updated from product sync
+      remarks,
+      productCustomizations: this.extractCustomizationsFromProperties(lineItem.properties),
+      assignedFloristId: undefined, // Will be assigned by florist
+      assignedAt: undefined,
+      completedAt: undefined,
+      status: 'pending',
+      date: new Date(shopifyOrder.created_at).toISOString().split('T')[0],
+      storeId: '', // Will be set by the calling function
+      customerEmail: shopifyOrder.email,
+      customerPhone: shopifyOrder.phone,
+      customerName: `${shopifyOrder.customer.first_name} ${shopifyOrder.customer.last_name}`,
+      totalPrice: shopifyOrder.total_price,
+      currency: shopifyOrder.currency,
+      fulfillmentStatus: shopifyOrder.fulfillment_status,
+      financialStatus: shopifyOrder.financial_status,
+      createdAt: shopifyOrder.created_at,
+      updatedAt: shopifyOrder.updated_at,
+    };
+  }
+
+  // Extract timeslot from order note
+  private extractTimeslotFromNote(note: string): string | null {
+    if (!note) return null;
+    
+    // Common timeslot patterns
+    const timeslotPatterns = [
+      /(\d{1,2}:\d{2}\s*(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s*(?:AM|PM))/i,
+      /delivery.*?(\d{1,2}:\d{2}\s*(?:AM|PM))/i,
+      /time.*?(\d{1,2}:\d{2}\s*(?:AM|PM))/i,
+    ];
+    
+    for (const pattern of timeslotPatterns) {
+      const match = note.match(pattern);
+      if (match) {
+        return match[1];
+      }
+    }
+    
+    return null;
+  }
+
+  // Extract special instructions from order note
+  private extractInstructionsFromNote(note: string): string | null {
+    if (!note) return null;
+    
+    // Look for instruction-related keywords
+    const instructionKeywords = ['instruction', 'note', 'special', 'request', 'preference'];
+    const lines = note.split('\n');
+    
+    for (const line of lines) {
+      const lowerLine = line.toLowerCase();
+      if (instructionKeywords.some(keyword => lowerLine.includes(keyword))) {
+        return line.trim();
+      }
+    }
+    
+    return null;
+  }
+
+  // Extract customizations from line item properties
+  private extractCustomizationsFromProperties(properties: ShopifyLineItemResponse['properties']): string {
+    if (!properties) return '';
+    
+    const customizationProperties = properties.filter(prop => 
+      !prop.name.toLowerCase().includes('delivery') &&
+      !prop.name.toLowerCase().includes('time') &&
+      !prop.name.toLowerCase().includes('instruction') &&
+      !prop.name.toLowerCase().includes('note') &&
+      !prop.name.toLowerCase().includes('special')
+    );
+    
+    return customizationProperties
+      .map(prop => `${prop.name}: ${prop.value}`)
+      .join(', ');
+  }
 }
 
 // Utility function to create Shopify API service for a store
@@ -338,4 +552,27 @@ export async function syncProductsFromShopify(
   }));
 
   return productsWithStoreId;
+}
+
+// Utility function to sync orders from Shopify to local storage
+export async function syncOrdersFromShopify(
+  store: Store, 
+  accessToken: string,
+  date?: string
+): Promise<Order[]> {
+  const apiService = createShopifyApiService(store, accessToken);
+  const orders = await apiService.fetchOrders();
+  
+  // Filter by date if specified
+  const filteredOrders = date 
+    ? orders.filter(order => order.date === date)
+    : orders;
+  
+  // Add store ID to each order
+  const ordersWithStoreId = filteredOrders.map(order => ({
+    ...order,
+    storeId: store.id
+  }));
+
+  return ordersWithStoreId;
 } 

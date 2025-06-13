@@ -332,4 +332,34 @@ node scripts/version.js set 1.5.0
 - **Better User Experience**: Users can quickly see total order count and reset filters
 - **Consistent Interaction**: All stats cards now have click-to-filter functionality
 
-## [1.0.14] - 2025-06-13 
+## [1.0.16] - 2025-06-13
+
+### Added
+- **Shopify Order Sync**: Complete order synchronization from Shopify stores
+  - **Order Fetching**: Fetch orders from Shopify REST Admin API
+  - **Data Mapping**: Map Shopify orders to local Order interface
+  - **Smart Extraction**: Extract delivery times, instructions, and customizations
+  - **Order Properties**: Parse line item properties for delivery slots and special requests
+  - **Note Parsing**: Intelligent parsing of order notes for timeslots and instructions
+  - **Customer Data**: Include customer email, phone, name, and order details
+  - **Sync Buttons**: Individual sync buttons for each store in OrdersView
+  - **Real-time Updates**: Toast notifications for sync success/failure
+  - **Date Filtering**: Sync orders for specific dates
+  - **Conflict Resolution**: Preserve florist assignments when updating existing orders
+
+### Enhanced
+- **Order Interface**: Extended with Shopify-specific fields
+  - `shopifyId`: Shopify order ID for tracking
+  - `customerEmail`, `customerPhone`, `customerName`: Customer information
+  - `totalPrice`, `currency`: Financial details
+  - `fulfillmentStatus`, `financialStatus`: Order status tracking
+  - `createdAt`, `updatedAt`: Timestamp tracking
+
+### Technical Implementation
+- **API Integration**: Shopify REST Admin API v2024-01
+- **Error Handling**: Comprehensive error handling and user feedback
+- **Data Preservation**: Maintains florist assignments during sync
+- **Responsive Design**: Mobile-friendly sync interface
+- **Loading States**: Visual feedback during sync operations
+
+## [1.0.15] - 2025-06-13 

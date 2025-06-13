@@ -182,6 +182,56 @@ export const saveOrders = (orders: Order[]) => {
   localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
 };
 
+export const addOrders = (newOrders: Order[]) => {
+  const existingOrders = getOrders();
+  const updatedOrders = [...existingOrders, ...newOrders];
+  saveOrders(updatedOrders);
+};
+
+export const updateOrderFromShopify = (shopifyOrder: Order) => {
+  const orders = getOrders();
+  const orderIndex = orders.findIndex(order => order.shopifyId === shopifyOrder.shopifyId);
+  
+  if (orderIndex !== -1) {
+    // Update existing order
+    orders[orderIndex] = {
+      ...orders[orderIndex],
+      ...shopifyOrder,
+      // Preserve florist assignment and completion data
+      assignedFloristId: orders[orderIndex].assignedFloristId,
+      assignedAt: orders[orderIndex].assignedAt,
+      completedAt: orders[orderIndex].completedAt,
+      status: orders[orderIndex].status,
+    };
+  } else {
+    // Add new order
+    orders.push(shopifyOrder);
+  }
+  
+  saveOrders(orders);
+};
+
+export const syncOrdersFromShopifyToStorage = async (
+  store: Store, 
+  accessToken: string, 
+  date?: string
+) => {
+  try {
+    const { syncOrdersFromShopify } = await import('./shopifyApi');
+    const shopifyOrders = await syncOrdersFromShopify(store, accessToken, date);
+    
+    // Update existing orders or add new ones
+    for (const shopifyOrder of shopifyOrders) {
+      updateOrderFromShopify(shopifyOrder);
+    }
+    
+    return shopifyOrders;
+  } catch (error) {
+    console.error('Error syncing orders from Shopify:', error);
+    throw error;
+  }
+};
+
 export const getOrdersByDate = (date: string): Order[] => {
   const orders = getOrders();
   return orders.filter(order => order.date === date);

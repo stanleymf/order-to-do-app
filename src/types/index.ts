@@ -118,6 +118,18 @@ export interface Order {
   status: 'pending' | 'assigned' | 'completed';
   date: string; // YYYY-MM-DD format
   storeId: string;
+  
+  // Shopify-specific fields
+  shopifyId?: string; // Shopify's order ID
+  customerEmail?: string;
+  customerPhone?: string;
+  customerName?: string;
+  totalPrice?: string;
+  currency?: string;
+  fulfillmentStatus?: string;
+  financialStatus?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface FloristStats {

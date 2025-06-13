@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarDays, Package, CheckCircle, Clock, UserCheck, CheckSquare, UserIcon } from 'lucide-react';
+import { CalendarDays, Package, CheckCircle, Clock, UserCheck, CheckSquare, UserIcon, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { OrderCard } from './OrderCard';
 import { useMobileView } from './Dashboard';
@@ -16,10 +16,12 @@ import {
   getFlorists, 
   getProductLabels,
   updateFloristStats,
-  assignOrder
+  assignOrder,
+  syncOrdersFromShopifyToStorage
 } from '../utils/storage';
 import { StoreSelector } from '@/components/StoreSelector';
 import { toast } from 'sonner';
+import { syncOrdersFromShopify } from '../utils/shopifyApi';
 
 interface OrdersViewProps {
   currentUser: User;
@@ -42,6 +44,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const [isBatchMode, setIsBatchMode] = useState<boolean>(false);
   const [orderCountsByStore, setOrderCountsByStore] = useState<Record<string, number>>({});
+  const [isSyncingOrders, setIsSyncingOrders] = useState<Record<string, boolean>>({});
   
   // Get mobile view context
   const { isMobileView } = useMobileView();
@@ -223,6 +226,30 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
     toast.info(`Successfully unassigned ${selectedOrderIds.size} orders`, {
       description: `Orders are now available for assignment`
     });
+  };
+
+  // Handle Shopify order sync for a specific store
+  const handleShopifyOrderSync = async (store: Store) => {
+    setIsSyncingOrders(prev => ({ ...prev, [store.id]: true }));
+    
+    try {
+      // In a real implementation, you would get the access token from secure storage
+      const accessToken = 'your-shopify-access-token'; // This should come from secure storage
+      
+      const syncedOrders = await syncOrdersFromShopifyToStorage(store, accessToken, selectedDate);
+      
+      handleOrderUpdate();
+      toast.success(`Successfully synced ${syncedOrders.length} orders from ${store.name}`, {
+        description: `Orders have been updated and are ready for assignment`
+      });
+    } catch (error) {
+      console.error('Error syncing orders:', error);
+      toast.error(`Error syncing orders from ${store.name}`, {
+        description: error instanceof Error ? error.message : 'Unknown error'
+      });
+    } finally {
+      setIsSyncingOrders(prev => ({ ...prev, [store.id]: false }));
+    }
   };
 
   // Calculate order statistics
@@ -463,6 +490,23 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
           <CheckSquare className={`${isMobileView ? 'h-4 w-4' : 'h-4 w-4'} mr-2`} />
           {isBatchMode ? 'Exit Batch Mode' : 'Batch Assign Orders'}
         </Button>
+      </div>
+
+      {/* Shopify Order Sync Buttons */}
+      <div className={`flex ${isMobileView ? 'flex-col gap-2 px-1' : 'justify-end gap-2'}`}>
+        {stores.map(store => (
+          <Button
+            key={store.id}
+            variant="outline"
+            size={isMobileView ? "default" : "sm"}
+            onClick={() => handleShopifyOrderSync(store)}
+            disabled={isSyncingOrders[store.id]}
+            className={`${isMobileView ? 'w-full' : ''}`}
+          >
+            <RefreshCw className={`mr-2 ${isSyncingOrders[store.id] ? 'animate-spin' : ''} ${isMobileView ? 'h-4 w-4' : 'h-3 w-3'}`} />
+            {isSyncingOrders[store.id] ? 'Syncing...' : `Sync ${store.name} Orders`}
+          </Button>
+        ))}
       </div>
 
       {/* Batch Mode Controls */}
