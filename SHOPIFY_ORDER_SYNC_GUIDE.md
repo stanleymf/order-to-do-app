@@ -50,9 +50,10 @@ Update your store configuration in the app:
 ### **Smart Data Extraction from Tags**
 
 #### **Date Extraction from Tags:**
-- **Format 1**: `"06/13/2025"` → `"2025-06-13"`
-- **Format 2**: `"13/06/25"` → `"2025-06-13"`
-- **Format 3**: `"6-13-2025"` → `"2025-06-13"`
+- **Format**: `"13/06/2025"` → `"2025-06-13"` (DD/MM/YYYY)
+- **Alternative**: `"13/06/25"` → `"2025-06-13"` (DD/MM/YY)
+- **Alternative**: `"13-06-2025"` → `"2025-06-13"` (DD-MM-YYYY)
+- **Note**: All dates are interpreted as DD/MM/YYYY format regardless of input format
 
 #### **Timeslot Extraction from Tags:**
 - **Format 1**: `"9:00 AM - 2:00 PM"` → `"9:00 AM - 2:00 PM"`
@@ -81,7 +82,7 @@ Update your store configuration in the app:
 {
   "order": {
     "name": "#1001",
-    "tags": "delivery, 06/13/2025, 9:00 AM - 11:00 AM",
+    "tags": "delivery, 13/06/2025, 9:00 AM - 11:00 AM",
     "line_items": [{
       "title": "Rose Bouquet",
       "variant_title": "Red Roses",
@@ -104,7 +105,7 @@ Update your store configuration in the app:
 {
   "order": {
     "name": "#1002",
-    "tags": "delivery, 06/13/2025, 2:00 PM - 6:00 PM",
+    "tags": "delivery, 13/06/2025, 2:00 PM - 6:00 PM",
     "line_items": [{
       "title": "Mixed Flower Arrangement",
       "variant_title": "Premium Collection",
@@ -128,7 +129,7 @@ Update your store configuration in the app:
 {
   "order": {
     "name": "#1003",
-    "tags": "express, 06/13/2025, 6:00 PM - 8:00 PM",
+    "tags": "express, 13/06/2025, 6:00 PM - 8:00 PM",
     "line_items": [{
       "title": "Sunflower Bundle",
       "variant_title": "Summer Collection"
@@ -148,7 +149,7 @@ Update your store configuration in the app:
 {
   "order": {
     "name": "#1004",
-    "tags": "collection, 06/14/2025, 10:00 AM - 12:00 PM",
+    "tags": "collection, 14/06/2025, 10:00 AM - 12:00 PM",
     "line_items": [{
       "title": "Tulip Arrangement",
       "variant_title": "Spring Collection"
@@ -238,8 +239,10 @@ Orders will be sorted according to the 5-level hierarchy:
 
 #### **4. "Date not extracted"**
 - **Solution**: 
-  - Use order tag: `"06/13/2025"` or `"13/06/25"`
-  - Or alternative format: `"6-13-2025"`
+  - Use order tag: `"13/06/2025"` (DD/MM/YYYY format)
+  - Or alternative format: `"13/06/25"` (DD/MM/YY format)
+  - Or alternative format: `"13-06-2025"` (DD-MM-YYYY format)
+  - **Important**: All dates are interpreted as DD/MM/YYYY format
 
 #### **5. "Delivery type not showing"**
 - **Solution**:

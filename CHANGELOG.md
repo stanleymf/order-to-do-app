@@ -394,4 +394,22 @@ node scripts/version.js set 1.5.0
 - **Time Parsing**: Support for multiple time formats (HH:MM AM/PM, HAM/PM)
 - **Delivery Type Detection**: Intelligent keyword matching for delivery methods
 
-## [1.0.16] - 2025-06-13 
+## [1.0.18] - 2025-06-13
+
+### Fixed
+- **Date Format Standardization**: Clarified that all dates are read as DD/MM/YYYY format
+  - **Consistent Interpretation**: All date inputs are treated as DD/MM/YYYY regardless of input format
+  - **Updated Documentation**: Testing guide now clearly specifies DD/MM/YYYY format
+  - **Test Examples**: Updated all test orders to use DD/MM/YYYY format
+  - **Troubleshooting**: Added clear guidance on date format requirements
+
+### Updated
+- **Testing Guide**: Clarified date extraction requirements
+  - All examples now use DD/MM/YYYY format
+  - Added note about consistent DD/MM/YYYY interpretation
+  - Updated troubleshooting section with format clarification
+- **Test Orders**: Updated to use correct DD/MM/YYYY format
+  - `"13/06/2025"` instead of `"06/13/2025"`
+  - `"14/06/2025"` instead of `"06/14/2025"`
+
+## [1.0.17] - 2025-06-13 

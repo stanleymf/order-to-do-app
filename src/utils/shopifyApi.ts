@@ -497,11 +497,12 @@ export class ShopifyApiService {
         result.deliveryType = 'express';
       }
       
-      // Extract date (various formats)
+      // Extract date (always read as DD/MM/YYYY format)
       const dateMatch = tag.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
       if (dateMatch) {
         const [, day, month, year] = dateMatch;
         const fullYear = year.length === 2 ? `20${year}` : year;
+        // Always treat as DD/MM/YYYY format
         result.date = `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
       }
       
