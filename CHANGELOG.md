@@ -5,6 +5,26 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2025-01-13
+
+### 🎯 Enhanced Filtering Dropdown Container
+
+#### 🐛 Bug Fixes
+- **Fixed Filtering Dropdowns Overflow**
+  - Wrapped filtering controls in a Card component for better visual containment
+  - Added proper mobile constraints to prevent dropdowns from extending outside viewport
+  - Improved mobile layout with consistent padding and spacing
+  - Enhanced visual separation between filtering controls and other content
+
+#### ✨ Improvements
+- **Better Visual Organization**
+  - Filtering controls now have a clear visual boundary
+  - Improved mobile user experience with contained dropdowns
+  - Better spacing and layout consistency
+  - Enhanced accessibility with proper container structure
+
+---
+
 ## [1.0.3] - 2025-01-13
 
 ### 🎯 Mobile Formatting Fixes

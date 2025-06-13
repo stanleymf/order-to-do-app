@@ -299,115 +299,120 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
           )}
         </div>
         
-        <div className={`flex ${isMobileView ? 'flex-col gap-2 w-full' : 'gap-3'}`}>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={`justify-start text-left font-normal ${isMobileView ? 'w-full' : 'w-[280px]'} ${!calendarDate && "text-muted-foreground"}`}
-              >
-                <CalendarDays className="mr-2 h-4 w-4 text-gray-500" />
-                {calendarDate ? format(calendarDate, "PPP") : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-4" align="start">
-              <Calendar
-                mode="single"
-                selected={calendarDate}
-                onSelect={handleDateSelect}
-                initialFocus
-                className="[--cell-size:3.5rem] text-base"
-              />
-            </PopoverContent>
-          </Popover>
-          
-          <Select value={selectedStore} onValueChange={setSelectedStore}>
-            <SelectTrigger className={`${isMobileView ? 'w-full' : 'w-48'}`}>
-              <SelectValue placeholder="Select store" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Stores</SelectItem>
-              {stores.map(store => (
-                <SelectItem key={store.id} value={store.id}>
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: store.color }}
-                    />
-                    {store.name}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Filtering Controls Container */}
+        <Card className={`${isMobileView ? 'w-full' : ''}`}>
+          <CardContent className={`${isMobileView ? 'p-3' : 'p-4'}`}>
+            <div className={`flex ${isMobileView ? 'flex-col gap-2' : 'gap-3'}`}>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={`justify-start text-left font-normal ${isMobileView ? 'w-full' : 'w-[280px]'} ${!calendarDate && "text-muted-foreground"}`}
+                  >
+                    <CalendarDays className="mr-2 h-4 w-4 text-gray-500" />
+                    {calendarDate ? format(calendarDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-4" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={calendarDate}
+                    onSelect={handleDateSelect}
+                    initialFocus
+                    className="[--cell-size:3.5rem] text-base"
+                  />
+                </PopoverContent>
+              </Popover>
+              
+              <Select value={selectedStore} onValueChange={setSelectedStore}>
+                <SelectTrigger className={`${isMobileView ? 'w-full' : 'w-48'}`}>
+                  <SelectValue placeholder="Select store" />
+                </SelectTrigger>
+                <SelectContent className={`${isMobileView ? 'w-[calc(100vw-2rem)] max-w-full' : ''}`}>
+                  <SelectItem value="all">All Stores</SelectItem>
+                  {stores.map(store => (
+                    <SelectItem key={store.id} value={store.id}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: store.color }}
+                        />
+                        {store.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-          <Select value={selectedDifficultyLabel} onValueChange={setSelectedDifficultyLabel}>
-            <SelectTrigger className={`${isMobileView ? 'w-full' : 'w-48'}`}>
-              <SelectValue placeholder="Select difficulty" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Difficulties</SelectItem>
-              {productLabels.filter(label => label.category === 'difficulty').sort((a, b) => a.priority - b.priority).map(label => (
-                <SelectItem key={label.id} value={label.name}>
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: label.color }}
-                    />
-                    {label.name} (Priority: {label.priority})
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <Select value={selectedDifficultyLabel} onValueChange={setSelectedDifficultyLabel}>
+                <SelectTrigger className={`${isMobileView ? 'w-full' : 'w-48'}`}>
+                  <SelectValue placeholder="Select difficulty" />
+                </SelectTrigger>
+                <SelectContent className={`${isMobileView ? 'w-[calc(100vw-2rem)] max-w-full' : ''}`}>
+                  <SelectItem value="all">All Difficulties</SelectItem>
+                  {productLabels.filter(label => label.category === 'difficulty').sort((a, b) => a.priority - b.priority).map(label => (
+                    <SelectItem key={label.id} value={label.name}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: label.color }}
+                        />
+                        {label.name} (Priority: {label.priority})
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-          <Select value={selectedProductTypeLabel} onValueChange={setSelectedProductTypeLabel}>
-            <SelectTrigger className={`${isMobileView ? 'w-full' : 'w-48'}`}>
-              <SelectValue placeholder="Select product type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Product Types</SelectItem>
-              {productLabels.filter(label => label.category === 'productType').sort((a, b) => a.priority - b.priority).map(label => (
-                <SelectItem key={label.id} value={label.name}>
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: label.color }}
-                    />
-                    {label.name} (Priority: {label.priority})
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <Select value={selectedProductTypeLabel} onValueChange={setSelectedProductTypeLabel}>
+                <SelectTrigger className={`${isMobileView ? 'w-full' : 'w-48'}`}>
+                  <SelectValue placeholder="Select product type" />
+                </SelectTrigger>
+                <SelectContent className={`${isMobileView ? 'w-[calc(100vw-2rem)] max-w-full' : ''}`}>
+                  <SelectItem value="all">All Product Types</SelectItem>
+                  {productLabels.filter(label => label.category === 'productType').sort((a, b) => a.priority - b.priority).map(label => (
+                    <SelectItem key={label.id} value={label.name}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: label.color }}
+                        />
+                        {label.name} (Priority: {label.priority})
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className={`${isMobileView ? 'w-full' : 'w-48'}`}>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-orange-500" />
-                  Pending
-                </div>
-              </SelectItem>
-              <SelectItem value="assigned">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-500" />
-                  Assigned
-                </div>
-              </SelectItem>
-              <SelectItem value="completed">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
-                  Completed
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className={`${isMobileView ? 'w-full' : 'w-48'}`}>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent className={`${isMobileView ? 'w-[calc(100vw-2rem)] max-w-full' : ''}`}>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="pending">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-orange-500" />
+                      Pending
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="assigned">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-blue-500" />
+                      Assigned
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="completed">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                      Completed
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Overall Stats (when viewing all stores) */}
