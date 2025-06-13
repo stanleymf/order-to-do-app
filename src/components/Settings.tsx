@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { Settings as SettingsIcon, MapPin, Clock, Package, User, FileText, Tag, Save, RefreshCw, Calendar, Key, Globe } from 'lucide-react';
+import { Settings as SettingsIcon, MapPin, Clock, Package, User, FileText, Tag, Save, RefreshCw, Calendar, Key } from 'lucide-react';
 import { toast } from 'sonner';
 import { type User as UserType } from '../types';
 import { useMobileView } from './Dashboard';
