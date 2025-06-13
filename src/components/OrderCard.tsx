@@ -103,7 +103,7 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Don't toggle if clicking on interactive elements
+    // Don't toggle if clicking on interactive elements or if any input/textarea/select is focused
     const target = e.target as HTMLElement;
     const isInteractive = target.closest('button') || 
                          target.closest('input') || 
@@ -116,10 +116,20 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
                          target.closest('.dialog') ||
                          target.closest('.modal') ||
                          target.closest('[data-interactive]');
-    
-    if (!isInteractive) {
-      setIsCollapsed(!isCollapsed);
+
+    // Prevent collapse if any input, textarea, or select inside the card is focused
+    const cardElement = e.currentTarget as HTMLElement;
+    const activeElement = document.activeElement;
+    if (
+      isInteractive ||
+      (activeElement && cardElement.contains(activeElement) &&
+        (activeElement.tagName === 'INPUT' ||
+         activeElement.tagName === 'TEXTAREA' ||
+         activeElement.tagName === 'SELECT'))
+    ) {
+      return;
     }
+    setIsCollapsed(!isCollapsed);
   };
 
   // Determine card background color based on status
