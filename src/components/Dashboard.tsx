@@ -49,7 +49,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             <div className={`flex justify-between items-center h-16 ${isMobileView ? 'gap-1.5' : ''}`}>
               <div className="flex items-center min-w-0 flex-shrink-0">
                 <h1 className={`font-semibold text-gray-900 ${isMobileView ? 'text-xs truncate max-w-[100px]' : 'text-xl'}`}>
-                  {isMobileView ? 'Dashboard' : 'Florist Dashboard'}
+                  {isMobileView ? 'Order To-Do' : 'Order To-Do'}
                 </h1>
                 <span className={`px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded-full ${isMobileView ? 'ml-1 flex-shrink-0 text-[10px]' : 'ml-4 text-xs'}`}>
                   {user.role}

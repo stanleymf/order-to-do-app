@@ -5,6 +5,44 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.31] - 2025-06-13
+
+### Changed
+- **Header Title**: Updated top-left header title from "Dashboard"/"Florist Dashboard" to "Order To-Do"
+  - **Consistent Branding**: Both mobile and desktop views now display "Order To-Do"
+  - **Brand Identity**: Aligns with the application's purpose and branding
+  - **User Experience**: Clearer identification of the application in the header
+
+### Enhanced
+- **Visual Consistency**: Header title now matches the application's name and purpose
+- **Professional Appearance**: More cohesive branding throughout the application
+
+## [1.0.30] - 2025-06-13
+
+### Added
+- **Shopify API Configuration Card**: New dedicated card in Settings for API configuration
+  - **Access Token Field**: Secure password input for Shopify access token
+  - **Shop Domain Field**: Input for Shopify store domain (e.g., my-store.myshopify.com)
+  - **API Version Selection**: Dropdown with latest Shopify API versions (2024-10 to 2023-01)
+  - **Webhook Secret Field**: Optional password input for webhook verification
+  - **Auto Sync Toggle**: Enable/disable automatic order synchronization
+  - **Sync Interval Selection**: Configurable sync intervals (1 minute to 1 hour)
+  - **Default Configuration**: Auto sync enabled with 5-minute interval by default
+
+### Enhanced
+- **Settings Interface**: Expanded configuration interface with API settings
+  - **TypeScript Interface**: Added ShopifyAPIConfig interface for type safety
+  - **Configuration Persistence**: API settings saved to localStorage with other settings
+  - **Mobile Responsive**: API configuration card adapts to mobile and desktop layouts
+  - **Security Features**: Password fields for sensitive API credentials
+  - **User Guidance**: Helpful descriptions for each configuration field
+
+### Technical
+- **Configuration Structure**: API settings integrated into existing mapping configuration
+- **State Management**: Proper state handling for API configuration changes
+- **Validation**: Input validation and error handling for API fields
+- **Integration Ready**: API configuration ready for integration with Shopify API service
+
 ## [1.0.29] - 2025-06-13
 
 ### Fixed

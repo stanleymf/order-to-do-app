@@ -6,12 +6,24 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { Settings as SettingsIcon, MapPin, Clock, Package, User, FileText, Tag, Save, RefreshCw, Calendar } from 'lucide-react';
+import { Settings as SettingsIcon, MapPin, Clock, Package, User, FileText, Tag, Save, RefreshCw, Calendar, Key, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { type User as UserType } from '../types';
 import { useMobileView } from './Dashboard';
 
+interface ShopifyAPIConfig {
+  accessToken: string;
+  shopDomain: string;
+  apiVersion: string;
+  webhookSecret?: string;
+  autoSync: boolean;
+  syncInterval: number; // in minutes
+}
+
 interface ShopifyMappingConfig {
+  // API Configuration
+  api: ShopifyAPIConfig;
+  
   // Order ID mapping
   orderIdSource: 'order_name' | 'order_id' | 'line_item_id' | 'custom_field';
   orderIdCustomField?: string;
@@ -73,6 +85,16 @@ interface SettingsProps {
 }
 
 const defaultMappingConfig: ShopifyMappingConfig = {
+  // API Configuration
+  api: {
+    accessToken: '',
+    shopDomain: '',
+    apiVersion: '2024-10',
+    webhookSecret: '',
+    autoSync: true,
+    syncInterval: 5
+  },
+  
   // Order ID mapping
   orderIdSource: 'order_name',
   
@@ -244,6 +266,135 @@ export function Settings({ currentUser }: SettingsProps) {
           </Button>
         </div>
       </div>
+
+      {/* Shopify API Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle className={`flex items-center gap-2 ${isMobileView ? 'text-lg' : ''}`}>
+            <Key className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
+            Shopify API Configuration
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          
+          {/* Access Token */}
+          <div className="space-y-2">
+            <Label htmlFor="accessToken">Access Token</Label>
+            <Input
+              id="accessToken"
+              type="password"
+              value={mappingConfig.api.accessToken}
+              onChange={(e) => updateMappingConfig('api', { ...mappingConfig.api, accessToken: e.target.value })}
+              placeholder="Enter your Shopify access token"
+              className="font-mono text-sm"
+            />
+            <p className="text-xs text-gray-500">
+              Your private access token for Shopify API authentication
+            </p>
+          </div>
+
+          {/* Shop Domain */}
+          <div className="space-y-2">
+            <Label htmlFor="shopDomain">Shop Domain</Label>
+            <Input
+              id="shopDomain"
+              value={mappingConfig.api.shopDomain}
+              onChange={(e) => updateMappingConfig('api', { ...mappingConfig.api, shopDomain: e.target.value })}
+              placeholder="your-shop.myshopify.com"
+            />
+            <p className="text-xs text-gray-500">
+              Your Shopify store domain (e.g., my-store.myshopify.com)
+            </p>
+          </div>
+
+          {/* API Version */}
+          <div className="space-y-2">
+            <Label htmlFor="apiVersion">API Version</Label>
+            <Select
+              value={mappingConfig.api.apiVersion}
+              onValueChange={(value) => updateMappingConfig('api', { ...mappingConfig.api, apiVersion: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select API version" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2024-10">2024-10 (Latest)</SelectItem>
+                <SelectItem value="2024-07">2024-07</SelectItem>
+                <SelectItem value="2024-04">2024-04</SelectItem>
+                <SelectItem value="2024-01">2024-01</SelectItem>
+                <SelectItem value="2023-10">2023-10</SelectItem>
+                <SelectItem value="2023-07">2023-07</SelectItem>
+                <SelectItem value="2023-04">2023-04</SelectItem>
+                <SelectItem value="2023-01">2023-01</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-gray-500">
+              Shopify API version to use for requests
+            </p>
+          </div>
+
+          {/* Webhook Secret (Optional) */}
+          <div className="space-y-2">
+            <Label htmlFor="webhookSecret">Webhook Secret (Optional)</Label>
+            <Input
+              id="webhookSecret"
+              type="password"
+              value={mappingConfig.api.webhookSecret || ''}
+              onChange={(e) => updateMappingConfig('api', { ...mappingConfig.api, webhookSecret: e.target.value })}
+              placeholder="Enter webhook secret for verification"
+              className="font-mono text-sm"
+            />
+            <p className="text-xs text-gray-500">
+              Secret key for webhook verification (optional)
+            </p>
+          </div>
+
+          <Separator />
+
+          {/* Auto Sync Settings */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="autoSync">Auto Sync Orders</Label>
+                <p className="text-xs text-gray-500">
+                  Automatically sync orders from Shopify at regular intervals
+                </p>
+              </div>
+              <Switch
+                id="autoSync"
+                checked={mappingConfig.api.autoSync}
+                onCheckedChange={(checked) => updateMappingConfig('api', { ...mappingConfig.api, autoSync: checked })}
+              />
+            </div>
+
+            {mappingConfig.api.autoSync && (
+              <div className="space-y-2">
+                <Label htmlFor="syncInterval">Sync Interval (minutes)</Label>
+                <Select
+                  value={mappingConfig.api.syncInterval.toString()}
+                  onValueChange={(value) => updateMappingConfig('api', { ...mappingConfig.api, syncInterval: parseInt(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 minute</SelectItem>
+                    <SelectItem value="5">5 minutes</SelectItem>
+                    <SelectItem value="10">10 minutes</SelectItem>
+                    <SelectItem value="15">15 minutes</SelectItem>
+                    <SelectItem value="30">30 minutes</SelectItem>
+                    <SelectItem value="60">1 hour</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">
+                  How often to automatically sync orders from Shopify
+                </p>
+              </div>
+            )}
+          </div>
+
+        </CardContent>
+      </Card>
 
       {/* Shopify Order Mapping Configuration */}
       <Card>
