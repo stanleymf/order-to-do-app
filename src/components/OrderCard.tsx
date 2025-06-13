@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, Clock, User as UserIcon, Package, FileText, Tag, Eye, ChevronDown, ChevronRight } from 'lucide-react';
+import { Check, Clock, User as UserIcon, Package, FileText, Tag, Eye } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { type Order, type User } from '../types';
