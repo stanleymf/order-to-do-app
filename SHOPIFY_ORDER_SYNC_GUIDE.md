@@ -56,8 +56,10 @@ Update your store configuration in the app:
 - **Note**: All dates are interpreted as DD/MM/YYYY format regardless of input format
 
 #### **Timeslot Extraction from Tags:**
-- **Format 1**: `"9:00 AM - 2:00 PM"` → `"9:00 AM - 2:00 PM"`
-- **Format 2**: `"9AM - 2PM"` → `"9 AM - 2 PM"`
+- **Primary Format**: `"09:00-11:00"` → `"9:00 AM - 11:00 AM"` (HH:MM-HH:MM)
+- **Alternative**: `"9:00 AM - 2:00 PM"` → `"9:00 AM - 2:00 PM"` (with AM/PM)
+- **Alternative**: `"9AM - 2PM"` → `"9 AM - 2 PM"` (short format)
+- **Note**: 24-hour format (HH:MM-HH:MM) is automatically converted to 12-hour format with AM/PM
 
 #### **Delivery Type Extraction from Tags:**
 - **Delivery**: `"delivery"`, `"deliver"` → `"Delivery"`
@@ -82,7 +84,7 @@ Update your store configuration in the app:
 {
   "order": {
     "name": "#1001",
-    "tags": "delivery, 13/06/2025, 9:00 AM - 11:00 AM",
+    "tags": "delivery, 13/06/2025, 09:00-11:00",
     "line_items": [{
       "title": "Rose Bouquet",
       "variant_title": "Red Roses",
@@ -105,7 +107,7 @@ Update your store configuration in the app:
 {
   "order": {
     "name": "#1002",
-    "tags": "delivery, 13/06/2025, 2:00 PM - 6:00 PM",
+    "tags": "delivery, 13/06/2025, 14:00-18:00",
     "line_items": [{
       "title": "Mixed Flower Arrangement",
       "variant_title": "Premium Collection",
@@ -129,7 +131,7 @@ Update your store configuration in the app:
 {
   "order": {
     "name": "#1003",
-    "tags": "express, 13/06/2025, 6:00 PM - 8:00 PM",
+    "tags": "express, 13/06/2025, 18:00-20:00",
     "line_items": [{
       "title": "Sunflower Bundle",
       "variant_title": "Summer Collection"
@@ -149,7 +151,7 @@ Update your store configuration in the app:
 {
   "order": {
     "name": "#1004",
-    "tags": "collection, 14/06/2025, 10:00 AM - 12:00 PM",
+    "tags": "collection, 14/06/2025, 10:00-12:00",
     "line_items": [{
       "title": "Tulip Arrangement",
       "variant_title": "Spring Collection"
@@ -234,8 +236,10 @@ Orders will be sorted according to the 5-level hierarchy:
 
 #### **3. "Timeslot not extracted"**
 - **Solution**: 
-  - Use order tag: `"9:00 AM - 2:00 PM"`
-  - Or alternative format: `"9AM - 2PM"`
+  - Use order tag: `"09:00-11:00"` (HH:MM-HH:MM format)
+  - Or alternative format: `"9:00 AM - 2:00 PM"` (with AM/PM)
+  - Or alternative format: `"9AM - 2PM"` (short format)
+  - **Note**: 24-hour format is automatically converted to 12-hour format with AM/PM
 
 #### **4. "Date not extracted"**
 - **Solution**: 

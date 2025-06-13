@@ -412,4 +412,28 @@ node scripts/version.js set 1.5.0
   - `"13/06/2025"` instead of `"06/13/2025"`
   - `"14/06/2025"` instead of `"06/14/2025"`
 
-## [1.0.17] - 2025-06-13 
+## [1.0.19] - 2025-06-13
+
+### Enhanced
+- **Timeslot Format Support**: Added primary support for HH:MM-HH:MM format from Shopify order tags
+  - **Primary Format**: `"09:00-11:00"` → `"9:00 AM - 11:00 AM"` (24-hour to 12-hour conversion)
+  - **Automatic Conversion**: 24-hour format automatically converted to 12-hour format with AM/PM
+  - **Fallback Support**: Still supports existing AM/PM formats as alternatives
+  - **Time Conversion**: Added `convertTo12HourFormat` utility function
+
+### Updated
+- **Testing Guide**: Updated with HH:MM-HH:MM format examples
+  - All test orders now use 24-hour format: `"09:00-11:00"`, `"14:00-18:00"`, `"18:00-20:00"`
+  - Added conversion examples showing 24-hour to 12-hour transformation
+  - Updated troubleshooting section with format guidance
+- **Test Orders**: Updated to use HH:MM-HH:MM format
+  - `"09:00-11:00"` instead of `"9:00 AM - 11:00 AM"`
+  - `"14:00-18:00"` instead of `"2:00 PM - 6:00 PM"`
+  - `"18:00-20:00"` instead of `"6:00 PM - 8:00 PM"`
+
+### Technical Improvements
+- **Time Parsing**: Enhanced regex pattern for HH:MM-HH:MM format
+- **Format Conversion**: Added utility function for 24-hour to 12-hour conversion
+- **Backward Compatibility**: Maintains support for existing AM/PM formats
+
+## [1.0.18] - 2025-06-13 

@@ -506,10 +506,20 @@ export class ShopifyApiService {
         result.date = `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
       }
       
-      // Extract timeslot (various formats)
-      const timeMatch = tag.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+      // Extract timeslot (HH:MM-HH:MM format from order tags)
+      const timeMatch = tag.match(/(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})/);
       if (timeMatch) {
-        const [, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = timeMatch;
+        const [, startHour, startMin, endHour, endMin] = timeMatch;
+        // Convert to 12-hour format with AM/PM
+        const startTime = this.convertTo12HourFormat(parseInt(startHour), parseInt(startMin));
+        const endTime = this.convertTo12HourFormat(parseInt(endHour), parseInt(endMin));
+        result.timeslot = `${startTime} - ${endTime}`;
+      }
+      
+      // Fallback: Extract timeslot (various formats)
+      const timeMatchWithAMPM = tag.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+      if (timeMatchWithAMPM) {
+        const [, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = timeMatchWithAMPM;
         result.timeslot = `${startHour}:${startMin} ${startPeriod.toUpperCase()} - ${endHour}:${endMin} ${endPeriod.toUpperCase()}`;
       }
       
@@ -557,6 +567,13 @@ export class ShopifyApiService {
     return customizationProperties
       .map(prop => `${prop.name}: ${prop.value}`)
       .join(', ');
+  }
+
+  // Convert 24-hour format to 12-hour format with AM/PM
+  private convertTo12HourFormat(hour: number, minute: number): string {
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const twelveHour = hour % 12 || 12;
+    return `${twelveHour}:${minute.toString().padStart(2, '0')} ${period}`;
   }
 }
 
