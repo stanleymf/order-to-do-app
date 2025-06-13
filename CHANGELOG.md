@@ -5,6 +5,21 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.22] - 2025-06-13
+
+### Fixed
+- **Settings Menu Integration**: Integrated Settings tab into the main navigation menu container
+  - Settings tab now appears in the same TabsList as Orders, Analytics, and Products
+  - Updated desktop grid layout from 3 columns to 4 columns to accommodate all tabs
+  - Settings tab properly integrated into the navigation menu for both desktop and mobile
+  - Consistent styling and responsive design across all navigation elements
+  - Admin-only access maintained for Settings tab
+
+### Enhanced
+- **Navigation Consistency**: All admin tabs (Products, Settings) now follow the same layout pattern
+- **Mobile Responsiveness**: Settings tab properly adapted for mobile view with appropriate sizing
+- **User Experience**: More intuitive navigation with all related tabs grouped together
+
 ## [1.0.21] - 2025-06-13
 
 ### Fixed

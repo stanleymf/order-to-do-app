@@ -99,7 +99,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
 
         <main className={`mx-auto py-4 ${isMobileView ? 'px-3' : 'max-w-7xl px-4 sm:px-6 lg:px-8 py-8'}`}>
           <Tabs value={activeTab} onValueChange={setActiveTab} className={`${isMobileView ? 'space-y-4' : 'space-y-6'}`}>
-            <TabsList className={`grid w-full ${isMobileView ? 'grid-cols-2 h-10' : 'grid-cols-3'}`}>
+            <TabsList className={`grid w-full ${isMobileView ? 'grid-cols-2 h-10' : 'grid-cols-4'}`}>
               <TabsTrigger value="orders" className={`flex items-center gap-2 ${isMobileView ? 'text-xs px-2' : ''}`}>
                 <Calendar className={`${isMobileView ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 Orders
@@ -108,21 +108,21 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 <BarChart3 className={`${isMobileView ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 Analytics
               </TabsTrigger>
-              {user.role === 'admin' && !isMobileView && (
-                <TabsTrigger value="products" className="flex items-center gap-2">
-                  <Package className="h-4 w-4" />
+              {user.role === 'admin' && (
+                <TabsTrigger value="products" className={`flex items-center gap-2 ${isMobileView ? 'text-xs px-2' : ''}`}>
+                  <Package className={`${isMobileView ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   Products
                 </TabsTrigger>
               )}
-              {user.role === 'admin' && !isMobileView && (
-                <TabsTrigger value="settings" className="flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
+              {user.role === 'admin' && (
+                <TabsTrigger value="settings" className={`flex items-center gap-2 ${isMobileView ? 'text-xs px-2' : ''}`}>
+                  <Settings className={`${isMobileView ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   Settings
                 </TabsTrigger>
               )}
             </TabsList>
 
-            {/* Admin Products Tab for Mobile - Show as separate row */}
+            {/* Admin tabs for mobile - Show as separate row if needed */}
             {user.role === 'admin' && isMobileView && (
               <TabsList className="grid w-full grid-cols-2 h-10">
                 <TabsTrigger value="products" className="flex items-center gap-2 text-xs px-2">
@@ -181,17 +181,32 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               <BarChart3 className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
               Analytics
             </NavLink>
-            <NavLink 
-              to="/products" 
-              className={({ isActive }) => `
-                flex items-center gap-2 px-4 py-2 rounded-lg
-                ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-100'}
-                ${isMobileView ? 'text-sm w-full' : ''}
-              `}
-            >
-              <Package className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
-              Products
-            </NavLink>
+            {user.role === 'admin' && (
+              <NavLink 
+                to="/products" 
+                className={({ isActive }) => `
+                  flex items-center gap-2 px-4 py-2 rounded-lg
+                  ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-100'}
+                  ${isMobileView ? 'text-sm w-full' : ''}
+                `}
+              >
+                <Package className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                Products
+              </NavLink>
+            )}
+            {user.role === 'admin' && (
+              <NavLink 
+                to="/settings" 
+                className={({ isActive }) => `
+                  flex items-center gap-2 px-4 py-2 rounded-lg
+                  ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-100'}
+                  ${isMobileView ? 'text-sm w-full' : ''}
+                `}
+              >
+                <Settings className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                Settings
+              </NavLink>
+            )}
           </nav>
         </main>
       </div>
