@@ -5,6 +5,25 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2025-01-13
+
+### 🎯 Default Collapsed State
+
+#### ✨ Improvements
+- **OrderCards Now Collapsed by Default**
+  - All OrderCards now start in collapsed state for better mobile experience
+  - Users can click to expand when they need to see full details
+  - Reduces initial visual clutter and improves page load performance
+  - Maintains ultra-compact view showing only product title, variant, and checkbox
+
+- **Better Initial User Experience**
+  - Clean, uncluttered order list on first load
+  - Faster scanning through multiple orders
+  - Progressive disclosure of information as needed
+  - Consistent behavior across all order cards
+
+---
+
 ## [1.0.1] - 2025-01-13
 
 ### 🎯 Enhanced Collapse/Expand Functionality

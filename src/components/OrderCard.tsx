@@ -28,7 +28,7 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
   const [isEditingProduct, setIsEditingProduct] = useState(false);
   const [productCustomizationsValue, setProductCustomizationsValue] = useState(order.productCustomizations || '');
   const [showImagePreview, setShowImagePreview] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   
   // Get mobile view context to force mobile styling when toggle is active
   const { isMobileView } = useMobileView();
