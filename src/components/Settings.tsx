@@ -6,43 +6,66 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { Settings as SettingsIcon, MapPin, Clock, Package, User, FileText, Tag, Save, RefreshCw } from 'lucide-react';
+import { Settings as SettingsIcon, MapPin, Clock, Package, User, FileText, Tag, Save, RefreshCw, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { type User as UserType } from '../types';
 import { useMobileView } from './Dashboard';
 
 interface ShopifyMappingConfig {
+  // Order ID mapping
+  orderIdSource: 'order_name' | 'order_id' | 'line_item_id' | 'custom_field';
+  orderIdCustomField?: string;
+  
+  // Product Name mapping
+  productNameSource: 'line_item_title' | 'product_title' | 'product_handle' | 'custom_field';
+  productNameCustomField?: string;
+  
+  // Product Variant mapping
+  productVariantSource: 'line_item_variant_title' | 'variant_title' | 'sku' | 'custom_field';
+  productVariantCustomField?: string;
+  
   // Date mapping
-  dateSource: 'tags' | 'created_at' | 'custom_field';
+  dateSource: 'tags' | 'created_at' | 'processed_at' | 'custom_field';
   dateTagPattern: string;
   dateFormat: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
+  dateCustomField?: string;
   
   // Timeslot mapping
-  timeslotSource: 'tags' | 'line_item_properties' | 'order_note';
+  timeslotSource: 'tags' | 'line_item_properties' | 'order_note' | 'custom_field';
   timeslotTagPattern: string;
   timeslotFormat: 'HH:MM-HH:MM' | 'HH:MM AM/PM-HH:MM AM/PM' | 'HAM/PM-HAM/PM';
+  timeslotCustomField?: string;
   
-  // Delivery type mapping
-  deliveryTypeSource: 'tags' | 'line_item_properties' | 'order_note';
+  // Delivery Type mapping
+  deliveryTypeSource: 'tags' | 'line_item_properties' | 'order_note' | 'custom_field';
   deliveryTypeKeywords: {
     delivery: string[];
     collection: string[];
     express: string[];
   };
+  deliveryTypeCustomField?: string;
   
-  // Instructions mapping
-  instructionsSource: 'line_item_properties' | 'order_note' | 'both';
-  instructionsPropertyName: string;
-  instructionsKeywords: string[];
+  // Add-Ons mapping (Product Customizations)
+  addOnsSource: 'line_item_properties' | 'order_note' | 'custom_field' | 'both';
+  addOnsExcludeProperties: string[];
+  addOnsCustomField?: string;
   
-  // Customizations mapping
-  customizationsSource: 'line_item_properties' | 'order_note' | 'both';
-  excludeProperties: string[];
+  // Remarks mapping
+  remarksSource: 'line_item_properties' | 'order_note' | 'custom_field' | 'both';
+  remarksPropertyName: string;
+  remarksKeywords: string[];
+  remarksCustomField?: string;
   
   // Customer info mapping
   customerNameFormat: 'first_last' | 'last_first' | 'full_name';
   includeCustomerPhone: boolean;
   includeCustomerEmail: boolean;
+  
+  // Additional Order properties
+  includeTotalPrice: boolean;
+  includeCurrency: boolean;
+  includeFulfillmentStatus: boolean;
+  includeFinancialStatus: boolean;
 }
 
 interface SettingsProps {
@@ -50,6 +73,15 @@ interface SettingsProps {
 }
 
 const defaultMappingConfig: ShopifyMappingConfig = {
+  // Order ID mapping
+  orderIdSource: 'order_name',
+  
+  // Product Name mapping
+  productNameSource: 'line_item_title',
+  
+  // Product Variant mapping
+  productVariantSource: 'line_item_variant_title',
+  
   // Date mapping
   dateSource: 'tags',
   dateTagPattern: '(\\d{1,2})[/\\-](\\d{1,2})[/\\-](\\d{2,4})',
@@ -68,19 +100,25 @@ const defaultMappingConfig: ShopifyMappingConfig = {
     express: ['express', 'urgent', 'rush']
   },
   
-  // Instructions mapping
-  instructionsSource: 'line_item_properties',
-  instructionsPropertyName: 'Special Instructions',
-  instructionsKeywords: ['instruction', 'note', 'special', 'request', 'preference'],
+  // Add-Ons mapping
+  addOnsSource: 'line_item_properties',
+  addOnsExcludeProperties: ['Delivery Time', 'Special Instructions', 'delivery', 'time', 'instruction', 'note', 'special'],
   
-  // Customizations mapping
-  customizationsSource: 'line_item_properties',
-  excludeProperties: ['Delivery Time', 'Special Instructions', 'delivery', 'time', 'instruction', 'note', 'special'],
+  // Remarks mapping
+  remarksSource: 'line_item_properties',
+  remarksPropertyName: 'Special Instructions',
+  remarksKeywords: ['instruction', 'note', 'special', 'request', 'preference'],
   
   // Customer info mapping
   customerNameFormat: 'first_last',
   includeCustomerPhone: true,
-  includeCustomerEmail: true
+  includeCustomerEmail: true,
+  
+  // Additional Order properties
+  includeTotalPrice: true,
+  includeCurrency: true,
+  includeFulfillmentStatus: true,
+  includeFinancialStatus: true
 };
 
 export function Settings({ currentUser }: SettingsProps) {
@@ -148,17 +186,17 @@ export function Settings({ currentUser }: SettingsProps) {
     }));
   };
 
-  const updateInstructionsKeywords = (keywords: string) => {
-    setMappingConfig(prev => ({
-      ...prev,
-      instructionsKeywords: keywords.split(',').map(k => k.trim()).filter(k => k)
-    }));
-  };
-
   const updateExcludeProperties = (properties: string) => {
     setMappingConfig(prev => ({
       ...prev,
-      excludeProperties: properties.split(',').map(p => p.trim()).filter(p => p)
+      addOnsExcludeProperties: properties.split(',').map(p => p.trim()).filter(p => p)
+    }));
+  };
+
+  const updateRemarksKeywords = (keywords: string) => {
+    setMappingConfig(prev => ({
+      ...prev,
+      remarksKeywords: keywords.split(',').map(k => k.trim()).filter(k => k)
     }));
   };
 
@@ -212,14 +250,141 @@ export function Settings({ currentUser }: SettingsProps) {
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 ${isMobileView ? 'text-lg' : ''}`}>
             <Package className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
-            Shopify Order Mapping Configuration
+            Shopify Order Data Mapping
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8">
+          
+          {/* Order ID Mapping */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Tag className="h-4 w-4 text-gray-500" />
+              <h3 className="font-medium text-gray-900">Order ID Mapping</h3>
+            </div>
+            <div className={`grid ${isMobileView ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-4'}`}>
+              <div>
+                <Label htmlFor="orderIdSource">Order ID Source</Label>
+                <Select
+                  value={mappingConfig.orderIdSource}
+                  onValueChange={(value: 'order_name' | 'order_id' | 'line_item_id' | 'custom_field') => 
+                    updateMappingConfig('orderIdSource', value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="order_name">Order Name (#1001)</SelectItem>
+                    <SelectItem value="order_id">Order ID</SelectItem>
+                    <SelectItem value="line_item_id">Line Item ID</SelectItem>
+                    <SelectItem value="custom_field">Custom Field</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {mappingConfig.orderIdSource === 'custom_field' && (
+                <div>
+                  <Label htmlFor="orderIdCustomField">Custom Field Name</Label>
+                  <Input
+                    id="orderIdCustomField"
+                    value={mappingConfig.orderIdCustomField || ''}
+                    onChange={(e) => updateMappingConfig('orderIdCustomField', e.target.value)}
+                    placeholder="Enter custom field name"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Product Name Mapping */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Package className="h-4 w-4 text-gray-500" />
+              <h3 className="font-medium text-gray-900">Product Name Mapping</h3>
+            </div>
+            <div className={`grid ${isMobileView ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-4'}`}>
+              <div>
+                <Label htmlFor="productNameSource">Product Name Source</Label>
+                <Select
+                  value={mappingConfig.productNameSource}
+                  onValueChange={(value: 'line_item_title' | 'product_title' | 'product_handle' | 'custom_field') => 
+                    updateMappingConfig('productNameSource', value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="line_item_title">Line Item Title</SelectItem>
+                    <SelectItem value="product_title">Product Title</SelectItem>
+                    <SelectItem value="product_handle">Product Handle</SelectItem>
+                    <SelectItem value="custom_field">Custom Field</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {mappingConfig.productNameSource === 'custom_field' && (
+                <div>
+                  <Label htmlFor="productNameCustomField">Custom Field Name</Label>
+                  <Input
+                    id="productNameCustomField"
+                    value={mappingConfig.productNameCustomField || ''}
+                    onChange={(e) => updateMappingConfig('productNameCustomField', e.target.value)}
+                    placeholder="Enter custom field name"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Product Variant Mapping */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Package className="h-4 w-4 text-gray-500" />
+              <h3 className="font-medium text-gray-900">Product Variant Mapping</h3>
+            </div>
+            <div className={`grid ${isMobileView ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-4'}`}>
+              <div>
+                <Label htmlFor="productVariantSource">Product Variant Source</Label>
+                <Select
+                  value={mappingConfig.productVariantSource}
+                  onValueChange={(value: 'line_item_variant_title' | 'variant_title' | 'sku' | 'custom_field') => 
+                    updateMappingConfig('productVariantSource', value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="line_item_variant_title">Line Item Variant Title</SelectItem>
+                    <SelectItem value="variant_title">Variant Title</SelectItem>
+                    <SelectItem value="sku">SKU</SelectItem>
+                    <SelectItem value="custom_field">Custom Field</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {mappingConfig.productVariantSource === 'custom_field' && (
+                <div>
+                  <Label htmlFor="productVariantCustomField">Custom Field Name</Label>
+                  <Input
+                    id="productVariantCustomField"
+                    value={mappingConfig.productVariantCustomField || ''}
+                    onChange={(e) => updateMappingConfig('productVariantCustomField', e.target.value)}
+                    placeholder="Enter custom field name"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
           {/* Date Mapping */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-gray-500" />
+              <Calendar className="h-4 w-4 text-gray-500" />
               <h3 className="font-medium text-gray-900">Date Mapping</h3>
             </div>
             <div className={`grid ${isMobileView ? 'grid-cols-1 gap-4' : 'grid-cols-3 gap-4'}`}>
@@ -227,7 +392,7 @@ export function Settings({ currentUser }: SettingsProps) {
                 <Label htmlFor="dateSource">Date Source</Label>
                 <Select
                   value={mappingConfig.dateSource}
-                  onValueChange={(value: 'tags' | 'created_at' | 'custom_field') => 
+                  onValueChange={(value: 'tags' | 'created_at' | 'processed_at' | 'custom_field') => 
                     updateMappingConfig('dateSource', value)
                   }
                 >
@@ -237,18 +402,10 @@ export function Settings({ currentUser }: SettingsProps) {
                   <SelectContent>
                     <SelectItem value="tags">Order Tags</SelectItem>
                     <SelectItem value="created_at">Order Created Date</SelectItem>
+                    <SelectItem value="processed_at">Order Processed Date</SelectItem>
                     <SelectItem value="custom_field">Custom Field</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div>
-                <Label htmlFor="dateTagPattern">Date Pattern (Regex)</Label>
-                <Input
-                  id="dateTagPattern"
-                  value={mappingConfig.dateTagPattern}
-                  onChange={(e) => updateMappingConfig('dateTagPattern', e.target.value)}
-                  placeholder="(\\d{1,2})[/\\-](\\d{1,2})[/\\-](\\d{2,4})"
-                />
               </div>
               <div>
                 <Label htmlFor="dateFormat">Date Format</Label>
@@ -268,7 +425,29 @@ export function Settings({ currentUser }: SettingsProps) {
                   </SelectContent>
                 </Select>
               </div>
+              {mappingConfig.dateSource === 'custom_field' && (
+                <div>
+                  <Label htmlFor="dateCustomField">Custom Field Name</Label>
+                  <Input
+                    id="dateCustomField"
+                    value={mappingConfig.dateCustomField || ''}
+                    onChange={(e) => updateMappingConfig('dateCustomField', e.target.value)}
+                    placeholder="Enter custom field name"
+                  />
+                </div>
+              )}
             </div>
+            {mappingConfig.dateSource === 'tags' && (
+              <div>
+                <Label htmlFor="dateTagPattern">Date Tag Pattern (regex)</Label>
+                <Input
+                  id="dateTagPattern"
+                  value={mappingConfig.dateTagPattern}
+                  onChange={(e) => updateMappingConfig('dateTagPattern', e.target.value)}
+                  placeholder="(\\d{1,2})[/\\-](\\d{1,2})[/\\-](\\d{2,4})"
+                />
+              </div>
+            )}
           </div>
 
           <Separator />
@@ -284,7 +463,7 @@ export function Settings({ currentUser }: SettingsProps) {
                 <Label htmlFor="timeslotSource">Timeslot Source</Label>
                 <Select
                   value={mappingConfig.timeslotSource}
-                  onValueChange={(value: 'tags' | 'line_item_properties' | 'order_note') => 
+                  onValueChange={(value: 'tags' | 'line_item_properties' | 'order_note' | 'custom_field') => 
                     updateMappingConfig('timeslotSource', value)
                   }
                 >
@@ -295,17 +474,9 @@ export function Settings({ currentUser }: SettingsProps) {
                     <SelectItem value="tags">Order Tags</SelectItem>
                     <SelectItem value="line_item_properties">Line Item Properties</SelectItem>
                     <SelectItem value="order_note">Order Note</SelectItem>
+                    <SelectItem value="custom_field">Custom Field</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div>
-                <Label htmlFor="timeslotTagPattern">Timeslot Pattern (Regex)</Label>
-                <Input
-                  id="timeslotTagPattern"
-                  value={mappingConfig.timeslotTagPattern}
-                  onChange={(e) => updateMappingConfig('timeslotTagPattern', e.target.value)}
-                  placeholder="(\\d{1,2}):(\\d{2})-(\\d{1,2}):(\\d{2})"
-                />
               </div>
               <div>
                 <Label htmlFor="timeslotFormat">Timeslot Format</Label>
@@ -319,13 +490,35 @@ export function Settings({ currentUser }: SettingsProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="HH:MM-HH:MM">HH:MM-HH:MM</SelectItem>
-                    <SelectItem value="HH:MM AM/PM-HH:MM AM/PM">HH:MM AM/PM-HH:MM AM/PM</SelectItem>
-                    <SelectItem value="HAM/PM-HAM/PM">HAM/PM-HAM/PM</SelectItem>
+                    <SelectItem value="HH:MM-HH:MM">24-Hour (09:00-11:00)</SelectItem>
+                    <SelectItem value="HH:MM AM/PM-HH:MM AM/PM">12-Hour (9:00 AM - 11:00 AM)</SelectItem>
+                    <SelectItem value="HAM/PM-HAM/PM">Short (9AM - 11AM)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              {mappingConfig.timeslotSource === 'custom_field' && (
+                <div>
+                  <Label htmlFor="timeslotCustomField">Custom Field Name</Label>
+                  <Input
+                    id="timeslotCustomField"
+                    value={mappingConfig.timeslotCustomField || ''}
+                    onChange={(e) => updateMappingConfig('timeslotCustomField', e.target.value)}
+                    placeholder="Enter custom field name"
+                  />
+                </div>
+              )}
             </div>
+            {mappingConfig.timeslotSource === 'tags' && (
+              <div>
+                <Label htmlFor="timeslotTagPattern">Timeslot Tag Pattern (regex)</Label>
+                <Input
+                  id="timeslotTagPattern"
+                  value={mappingConfig.timeslotTagPattern}
+                  onChange={(e) => updateMappingConfig('timeslotTagPattern', e.target.value)}
+                  placeholder="(\\d{1,2}):(\\d{2})-(\\d{1,2}):(\\d{2})"
+                />
+              </div>
+            )}
           </div>
 
           <Separator />
@@ -333,15 +526,15 @@ export function Settings({ currentUser }: SettingsProps) {
           {/* Delivery Type Mapping */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Tag className="h-4 w-4 text-gray-500" />
+              <MapPin className="h-4 w-4 text-gray-500" />
               <h3 className="font-medium text-gray-900">Delivery Type Mapping</h3>
             </div>
-            <div className={`grid ${isMobileView ? 'grid-cols-1 gap-4' : 'grid-cols-3 gap-4'}`}>
+            <div className={`grid ${isMobileView ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-4'}`}>
               <div>
                 <Label htmlFor="deliveryTypeSource">Delivery Type Source</Label>
                 <Select
                   value={mappingConfig.deliveryTypeSource}
-                  onValueChange={(value: 'tags' | 'line_item_properties' | 'order_note') => 
+                  onValueChange={(value: 'tags' | 'line_item_properties' | 'order_note' | 'custom_field') => 
                     updateMappingConfig('deliveryTypeSource', value)
                   }
                 >
@@ -352,39 +545,51 @@ export function Settings({ currentUser }: SettingsProps) {
                     <SelectItem value="tags">Order Tags</SelectItem>
                     <SelectItem value="line_item_properties">Line Item Properties</SelectItem>
                     <SelectItem value="order_note">Order Note</SelectItem>
+                    <SelectItem value="custom_field">Custom Field</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-2">
-                <Label>Delivery Type Keywords (comma-separated)</Label>
-                <div className="space-y-2">
-                  <div>
-                    <Label htmlFor="deliveryKeywords" className="text-xs text-gray-600">Delivery</Label>
-                    <Input
-                      id="deliveryKeywords"
-                      value={mappingConfig.deliveryTypeKeywords.delivery.join(', ')}
-                      onChange={(e) => updateDeliveryTypeKeywords('delivery', e.target.value)}
-                      placeholder="delivery, deliver"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="collectionKeywords" className="text-xs text-gray-600">Collection</Label>
-                    <Input
-                      id="collectionKeywords"
-                      value={mappingConfig.deliveryTypeKeywords.collection.join(', ')}
-                      onChange={(e) => updateDeliveryTypeKeywords('collection', e.target.value)}
-                      placeholder="collection, pickup, collect"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="expressKeywords" className="text-xs text-gray-600">Express</Label>
-                    <Input
-                      id="expressKeywords"
-                      value={mappingConfig.deliveryTypeKeywords.express.join(', ')}
-                      onChange={(e) => updateDeliveryTypeKeywords('express', e.target.value)}
-                      placeholder="express, urgent, rush"
-                    />
-                  </div>
+              {mappingConfig.deliveryTypeSource === 'custom_field' && (
+                <div>
+                  <Label htmlFor="deliveryTypeCustomField">Custom Field Name</Label>
+                  <Input
+                    id="deliveryTypeCustomField"
+                    value={mappingConfig.deliveryTypeCustomField || ''}
+                    onChange={(e) => updateMappingConfig('deliveryTypeCustomField', e.target.value)}
+                    placeholder="Enter custom field name"
+                  />
+                </div>
+              )}
+            </div>
+            <div>
+              <Label>Delivery Type Keywords (comma-separated)</Label>
+              <div className="space-y-2">
+                <div>
+                  <Label htmlFor="deliveryKeywords" className="text-xs text-gray-600">Delivery</Label>
+                  <Input
+                    id="deliveryKeywords"
+                    value={mappingConfig.deliveryTypeKeywords.delivery.join(', ')}
+                    onChange={(e) => updateDeliveryTypeKeywords('delivery', e.target.value)}
+                    placeholder="delivery, deliver"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="collectionKeywords" className="text-xs text-gray-600">Collection</Label>
+                  <Input
+                    id="collectionKeywords"
+                    value={mappingConfig.deliveryTypeKeywords.collection.join(', ')}
+                    onChange={(e) => updateDeliveryTypeKeywords('collection', e.target.value)}
+                    placeholder="collection, pickup, collect"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="expressKeywords" className="text-xs text-gray-600">Express</Label>
+                  <Input
+                    id="expressKeywords"
+                    value={mappingConfig.deliveryTypeKeywords.express.join(', ')}
+                    onChange={(e) => updateDeliveryTypeKeywords('express', e.target.value)}
+                    placeholder="express, urgent, rush"
+                  />
                 </div>
               </div>
             </div>
@@ -392,19 +597,19 @@ export function Settings({ currentUser }: SettingsProps) {
 
           <Separator />
 
-          {/* Instructions Mapping */}
+          {/* Add-Ons Mapping */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-gray-500" />
-              <h3 className="font-medium text-gray-900">Instructions Mapping</h3>
+              <Package className="h-4 w-4 text-gray-500" />
+              <h3 className="font-medium text-gray-900">Add-Ons Mapping (Product Customizations)</h3>
             </div>
             <div className={`grid ${isMobileView ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-4'}`}>
               <div>
-                <Label htmlFor="instructionsSource">Instructions Source</Label>
+                <Label htmlFor="addOnsSource">Add-Ons Source</Label>
                 <Select
-                  value={mappingConfig.instructionsSource}
-                  onValueChange={(value: 'line_item_properties' | 'order_note' | 'both') => 
-                    updateMappingConfig('instructionsSource', value)
+                  value={mappingConfig.addOnsSource}
+                  onValueChange={(value: 'line_item_properties' | 'order_note' | 'custom_field' | 'both') => 
+                    updateMappingConfig('addOnsSource', value)
                   }
                 >
                   <SelectTrigger>
@@ -413,46 +618,49 @@ export function Settings({ currentUser }: SettingsProps) {
                   <SelectContent>
                     <SelectItem value="line_item_properties">Line Item Properties</SelectItem>
                     <SelectItem value="order_note">Order Note</SelectItem>
+                    <SelectItem value="custom_field">Custom Field</SelectItem>
                     <SelectItem value="both">Both</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label htmlFor="instructionsPropertyName">Property Name</Label>
-                <Input
-                  id="instructionsPropertyName"
-                  value={mappingConfig.instructionsPropertyName}
-                  onChange={(e) => updateMappingConfig('instructionsPropertyName', e.target.value)}
-                  placeholder="Special Instructions"
-                />
-              </div>
+              {mappingConfig.addOnsSource === 'custom_field' && (
+                <div>
+                  <Label htmlFor="addOnsCustomField">Custom Field Name</Label>
+                  <Input
+                    id="addOnsCustomField"
+                    value={mappingConfig.addOnsCustomField || ''}
+                    onChange={(e) => updateMappingConfig('addOnsCustomField', e.target.value)}
+                    placeholder="Enter custom field name"
+                  />
+                </div>
+              )}
             </div>
             <div>
-              <Label htmlFor="instructionsKeywords">Instruction Keywords (comma-separated)</Label>
+              <Label htmlFor="addOnsExcludeProperties">Exclude Properties (comma-separated)</Label>
               <Input
-                id="instructionsKeywords"
-                value={mappingConfig.instructionsKeywords.join(', ')}
-                onChange={(e) => updateInstructionsKeywords(e.target.value)}
-                placeholder="instruction, note, special, request, preference"
+                id="addOnsExcludeProperties"
+                value={mappingConfig.addOnsExcludeProperties.join(', ')}
+                onChange={(e) => updateExcludeProperties(e.target.value)}
+                placeholder="Delivery Time, Special Instructions, delivery, time"
               />
             </div>
           </div>
 
           <Separator />
 
-          {/* Customizations Mapping */}
+          {/* Remarks Mapping */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Package className="h-4 w-4 text-gray-500" />
-              <h3 className="font-medium text-gray-900">Customizations Mapping</h3>
+              <FileText className="h-4 w-4 text-gray-500" />
+              <h3 className="font-medium text-gray-900">Remarks Mapping</h3>
             </div>
-            <div className="space-y-4">
+            <div className={`grid ${isMobileView ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-4'}`}>
               <div>
-                <Label htmlFor="customizationsSource">Customizations Source</Label>
+                <Label htmlFor="remarksSource">Remarks Source</Label>
                 <Select
-                  value={mappingConfig.customizationsSource}
-                  onValueChange={(value: 'line_item_properties' | 'order_note' | 'both') => 
-                    updateMappingConfig('customizationsSource', value)
+                  value={mappingConfig.remarksSource}
+                  onValueChange={(value: 'line_item_properties' | 'order_note' | 'custom_field' | 'both') => 
+                    updateMappingConfig('remarksSource', value)
                   }
                 >
                   <SelectTrigger>
@@ -461,17 +669,40 @@ export function Settings({ currentUser }: SettingsProps) {
                   <SelectContent>
                     <SelectItem value="line_item_properties">Line Item Properties</SelectItem>
                     <SelectItem value="order_note">Order Note</SelectItem>
+                    <SelectItem value="custom_field">Custom Field</SelectItem>
                     <SelectItem value="both">Both</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              {mappingConfig.remarksSource === 'custom_field' && (
+                <div>
+                  <Label htmlFor="remarksCustomField">Custom Field Name</Label>
+                  <Input
+                    id="remarksCustomField"
+                    value={mappingConfig.remarksCustomField || ''}
+                    onChange={(e) => updateMappingConfig('remarksCustomField', e.target.value)}
+                    placeholder="Enter custom field name"
+                  />
+                </div>
+              )}
+            </div>
+            <div className={`grid ${isMobileView ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-4'}`}>
               <div>
-                <Label htmlFor="excludeProperties">Exclude Properties (comma-separated)</Label>
+                <Label htmlFor="remarksPropertyName">Property Name</Label>
                 <Input
-                  id="excludeProperties"
-                  value={mappingConfig.excludeProperties.join(', ')}
-                  onChange={(e) => updateExcludeProperties(e.target.value)}
-                  placeholder="Delivery Time, Special Instructions, delivery, time"
+                  id="remarksPropertyName"
+                  value={mappingConfig.remarksPropertyName}
+                  onChange={(e) => updateMappingConfig('remarksPropertyName', e.target.value)}
+                  placeholder="Special Instructions"
+                />
+              </div>
+              <div>
+                <Label htmlFor="remarksKeywords">Remarks Keywords (comma-separated)</Label>
+                <Input
+                  id="remarksKeywords"
+                  value={mappingConfig.remarksKeywords.join(', ')}
+                  onChange={(e) => updateRemarksKeywords(e.target.value)}
+                  placeholder="instruction, note, special, request, preference"
                 />
               </div>
             </div>
@@ -522,6 +753,51 @@ export function Settings({ currentUser }: SettingsProps) {
               </div>
             </div>
           </div>
+
+          <Separator />
+
+          {/* Additional Order Properties */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <SettingsIcon className="h-4 w-4 text-gray-500" />
+              <h3 className="font-medium text-gray-900">Additional Order Properties</h3>
+            </div>
+            <div className={`grid ${isMobileView ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-4'}`}>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="includeTotalPrice"
+                  checked={mappingConfig.includeTotalPrice}
+                  onCheckedChange={(checked) => updateMappingConfig('includeTotalPrice', checked)}
+                />
+                <Label htmlFor="includeTotalPrice">Include Total Price</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="includeCurrency"
+                  checked={mappingConfig.includeCurrency}
+                  onCheckedChange={(checked) => updateMappingConfig('includeCurrency', checked)}
+                />
+                <Label htmlFor="includeCurrency">Include Currency</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="includeFulfillmentStatus"
+                  checked={mappingConfig.includeFulfillmentStatus}
+                  onCheckedChange={(checked) => updateMappingConfig('includeFulfillmentStatus', checked)}
+                />
+                <Label htmlFor="includeFulfillmentStatus">Include Fulfillment Status</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="includeFinancialStatus"
+                  checked={mappingConfig.includeFinancialStatus}
+                  onCheckedChange={(checked) => updateMappingConfig('includeFinancialStatus', checked)}
+                />
+                <Label htmlFor="includeFinancialStatus">Include Financial Status</Label>
+              </div>
+            </div>
+          </div>
+
         </CardContent>
       </Card>
     </div>

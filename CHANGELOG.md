@@ -514,3 +514,30 @@ node scripts/version.js set 1.5.0
 - **Patch** (1.0.0 → 1.0.1): Bug fixes, minor improvements
 - **Minor** (1.0.0 → 1.1.0): New features, backward compatible
 - **Major** (1.0.0 → 2.0.0): Breaking changes, major features 
+
+## [1.0.24] - 2025-06-13
+
+### Added
+- **Comprehensive Data Mapping Structure in Settings**
+  - Admins can now configure mapping for all key order fields:
+    - Order ID, Product Name, Product Variant, Date, Timeslot, Delivery Type, Add-Ons, Remarks
+  - Each field allows selection of the source from relevant Shopify order properties (dropdowns):
+    - e.g., Order Name, Order ID, Line Item Title, Product Title, Tags, Line Item Properties, Order Note, Custom Field, etc.
+  - Regex and format options for tag extraction (date/timeslot)
+  - Customizable keywords for delivery type and remarks
+  - Exclude properties for Add-Ons
+  - Custom field name support for all custom field sources
+  - All mappings are saved and used in real time for incoming Shopify orders
+- **UI/UX**
+  - Responsive, organized mapping interface in Settings
+  - Dropdowns for both Shopify source and Order Card destination fields
+  - All changes persist in localStorage and apply immediately
+
+### Enhanced
+- **Order Card Mapping**
+  - All mapped fields are now configurable and can be routed to any Order Card property
+  - Supports advanced mapping scenarios for different Shopify setups
+
+### Technical
+- **Version:** 1.0.24
+- **Changelog:** Updated to reflect new mapping structure in Settings 
