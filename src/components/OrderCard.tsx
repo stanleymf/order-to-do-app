@@ -43,7 +43,7 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
   const currentLabel = labels.find(label => label.name === order.difficultyLabel);
 
   // Mock function to get product image - will be replaced with Shopify integration
-  const getProductImage = (productName: string) => {
+  const getProductImage = () => {
     // For now, return a placeholder image based on product type
     const productType = order.productTypeLabel?.toLowerCase() || 'bouquet';
     const imageMap: { [key: string]: string } = {
@@ -541,7 +541,7 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
           <div className="space-y-4">
             <div className="relative">
               <img
-                src={getProductImage(order.productName)}
+                src={getProductImage()}
                 alt={`${order.productName} preview`}
                 className="w-full h-auto rounded-lg shadow-lg object-cover"
                 style={{ maxHeight: '500px' }}
