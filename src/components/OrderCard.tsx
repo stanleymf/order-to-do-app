@@ -445,7 +445,12 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
                       className={`${
                         isAdmin && !isCompleted ? 'cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors border border-dashed border-gray-200 hover:border-gray-300' : 'p-2'
                       }`}
-                      onClick={() => isAdmin && !isCompleted && setIsEditingProduct(true)}
+                      onClick={e => {
+                        if (isAdmin && !isCompleted) {
+                          e.stopPropagation();
+                          setIsEditingProduct(true);
+                        }
+                      }}
                       onKeyDown={(e) => {
                         if (isAdmin && !isCompleted && (e.key === 'Enter' || e.key === ' ')) {
                           e.preventDefault();
