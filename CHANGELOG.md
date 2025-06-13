@@ -5,7 +5,31 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.23] - 2025-06-13
+## [1.0.25] - 2025-06-13
+
+### Fixed
+- **Mobile Menu Duplication**: Fixed duplicate Products and Settings tabs in mobile view
+  - Removed redundant mobile admin tabs section that created a second row
+  - Admin tabs now properly display in a single row with 2-column grid layout
+  - Eliminated visual duplication and improved mobile navigation consistency
+
+### Changed
+- **Browser Tab Title**: Updated from "React Starter" to "Order To-Do"
+  - More descriptive and brand-appropriate title for the application
+  - Better user experience with clear application identification
+
+### Added
+- **Flower Favicon**: Added custom flower-themed favicon
+  - Pink flower design with golden center and green stem
+  - Replaces default Vite favicon with brand-appropriate icon
+  - SVG format for crisp display at all sizes
+
+### Enhanced
+- **Brand Identity**: Improved visual branding with custom favicon and title
+- **Mobile UX**: Cleaner mobile navigation without duplicate elements
+- **Professional Appearance**: More polished and professional application presentation
+
+## [1.0.24] - 2025-06-13
 
 ### Changed
 - **Real-Time Order Fetching**: Replaced manual sync buttons with automatic order fetching
@@ -30,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Real-Time Data**: Orders are always up-to-date with the latest Shopify data
 - **Seamless Operation**: Users can focus on order management without worrying about data sync
 
-## [1.0.22] - 2025-06-13
+## [1.0.23] - 2025-06-13
 
 ### Fixed
 - **Settings Menu Integration**: Integrated Settings tab into the main navigation menu container
@@ -45,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Mobile Responsiveness**: Settings tab properly adapted for mobile view with appropriate sizing
 - **User Experience**: More intuitive navigation with all related tabs grouped together
 
-## [1.0.21] - 2025-06-13
+## [1.0.22] - 2025-06-13
 
 ### Fixed
 - **TypeScript Compilation Errors**: Fixed all TypeScript build errors
@@ -61,7 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Code Quality**: Removed unused imports and parameters
 - **Type Safety**: Fixed type identifier conflicts
 
-## [1.0.20] - 2025-06-13
+## [1.0.21] - 2025-06-13
 
 ### Added
 - **Admin Settings Menu**: New settings interface for admin users
@@ -108,7 +132,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Save/Load**: Persistent configuration storage
 - **Responsive Design**: Mobile-friendly interface with adaptive layouts
 
-## [1.0.19] - 2025-06-13
+## [1.0.20] - 2025-06-13
 
 ### Enhanced
 - **Timeslot Format Support**: Added primary support for HH:MM-HH:MM format from Shopify order tags
@@ -132,7 +156,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Format Conversion**: Added utility function for 24-hour to 12-hour conversion
 - **Backward Compatibility**: Maintains support for existing AM/PM formats
 
-## [1.0.18] - 2025-06-13
+## [1.0.19] - 2025-06-13
 
 ### Fixed
 - **Date Format Standardization**: Clarified that all dates are read as DD/MM/YYYY format
@@ -150,7 +174,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `"13/06/2025"` instead of `"06/13/2025"`
   - `"14/06/2025"` instead of `"06/14/2025"`
 
-## [1.0.17] - 2025-06-13
+## [1.0.18] - 2025-06-13
 
 ### Enhanced
 - **Tag-Based Smart Extraction**: Improved order data extraction from Shopify order tags
@@ -182,7 +206,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Time Parsing**: Support for multiple time formats (HH:MM AM/PM, HAM/PM)
 - **Delivery Type Detection**: Intelligent keyword matching for delivery methods
 
-## [1.0.16] - 2025-06-13
+## [1.0.17] - 2025-06-13
 
 ### Added
 - **Shopify Order Sync**: Complete order synchronization from Shopify stores
@@ -212,7 +236,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Responsive Design**: Mobile-friendly sync interface
 - **Loading States**: Visual feedback during sync operations
 
-## [1.0.15] - 2025-06-13
+## [1.0.16] - 2025-06-13
 
 ### Added
 - **All Orders Stats Card**: Added missing "All Orders" card as the first card in stats breakdown
@@ -228,7 +252,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Better User Experience**: Users can quickly see total order count and reset filters
 - **Consistent Interaction**: All stats cards now have click-to-filter functionality
 
-## [1.0.14] - 2025-06-13
+## [1.0.15] - 2025-06-13
 
 ### Verified
 - **Average Time Completion Logic**: Confirmed that the completion time calculation system is fully intact and working correctly
@@ -251,7 +275,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Time formatting**: Proper display in hours and minutes format
 - **Mobile responsive**: Analytics dashboard works on all devices
 
-## [1.0.13] - 2025-06-13
+## [1.0.14] - 2025-06-13
 
 ### Verified
 - **Hierarchical Sorting Logic**: Confirmed that the 5-level priority sorting system is fully intact and working correctly
@@ -270,7 +294,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implementation details for time parsing and label priorities
   - Business logic rationale for florist assignment ordering
 
-## [1.0.12] - 2025-06-13
+## [1.0.13] - 2025-06-13
 
 ### Added
 - **Clickable Stats Cards**: Stats overview cards are now interactive
@@ -289,7 +313,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Visual state indication for active filters
   - Smooth transitions and hover effects
 
-## [1.0.11] - 2025-06-13
+## [1.0.12] - 2025-06-13
 
 ### Changed
 - **Simplified Batch Assign UI**: Moved batch assign button to a more logical position
@@ -298,7 +322,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - More intuitive placement that follows natural workflow
   - Cleaner header area without additional controls 
 
-## [1.0.10] - 2025-06-13
+## [1.0.11] - 2025-06-13
 
 ### Added
 - **Batch Assign Functionality**: Restored batch assignment features that were accidentally removed during TypeScript cleanup
@@ -318,7 +342,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed missing `assignOrder` import in OrdersView component
 - Ensured proper state management for batch mode and order selection 
 
-## [1.0.9] - 2025-06-13
+## [1.0.10] - 2025-06-13
 
 ### Added
 - **Toast Notifications**: Added popup notifications for order assignments and completions
@@ -332,19 +356,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed TypeScript build errors by removing unused imports and variables
 - Ensured version history is updated with every change
 
-## [1.0.8] - 2025-06-13
+## [1.0.9] - 2025-06-13
 
 ### Fixed
 - Fixed: Order card no longer collapses when typing in the product customizations textarea in desktop view (robust event forwarding and logic)
 - Ensured version history is updated with every change
 
-## [1.0.7] - 2025-06-13
+## [1.0.8] - 2025-06-13
 
 ### Fixed
 - Fixed: Order card no longer collapses when typing in the product customizations textarea in desktop view
 - Versioning is now updated with every change
 
-## [1.0.6] - 2025-06-13
+## [1.0.7] - 2025-06-13
 
 ### Fixed
 - Further improved mobile responsiveness for iPhone 15:
@@ -354,7 +378,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed calendar popup sizing on mobile
   - Improved overall spacing and touch targets
 
-## [1.0.5] - 2025-06-13
+## [1.0.6] - 2025-06-13
 
 ### Fixed
 - Improved mobile responsiveness for iPhone and other mobile devices:
@@ -363,7 +387,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed filtering controls going off-screen
   - Adjusted text and component sizes for better mobile visibility
 
-## [1.0.4] - 2025-01-13
+## [1.0.5] - 2025-06-13
 
 ### Fixed
 - **Fixed Filtering Dropdowns Overflow**
@@ -379,7 +403,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Better spacing and layout consistency
   - Enhanced accessibility with proper container structure
 
-## [1.0.3] - 2025-01-13
+## [1.0.4] - 2025-01-13
 
 ### Fixed
 - **Fixed Header Menu Layout**
@@ -407,7 +431,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Better text sizing and readability on mobile
   - Consistent mobile-first design approach
 
-## [1.0.2] - 2025-01-13
+## [1.0.3] - 2025-01-13
 
 ### Enhanced
 - **OrderCards Now Collapsed by Default**
@@ -422,7 +446,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Progressive disclosure of information as needed
   - Consistent behavior across all order cards
 
-## [1.0.1] - 2025-01-13
+## [1.0.2] - 2025-01-13
 
 ### Enhanced
 - **Ultra-Compact Collapsed View**
@@ -444,7 +468,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed TypeScript compilation errors
 - Improved responsive design for collapsed state
 
-## [1.0.0] - 2025-01-13
+## [1.0.1] - 2025-01-13
 
 ### Added
 - **Complete Florist Order Management System**

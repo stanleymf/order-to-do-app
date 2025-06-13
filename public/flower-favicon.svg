@@ -1,0 +1,14 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Flower petals -->
+  <circle cx="16" cy="16" r="12" fill="#FF69B4" opacity="0.8"/>
+  <circle cx="16" cy="8" r="6" fill="#FFB6C1"/>
+  <circle cx="24" cy="16" r="6" fill="#FFB6C1"/>
+  <circle cx="16" cy="24" r="6" fill="#FFB6C1"/>
+  <circle cx="8" cy="16" r="6" fill="#FFB6C1"/>
+  
+  <!-- Flower center -->
+  <circle cx="16" cy="16" r="4" fill="#FFD700"/>
+  
+  <!-- Stem -->
+  <rect x="15" y="28" width="2" height="4" fill="#228B22"/>
+</svg> 

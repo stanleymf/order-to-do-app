@@ -122,20 +122,6 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               )}
             </TabsList>
 
-            {/* Admin tabs for mobile - Show as separate row if needed */}
-            {user.role === 'admin' && isMobileView && (
-              <TabsList className="grid w-full grid-cols-2 h-10">
-                <TabsTrigger value="products" className="flex items-center gap-2 text-xs px-2">
-                  <Package className="h-3 w-3" />
-                  Products
-                </TabsTrigger>
-                <TabsTrigger value="settings" className="flex items-center gap-2 text-xs px-2">
-                  <Settings className="h-3 w-3" />
-                  Settings
-                </TabsTrigger>
-              </TabsList>
-            )}
-
             <TabsContent value="orders">
               <OrdersView currentUser={user} />
             </TabsContent>
