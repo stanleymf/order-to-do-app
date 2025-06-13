@@ -318,7 +318,7 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
                           value={order.assignedFloristId || 'unassigned'}
                           onValueChange={handleAdminAssign}
                         >
-                          <SelectTrigger className="h-6 text-[10px] w-20 border-gray-300">
+                          <SelectTrigger className="h-6 text-[10px] w-20 border-gray-300" onClick={e => e.stopPropagation()} onFocus={e => e.stopPropagation()}>
                             <SelectValue placeholder="Assign" />
                           </SelectTrigger>
                           <SelectContent>
@@ -418,6 +418,8 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
                         onChange={(e) => setProductCustomizationsValue(e.target.value)}
                         placeholder="Add customizations or special instructions..."
                         className="text-sm min-h-[60px] resize-none"
+                        onClick={e => e.stopPropagation()}
+                        onFocus={e => e.stopPropagation()}
                       />
                       <div className="flex gap-2">
                         <Button size="sm" onClick={handleProductCustomizationsSubmit}>
@@ -510,7 +512,7 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
                           order.assignedFloristId === currentUser.id 
                             ? 'bg-yellow-100 border-yellow-300 text-yellow-800 font-semibold' 
                             : ''
-                        }`}>
+                        }`} onClick={e => e.stopPropagation()} onFocus={e => e.stopPropagation()}>
                           <SelectValue placeholder="Assign" />
                         </SelectTrigger>
                         <SelectContent>
@@ -582,6 +584,8 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
                             onChange={(e) => setRemarksValue(e.target.value)}
                             placeholder="Add remarks..."
                             className="text-xs h-8"
+                            onClick={e => e.stopPropagation()}
+                            onFocus={e => e.stopPropagation()}
                           />
                           <div className="flex gap-2">
                             <Button size="sm" onClick={handleRemarksSubmit} className="h-7 text-xs">
@@ -616,7 +620,7 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
                     {canAssignSelf && !isCompleted && (
                       <Button 
                         size="sm" 
-                        onClick={handleAssignSelf} 
+                        onClick={e => { e.stopPropagation(); handleAssignSelf(); }}
                         className="bg-green-600 hover:bg-green-700 h-8 text-xs px-3"
                       >
                         <UserIcon className="h-3 w-3 mr-1" />
