@@ -5,6 +5,26 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.27] - 2025-06-13
+
+### Fixed
+- **Delivery Type Display**: Fixed missing Type container in order cards
+  - **Mock Data Enhancement**: Added deliveryType fields to all mock orders
+  - **Variety of Types**: Added delivery, collection, and express types to different orders
+  - **Visual Confirmation**: Type container now properly displays in order cards
+  - **Color Coding**: Green (delivery), Blue (collection), Red (express) badges visible
+
+### Enhanced
+- **Test Data**: Improved mock data to better demonstrate delivery type functionality
+  - Windflower Florist orders now cycle through delivery, collection, and express types
+  - Bloom & Co and Garden Dreams orders have varied delivery types
+  - Better representation of real-world order scenarios
+
+### Technical
+- **Data Consistency**: All mock orders now include deliveryType field
+- **Visual Testing**: Type container can now be properly tested and verified
+- **Real-world Simulation**: Mock data better reflects actual Shopify order structure
+
 ## [1.0.26] - 2025-06-13
 
 ### Enhanced

@@ -223,6 +223,10 @@ const generateWindflowerOrder = (index: number): Order => {
     '06:00 PM - 10:00 PM'
   ];
   
+  // Add delivery types with some variety
+  const deliveryTypes: ('delivery' | 'collection' | 'express')[] = ['delivery', 'collection', 'express'];
+  const deliveryType = deliveryTypes[index % deliveryTypes.length];
+  
   const shouldAssign = Math.random() > 0.3; // 70% chance of being assigned
   const shouldComplete = shouldAssign && Math.random() > 0.6; // 40% of assigned orders are completed
   
@@ -264,7 +268,8 @@ const generateWindflowerOrder = (index: number): Order => {
     assignedAt,
     completedAt,
     status,
-    date: today
+    date: today,
+    deliveryType
   };
 };
 
@@ -284,7 +289,8 @@ export const mockOrders: Order[] = [
     timeslot: '10:00 AM - 02:00 PM',
     remarks: '',
     status: 'pending',
-    date: today
+    date: today,
+    deliveryType: 'delivery'
   },
   {
     id: 'BC76033',
@@ -297,7 +303,8 @@ export const mockOrders: Order[] = [
     timeslot: '10:00 AM - 02:00 PM',
     remarks: '',
     status: 'pending',
-    date: today
+    date: today,
+    deliveryType: 'collection'
   },
   {
     id: 'BC76041',
@@ -310,7 +317,8 @@ export const mockOrders: Order[] = [
     timeslot: '10:00 AM - 02:00 PM',
     remarks: '',
     status: 'pending',
-    date: today
+    date: today,
+    deliveryType: 'express'
   },
   {
     id: 'BC74768',
@@ -325,7 +333,8 @@ export const mockOrders: Order[] = [
     assignedFloristId: 'florist-5',
     assignedAt: new Date(Date.now() - 45 * 60 * 1000), // 45 minutes ago
     status: 'assigned',
-    date: today
+    date: today,
+    deliveryType: 'delivery'
   },
   {
     id: 'BC76019',
@@ -341,7 +350,8 @@ export const mockOrders: Order[] = [
     assignedAt: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
     completedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
     status: 'completed',
-    date: today
+    date: today,
+    deliveryType: 'collection'
   },
   
   // Garden Dreams orders (keeping original smaller set)
@@ -356,7 +366,8 @@ export const mockOrders: Order[] = [
     timeslot: '06:00 PM - 10:00 PM',
     remarks: '',
     status: 'pending',
-    date: today
+    date: today,
+    deliveryType: 'express'
   },
   {
     id: 'GD75617',
@@ -371,7 +382,8 @@ export const mockOrders: Order[] = [
     assignedFloristId: 'florist-4',
     assignedAt: new Date(Date.now() - 1.5 * 60 * 60 * 1000), // 1.5 hours ago
     status: 'assigned',
-    date: today
+    date: today,
+    deliveryType: 'delivery'
   },
   {
     id: 'GD75621',
@@ -384,7 +396,8 @@ export const mockOrders: Order[] = [
     timeslot: '02:00 PM - 06:00 PM',
     remarks: 'Customer requested extra care with packaging',
     status: 'pending',
-    date: today
+    date: today,
+    deliveryType: 'collection'
   },
   {
     id: 'GD76055',
@@ -400,7 +413,8 @@ export const mockOrders: Order[] = [
     assignedAt: new Date(Date.now() - 2.5 * 60 * 60 * 1000), // 2.5 hours ago
     completedAt: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
     status: 'completed',
-    date: today
+    date: today,
+    deliveryType: 'express'
   }
 ];
 
