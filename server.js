@@ -16,8 +16,8 @@ app.get('/healthz', (req, res) => {
   res.status(200).send('OK');
 });
 
-// Handle all routes by serving index.html (for SPA routing)
-app.get('*', (req, res) => {
+// Serve index.html for all other routes (SPA routing)
+app.get('/*', (req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
 
