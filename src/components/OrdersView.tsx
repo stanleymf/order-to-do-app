@@ -285,20 +285,6 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
             </p>
           </div>
 
-          {/* Batch Mode Toggle */}
-          <div className={`flex ${isMobileView ? 'justify-center' : 'justify-end'}`}>
-            <Button
-              variant={isBatchMode ? "default" : "outline"}
-              onClick={toggleBatchMode}
-              className={`${isMobileView ? 'w-full h-9 text-sm' : 'h-9'} ${
-                isBatchMode ? 'bg-blue-600 hover:bg-blue-700' : ''
-              }`}
-            >
-              <CheckSquare className={`${isMobileView ? 'h-4 w-4' : 'h-4 w-4'} mr-2`} />
-              {isBatchMode ? 'Exit Batch Mode' : 'Enter Batch Mode'}
-            </Button>
-          </div>
-
           {/* Filters Section */}
           <div className={`
             flex flex-col space-y-4 
@@ -394,6 +380,59 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
         </div>
       </div>
 
+      {/* Stats Overview */}
+      <div className={`grid ${isMobileView ? 'grid-cols-1 gap-2 px-1' : 'grid-cols-3 gap-6'}`}>
+        <Card>
+          <CardContent className={`flex items-center ${isMobileView ? 'py-2 px-3' : 'py-6'}`}>
+            <div className={`${isMobileView ? 'w-7 h-7' : 'w-12 h-12'} rounded-full bg-orange-100 flex items-center justify-center mr-3`}>
+              <Clock className={`${isMobileView ? 'w-3.5 h-3.5' : 'w-6 h-6'} text-orange-600`} />
+            </div>
+            <div>
+              <div className={`font-bold text-orange-600 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.pending}</div>
+              <p className={`text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>Pending Orders</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className={`flex items-center ${isMobileView ? 'py-2 px-3' : 'py-6'}`}>
+            <div className={`${isMobileView ? 'w-7 h-7' : 'w-12 h-12'} rounded-full bg-blue-100 flex items-center justify-center mr-3`}>
+              <UserCheck className={`${isMobileView ? 'w-3.5 h-3.5' : 'w-6 h-6'} text-blue-600`} />
+            </div>
+            <div>
+              <div className={`font-bold text-blue-600 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.assigned}</div>
+              <p className={`text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>Assigned Orders</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className={`flex items-center ${isMobileView ? 'py-2 px-3' : 'py-6'}`}>
+            <div className={`${isMobileView ? 'w-7 h-7' : 'w-12 h-12'} rounded-full bg-green-100 flex items-center justify-center mr-3`}>
+              <CheckCircle className={`${isMobileView ? 'w-3.5 h-3.5' : 'w-6 h-6'} text-green-600`} />
+            </div>
+            <div>
+              <div className={`font-bold text-green-600 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.completed}</div>
+              <p className={`text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>Completed Orders</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Batch Assign Button */}
+      <div className={`flex ${isMobileView ? 'justify-center px-1' : 'justify-end'}`}>
+        <Button
+          variant={isBatchMode ? "default" : "outline"}
+          onClick={toggleBatchMode}
+          className={`${isMobileView ? 'w-full h-10 text-sm' : 'h-10 px-6'} ${
+            isBatchMode ? 'bg-blue-600 hover:bg-blue-700' : ''
+          }`}
+        >
+          <CheckSquare className={`${isMobileView ? 'h-4 w-4' : 'h-4 w-4'} mr-2`} />
+          {isBatchMode ? 'Exit Batch Mode' : 'Batch Assign Orders'}
+        </Button>
+      </div>
+
       {/* Batch Mode Controls */}
       {isBatchMode && (
         <div className={`mb-4 ${isMobileView ? 'px-1' : ''}`}>
@@ -464,45 +503,6 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
           </Card>
         </div>
       )}
-
-      {/* Stats Overview */}
-      <div className={`grid ${isMobileView ? 'grid-cols-1 gap-2 px-1' : 'grid-cols-3 gap-6'}`}>
-        <Card>
-          <CardContent className={`flex items-center ${isMobileView ? 'py-2 px-3' : 'py-6'}`}>
-            <div className={`${isMobileView ? 'w-7 h-7' : 'w-12 h-12'} rounded-full bg-orange-100 flex items-center justify-center mr-3`}>
-              <Clock className={`${isMobileView ? 'w-3.5 h-3.5' : 'w-6 h-6'} text-orange-600`} />
-            </div>
-            <div>
-              <div className={`font-bold text-orange-600 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.pending}</div>
-              <p className={`text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>Pending Orders</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className={`flex items-center ${isMobileView ? 'py-2 px-3' : 'py-6'}`}>
-            <div className={`${isMobileView ? 'w-7 h-7' : 'w-12 h-12'} rounded-full bg-blue-100 flex items-center justify-center mr-3`}>
-              <UserCheck className={`${isMobileView ? 'w-3.5 h-3.5' : 'w-6 h-6'} text-blue-600`} />
-            </div>
-            <div>
-              <div className={`font-bold text-blue-600 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.assigned}</div>
-              <p className={`text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>Assigned Orders</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className={`flex items-center ${isMobileView ? 'py-2 px-3' : 'py-6'}`}>
-            <div className={`${isMobileView ? 'w-7 h-7' : 'w-12 h-12'} rounded-full bg-green-100 flex items-center justify-center mr-3`}>
-              <CheckCircle className={`${isMobileView ? 'w-3.5 h-3.5' : 'w-6 h-6'} text-green-600`} />
-            </div>
-            <div>
-              <div className={`font-bold text-green-600 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.completed}</div>
-              <p className={`text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>Completed Orders</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Multi-Store View */}
       {selectedStore === 'all' ? (

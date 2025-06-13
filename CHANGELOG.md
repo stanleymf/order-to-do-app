@@ -245,3 +245,12 @@ node scripts/version.js set 1.5.0
 - Restored missing batch assign functions: `toggleBatchMode`, `selectAllOrders`, `clearSelection`, `batchAssignToMe`, `batchUnassign`
 - Fixed missing `assignOrder` import in OrdersView component
 - Ensured proper state management for batch mode and order selection 
+
+## [1.0.11] - 2025-06-13
+
+### Changed
+- **Simplified Batch Assign UI**: Moved batch assign button to a more logical position
+  - Removed batch mode toggle from header area
+  - Positioned batch assign button below stats overview and before order cards
+  - More intuitive placement that follows natural workflow
+  - Cleaner header area without additional controls 
