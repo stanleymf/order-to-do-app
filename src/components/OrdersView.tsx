@@ -15,8 +15,7 @@ import {
   getStores, 
   getFlorists, 
   getProductLabels,
-  updateFloristStats,
-  assignOrder
+  updateFloristStats
 } from '../utils/storage';
 import { StoreSelector } from '@/components/StoreSelector';
 
@@ -39,7 +38,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
   const [stores, setStores] = useState<Store[]>([]);
   const [florists, setFlorists] = useState<User[]>([]);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
-  const [isBatchMode, setIsBatchMode] = useState<boolean>(false);
+  const [isBatchMode] = useState<boolean>(false);
   const [orderCountsByStore, setOrderCountsByStore] = useState<Record<string, number>>({});
   
   // Get mobile view context
