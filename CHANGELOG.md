@@ -316,4 +316,20 @@ node scripts/version.js set 1.5.0
 - **Time formatting**: Proper display in hours and minutes format
 - **Mobile responsive**: Analytics dashboard works on all devices
 
-## [1.0.13] - 2025-06-13 
+## [1.0.15] - 2025-06-13
+
+### Added
+- **All Orders Stats Card**: Added missing "All Orders" card as the first card in stats breakdown
+  - **Total Orders Display**: Shows total count of all orders (pending + assigned + completed)
+  - **Clickable Filter**: Click to show all orders (resets any status filter)
+  - **Visual Consistency**: Gray theme with Package icon to match other stats cards
+  - **Responsive Design**: Adapts to mobile view with proper spacing and sizing
+  - **Grid Layout**: Updated from 3-column to 4-column grid on desktop
+  - **Active State**: Gray ring and background when "All Orders" filter is active
+
+### Enhanced
+- **Complete Stats Overview**: Now shows all four order statuses (All, Pending, Assigned, Completed)
+- **Better User Experience**: Users can quickly see total order count and reset filters
+- **Consistent Interaction**: All stats cards now have click-to-filter functionality
+
+## [1.0.14] - 2025-06-13 

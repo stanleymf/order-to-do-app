@@ -381,7 +381,24 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
       </div>
 
       {/* Stats Overview */}
-      <div className={`grid ${isMobileView ? 'grid-cols-1 gap-2 px-1' : 'grid-cols-3 gap-6'}`}>
+      <div className={`grid ${isMobileView ? 'grid-cols-1 gap-2 px-1' : 'grid-cols-4 gap-6'}`}>
+        <Card 
+          className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+            selectedStatus === 'all' ? 'ring-2 ring-gray-500 bg-gray-50' : ''
+          }`}
+          onClick={() => setSelectedStatus(selectedStatus === 'all' ? 'all' : 'all')}
+        >
+          <CardContent className={`flex items-center ${isMobileView ? 'py-2 px-3' : 'py-6'}`}>
+            <div className={`${isMobileView ? 'w-7 h-7' : 'w-12 h-12'} rounded-full bg-gray-100 flex items-center justify-center mr-3`}>
+              <Package className={`${isMobileView ? 'w-3.5 h-3.5' : 'w-6 h-6'} text-gray-600`} />
+            </div>
+            <div>
+              <div className={`font-bold text-gray-600 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.total}</div>
+              <p className={`text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>All Orders</p>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card 
           className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
             selectedStatus === 'pending' ? 'ring-2 ring-orange-500 bg-orange-50' : ''
