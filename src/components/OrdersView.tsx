@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarDays, Package, CheckCircle, Clock, UserCheck } from 'lucide-react';
+import { CalendarDays, Package, CheckCircle, Clock, UserCheck, CheckSquare, UserIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { OrderCard } from './OrderCard';
 import { useMobileView } from './Dashboard';
@@ -15,9 +15,11 @@ import {
   getStores, 
   getFlorists, 
   getProductLabels,
-  updateFloristStats
+  updateFloristStats,
+  assignOrder
 } from '../utils/storage';
 import { StoreSelector } from '@/components/StoreSelector';
+import { toast } from 'sonner';
 
 interface OrdersViewProps {
   currentUser: User;
@@ -38,7 +40,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
   const [stores, setStores] = useState<Store[]>([]);
   const [florists, setFlorists] = useState<User[]>([]);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
-  const [isBatchMode] = useState<boolean>(false);
+  const [isBatchMode, setIsBatchMode] = useState<boolean>(false);
   const [orderCountsByStore, setOrderCountsByStore] = useState<Record<string, number>>({});
   
   // Get mobile view context
@@ -176,6 +178,12 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
     }
   };
 
+  // Batch selection handlers
+  const toggleBatchMode = () => {
+    setIsBatchMode(!isBatchMode);
+    setSelectedOrderIds(new Set());
+  };
+
   const toggleOrderSelection = (orderId: string) => {
     const newSelected = new Set(selectedOrderIds);
     if (newSelected.has(orderId)) {
@@ -184,6 +192,37 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
       newSelected.add(orderId);
     }
     setSelectedOrderIds(newSelected);
+  };
+
+  const selectAllOrders = () => {
+    const allOrderIds = new Set(orders.map(order => order.id));
+    setSelectedOrderIds(allOrderIds);
+  };
+
+  const clearSelection = () => {
+    setSelectedOrderIds(new Set());
+  };
+
+  const batchAssignToMe = () => {
+    selectedOrderIds.forEach(orderId => {
+      assignOrder(orderId, currentUser.id);
+    });
+    setSelectedOrderIds(new Set());
+    handleOrderUpdate();
+    toast.success(`Successfully assigned ${selectedOrderIds.size} orders to you!`, {
+      description: `Orders have been assigned and are ready for processing`
+    });
+  };
+
+  const batchUnassign = () => {
+    selectedOrderIds.forEach(orderId => {
+      assignOrder(orderId, 'unassigned');
+    });
+    setSelectedOrderIds(new Set());
+    handleOrderUpdate();
+    toast.info(`Successfully unassigned ${selectedOrderIds.size} orders`, {
+      description: `Orders are now available for assignment`
+    });
   };
 
   // Calculate order statistics
@@ -244,6 +283,20 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
             <p className={`text-gray-600 ${isMobileView ? 'text-sm' : 'text-base'}`}>
               Manage daily flower orders across all stores
             </p>
+          </div>
+
+          {/* Batch Mode Toggle */}
+          <div className={`flex ${isMobileView ? 'justify-center' : 'justify-end'}`}>
+            <Button
+              variant={isBatchMode ? "default" : "outline"}
+              onClick={toggleBatchMode}
+              className={`${isMobileView ? 'w-full h-9 text-sm' : 'h-9'} ${
+                isBatchMode ? 'bg-blue-600 hover:bg-blue-700' : ''
+              }`}
+            >
+              <CheckSquare className={`${isMobileView ? 'h-4 w-4' : 'h-4 w-4'} mr-2`} />
+              {isBatchMode ? 'Exit Batch Mode' : 'Enter Batch Mode'}
+            </Button>
           </div>
 
           {/* Filters Section */}
@@ -340,6 +393,77 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
           </div>
         </div>
       </div>
+
+      {/* Batch Mode Controls */}
+      {isBatchMode && (
+        <div className={`mb-4 ${isMobileView ? 'px-1' : ''}`}>
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className={`${isMobileView ? 'py-3 px-3' : 'py-4'}`}>
+              <div className={`flex ${isMobileView ? 'flex-col gap-2' : 'items-center justify-between gap-4'}`}>
+                <div className={`flex ${isMobileView ? 'flex-wrap gap-2' : 'items-center gap-4'}`}>
+                  <div className="flex items-center gap-2">
+                    <CheckSquare className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'} text-blue-600`} />
+                    <span className={`font-medium text-blue-900 ${isMobileView ? 'text-sm' : ''}`}>
+                      Batch Mode Active
+                    </span>
+                    <Badge variant="secondary" className={`${isMobileView ? 'text-xs' : ''}`}>
+                      {selectedOrderIds.size} selected
+                    </Badge>
+                  </div>
+                  
+                  <div className={`flex ${isMobileView ? 'flex-wrap gap-1' : 'gap-2'}`}>
+                    <Button
+                      size={isMobileView ? "sm" : "default"}
+                      variant="outline"
+                      onClick={selectAllOrders}
+                      className={`${isMobileView ? 'h-7 text-xs px-2' : 'h-8'}`}
+                    >
+                      Select All
+                    </Button>
+                    <Button
+                      size={isMobileView ? "sm" : "default"}
+                      variant="outline"
+                      onClick={clearSelection}
+                      className={`${isMobileView ? 'h-7 text-xs px-2' : 'h-8'}`}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className={`flex ${isMobileView ? 'flex-wrap gap-1' : 'gap-2'}`}>
+                  <Button
+                    size={isMobileView ? "sm" : "default"}
+                    onClick={batchAssignToMe}
+                    disabled={selectedOrderIds.size === 0}
+                    className={`${isMobileView ? 'h-7 text-xs px-2' : 'h-8'} bg-green-600 hover:bg-green-700`}
+                  >
+                    <UserIcon className={`${isMobileView ? 'h-3 w-3' : 'h-4 w-4'} mr-1`} />
+                    Assign to Me
+                  </Button>
+                  <Button
+                    size={isMobileView ? "sm" : "default"}
+                    variant="outline"
+                    onClick={batchUnassign}
+                    disabled={selectedOrderIds.size === 0}
+                    className={`${isMobileView ? 'h-7 text-xs px-2' : 'h-8'}`}
+                  >
+                    Unassign All
+                  </Button>
+                  <Button
+                    size={isMobileView ? "sm" : "default"}
+                    variant="outline"
+                    onClick={toggleBatchMode}
+                    className={`${isMobileView ? 'h-7 text-xs px-2' : 'h-8'}`}
+                  >
+                    Exit Batch Mode
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Stats Overview */}
       <div className={`grid ${isMobileView ? 'grid-cols-1 gap-2 px-1' : 'grid-cols-3 gap-6'}`}>

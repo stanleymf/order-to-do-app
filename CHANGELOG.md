@@ -224,4 +224,24 @@ node scripts/version.js set 1.5.0
 
 ### 🐛 Bug Fixes
 - Fixed TypeScript build errors by removing unused imports and variables
-- Ensured version history is updated with every change 
+- Ensured version history is updated with every change
+
+## [1.0.10] - 2025-06-13
+
+### Added
+- **Batch Assign Functionality**: Restored batch assignment features that were accidentally removed during TypeScript cleanup
+  - Batch mode toggle button in the header
+  - Batch mode controls panel with selection management
+  - "Select All" and "Clear" selection buttons
+  - "Assign to Me" and "Unassign All" batch operations
+  - Toast notifications for batch operations
+  - Checkbox selection in order cards when batch mode is active
+- **Enhanced User Experience**: 
+  - Visual feedback for batch mode with blue-themed control panel
+  - Disabled state for batch action buttons when no orders are selected
+  - Mobile-responsive batch mode controls
+
+### Fixed
+- Restored missing batch assign functions: `toggleBatchMode`, `selectAllOrders`, `clearSelection`, `batchAssignToMe`, `batchUnassign`
+- Fixed missing `assignOrder` import in OrdersView component
+- Ensured proper state management for batch mode and order selection 
