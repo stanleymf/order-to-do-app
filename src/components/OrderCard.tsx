@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +42,8 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
   // Get the label for this order's difficulty
   const labels = getProductLabels();
   const currentLabel = labels.find(label => label.name === order.difficultyLabel);
+
+  const justOpenedEdit = useRef(false);
 
   // Mock function to get product image - will be replaced with Shopify integration
   const getProductImage = () => {
@@ -103,6 +105,10 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
+    if (justOpenedEdit.current) {
+      justOpenedEdit.current = false;
+      return;
+    }
     // Don't toggle if clicking on interactive elements or if any input/textarea/select is focused
     const target = e.target as HTMLElement;
     const isInteractive = target.closest('button') || 
@@ -448,6 +454,7 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
                       onClick={e => {
                         if (isAdmin && !isCompleted) {
                           e.stopPropagation();
+                          justOpenedEdit.current = true;
                           setIsEditingProduct(true);
                         }
                       }}
