@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarDays, Package, CheckCircle, Clock, UserCheck, CheckSquare, UserIcon, RefreshCw } from 'lucide-react';
+import { CalendarDays, Package, CheckCircle, Clock, UserCheck, CheckSquare, UserIcon, RefreshCw, Search, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { OrderCard } from './OrderCard';
 import { useMobileView } from './Dashboard';
@@ -36,7 +37,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
   const [selectedDifficultyLabel] = useState<string>('all');
   const [selectedProductTypeLabel] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all'); // New status filter
-  const [searchQuery] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [orders, setOrders] = useState<Order[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
   const [florists, setFlorists] = useState<User[]>([]);
@@ -297,18 +298,66 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
 
   const unfilteredOrders = getUnfilteredOrders();
 
-  // Group orders by store for multi-store view
-  const ordersByStore = stores.reduce((acc, store) => {
-    const storeOrders = orders.filter(order => order.storeId === store.id);
-    if (storeOrders.length > 0) {
-      acc[store.id] = {
-        store,
-        orders: sortOrders(storeOrders), // Apply sorting to store orders
-        stats: getOrderStats(storeOrders)
-      };
+  // Filter orders based on selected criteria
+  const filteredOrders = useCallback(() => {
+    let filtered = orders;
+
+    // Filter by store
+    if (selectedStore !== 'all') {
+      filtered = filtered.filter(order => order.storeId === selectedStore);
     }
-    return acc;
-  }, {} as { [storeId: string]: { store: Store; orders: Order[]; stats: any } });
+
+    // Filter by status
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(order => order.status === selectedStatus);
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(order => 
+        order.id.toLowerCase().includes(query) ||
+        order.productName.toLowerCase().includes(query) ||
+        (order.productVariant && order.productVariant.toLowerCase().includes(query)) ||
+        (order.customerName && order.customerName.toLowerCase().includes(query)) ||
+        (order.customerEmail && order.customerEmail.toLowerCase().includes(query)) ||
+        (order.customerPhone && order.customerPhone.toLowerCase().includes(query)) ||
+        (order.remarks && order.remarks.toLowerCase().includes(query)) ||
+        (order.productCustomizations && order.productCustomizations.toLowerCase().includes(query)) ||
+        order.timeslot.toLowerCase().includes(query) ||
+        (order.deliveryType && order.deliveryType.toLowerCase().includes(query))
+      );
+    }
+
+    return filtered;
+  }, [orders, selectedStore, selectedStatus, searchQuery]);
+
+  // Group filtered orders by store
+  const ordersByStore = useCallback(() => {
+    const filtered = filteredOrders();
+    const grouped: Record<string, { store: Store; orders: Order[]; stats: any }> = {};
+
+    filtered.forEach(order => {
+      const store = stores.find(s => s.id === order.storeId);
+      if (store) {
+        if (!grouped[store.id]) {
+          grouped[store.id] = {
+            store,
+            orders: [],
+            stats: { pending: 0, assigned: 0, completed: 0, total: 0 }
+          };
+        }
+        grouped[store.id].orders.push(order);
+      }
+    });
+
+    // Calculate stats for each store
+    Object.values(grouped).forEach(group => {
+      group.stats = getOrderStats(group.orders);
+    });
+
+    return grouped;
+  }, [filteredOrders, stores]);
 
   const totalStats = getOrderStats(unfilteredOrders);
 
@@ -322,6 +371,8 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
     }, {} as Record<string, number>);
     setOrderCountsByStore(counts);
   };
+
+  const selectedStoreObj = stores.find(s => s.id === selectedStore);
 
   return (
     <div className="space-y-6">
@@ -511,6 +562,39 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
         </Card>
       </div>
 
+      {/* Search Bar */}
+      <div className={`mb-4 ${isMobileView ? 'px-1' : ''}`}>
+        <Card>
+          <CardContent className={`${isMobileView ? 'py-3 px-3' : 'py-4'}`}>
+            <div className="relative">
+              <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 ${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
+              <Input
+                type="text"
+                placeholder="Search orders by ID, product name, customer, timeslot, delivery type..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`pl-10 pr-10 ${isMobileView ? 'text-sm' : ''}`}
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSearchQuery('')}
+                  className={`absolute right-1 top-1/2 transform -translate-y-1/2 p-1 h-auto ${isMobileView ? 'w-6 h-6' : 'w-8 h-8'}`}
+                >
+                  <X className={`text-gray-400 ${isMobileView ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                </Button>
+              )}
+            </div>
+            {searchQuery && (
+              <div className={`mt-2 text-sm text-gray-600 ${isMobileView ? 'text-xs' : ''}`}>
+                Found {filteredOrders().length} order{filteredOrders().length !== 1 ? 's' : ''} matching "{searchQuery}"
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Batch Assign Button */}
       <div className={`flex ${isMobileView ? 'justify-center px-1' : 'justify-end'}`}>
         <Button
@@ -591,7 +675,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
       {/* Multi-Store View */}
       {selectedStore === 'all' ? (
         <div className="space-y-8">
-          {Object.values(ordersByStore).map(({ store, orders: storeOrders, stats }) => (
+          {Object.values(ordersByStore()).map(({ store, orders: storeOrders, stats }) => (
             <Card key={store.id} className={`${isMobileView ? 'mb-3' : 'mb-4'}`}>
               <CardHeader className={`${isMobileView ? 'pb-2 px-3' : 'pb-4'}`}>
                 <div className="flex items-center justify-between">
@@ -650,7 +734,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
             </Card>
           ))}
           
-          {Object.keys(ordersByStore).length === 0 && (
+          {Object.keys(ordersByStore()).length === 0 && (
             <Card>
               <CardContent className="text-center py-12">
                 <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -662,42 +746,42 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
         </div>
       ) : (
         /* Single Store View */
-        <Card>
-          <CardHeader className={`${isMobileView ? 'pb-2' : ''}`}>
-            <div className={`${isMobileView ? 'space-y-3' : 'flex items-center justify-between'}`}>
-              <CardTitle className={`flex items-center gap-3 ${isMobileView ? 'text-base' : ''}`}>
+        <Card className={`${isMobileView ? 'mb-3' : 'mb-4'}`}>
+          <CardHeader className={`${isMobileView ? 'pb-2 px-3' : 'pb-4'}`}>
+            <div className={`flex ${isMobileView ? 'flex-col gap-2' : 'items-center justify-between'}`}>
+              <div className={`flex ${isMobileView ? 'items-center gap-2' : 'items-center gap-4'}`}>
                 <div 
                   className={`${isMobileView ? 'w-3 h-3' : 'w-4 h-4'} rounded-full`} 
-                  style={{ backgroundColor: stores.find(s => s.id === selectedStore)?.color }}
+                  style={{ backgroundColor: selectedStoreObj?.color || '#gray' }}
                 />
-                <span>{stores.find(s => s.id === selectedStore)?.name}</span>
-                <Badge variant="outline" className={`ml-2 ${isMobileView ? 'text-xs' : ''}`}>
-                  {orders.length} orders
+                <CardTitle className={`${isMobileView ? 'text-base' : ''}`}>
+                  {selectedStoreObj?.name || 'Unknown Store'}
+                </CardTitle>
+                <Badge variant="secondary" className={`${isMobileView ? 'text-xs' : ''}`}>
+                  {filteredOrders().length} orders
                 </Badge>
-              </CardTitle>
+              </div>
               
-              {/* Single store stats */}
-              <div className={`flex ${isMobileView ? 'gap-2 flex-wrap' : 'gap-4'} ${isMobileView ? 'text-xs' : 'text-sm'}`}>
-                <div className="flex items-center gap-1">
-                  <div className={`${isMobileView ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full bg-orange-500`} />
-                  <span className="text-orange-600 font-medium">{totalStats.pending} Pending</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className={`${isMobileView ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full bg-blue-500`} />
-                  <span className="text-blue-600 font-medium">{totalStats.assigned} Assigned</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className={`${isMobileView ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full bg-green-500`} />
-                  <span className="text-green-600 font-medium">{totalStats.completed} Completed</span>
-                </div>
+              <div className={`flex ${isMobileView ? 'flex-wrap gap-1' : 'gap-2'}`}>
+                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                  <SelectTrigger className={`${isMobileView ? 'h-7 text-xs w-24' : 'h-8 w-32'}`}>
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="assigned">Assigned</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardHeader>
           
           <CardContent className={`${isMobileView ? 'pt-1' : ''}`}>
-            {orders.length > 0 ? (
+            {filteredOrders().length > 0 ? (
               <div className={`${isMobileView ? 'space-y-2' : 'space-y-3'}`}>
-                {orders.map(order => (
+                {filteredOrders().map(order => (
                   <OrderCard
                     key={order.id}
                     order={order}
@@ -712,7 +796,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
               </div>
             ) : (
               <div className={`text-center text-gray-500 ${isMobileView ? 'py-6 text-sm' : 'py-8'}`}>
-                No orders for this store on {selectedDate}
+                {searchQuery ? `No orders matching "${searchQuery}" for this store on ${selectedDate}` : `No orders for this store on ${selectedDate}`}
               </div>
             )}
           </CardContent>

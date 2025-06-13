@@ -5,6 +5,36 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.28] - 2025-06-13
+
+### Added
+- **Order Search Bar**: Added comprehensive search functionality above the batch assign button
+  - **Search Fields**: Search through order ID, product name, product variant, customer name, customer email, customer phone, remarks, product customizations, timeslot, and delivery type
+  - **Real-time Filtering**: Orders are filtered instantly as you type
+  - **Clear Button**: X button to quickly clear the search query
+  - **Search Results Counter**: Shows number of orders matching the search query
+  - **Responsive Design**: Mobile-friendly search bar with appropriate sizing
+
+### Enhanced
+- **Order Filtering**: Improved order filtering system with search integration
+  - **Combined Filters**: Search works together with existing store and status filters
+  - **Smart Search**: Case-insensitive search across multiple order fields
+  - **Visual Feedback**: Clear indication when no orders match search criteria
+  - **Performance**: Optimized filtering with useCallback for better performance
+
+### Improved
+- **User Experience**: 
+  - More efficient order discovery and management
+  - Quick access to specific orders without scrolling
+  - Better workflow for finding orders by various criteria
+  - Enhanced mobile experience with responsive search bar
+
+### Technical
+- **Search Logic**: Comprehensive search across all relevant order fields
+- **State Management**: Proper state handling for search query
+- **Component Integration**: Seamless integration with existing filtering system
+- **Mobile Responsiveness**: Adaptive design for different screen sizes
+
 ## [1.0.27] - 2025-06-13
 
 ### Fixed
