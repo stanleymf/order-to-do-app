@@ -198,4 +198,10 @@ node scripts/version.js set 1.5.0
 ### Version Guidelines:
 - **Patch** (1.0.0 → 1.0.1): Bug fixes, minor improvements
 - **Minor** (1.0.0 → 1.1.0): New features, backward compatible
-- **Major** (1.0.0 → 2.0.0): Breaking changes, major features 
+- **Major** (1.0.0 → 2.0.0): Breaking changes, major features
+
+## [1.0.7] - 2025-06-13
+
+### 🐛 Bug Fixes
+- Fixed: Order card no longer collapses when typing in the product customizations textarea in desktop view.
+- Versioning is now updated with every change. 
