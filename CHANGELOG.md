@@ -5,6 +5,16 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2025-06-13
+
+### Fixed
+- Further improved mobile responsiveness for iPhone 15:
+  - Reduced header elements size and spacing
+  - Optimized filtering controls layout and text size
+  - Adjusted stat cards padding and icon sizes
+  - Fixed calendar popup sizing on mobile
+  - Improved overall spacing and touch targets
+
 ## [1.0.5] - 2025-06-13
 
 ### Fixed

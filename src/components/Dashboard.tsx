@@ -43,17 +43,17 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     <MobileViewContext.Provider value={{ isMobileView, toggleMobileView }}>
       <div className={`min-h-screen bg-gray-50 ${isMobileView ? 'max-w-[393px] mx-auto border-x-4 border-gray-400 shadow-2xl' : ''}`}>
         <header className="bg-white shadow-sm border-b">
-          <div className={`mx-auto ${isMobileView ? 'px-2' : 'max-w-7xl px-4 sm:px-6 lg:px-8'}`}>
-            <div className={`flex justify-between items-center h-16 ${isMobileView ? 'gap-2 px-2' : ''}`}>
-              <div className="flex items-center min-w-0 flex-shrink-1">
-                <h1 className={`font-semibold text-gray-900 ${isMobileView ? 'text-sm truncate max-w-[120px]' : 'text-xl'}`}>
+          <div className={`mx-auto ${isMobileView ? 'px-1' : 'max-w-7xl px-4 sm:px-6 lg:px-8'}`}>
+            <div className={`flex justify-between items-center h-16 ${isMobileView ? 'gap-1.5' : ''}`}>
+              <div className="flex items-center min-w-0 flex-shrink-0">
+                <h1 className={`font-semibold text-gray-900 ${isMobileView ? 'text-xs truncate max-w-[100px]' : 'text-xl'}`}>
                   {isMobileView ? 'Dashboard' : 'Florist Dashboard'}
                 </h1>
-                <span className={`px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full ${isMobileView ? 'ml-1 flex-shrink-0 text-[10px] px-1.5' : 'ml-4'}`}>
+                <span className={`px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded-full ${isMobileView ? 'ml-1 flex-shrink-0 text-[10px]' : 'ml-4 text-xs'}`}>
                   {user.role}
                 </span>
                 {isMobileView && (
-                  <span className="ml-1 px-1 py-1 bg-orange-100 text-orange-800 text-[10px] rounded-full flex-shrink-0">
+                  <span className="ml-1 px-1 py-0.5 bg-orange-100 text-orange-800 text-[10px] rounded-full flex-shrink-0">
                     📱
                   </span>
                 )}
@@ -68,13 +68,11 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   variant={isMobileView ? "default" : "outline"}
                   size="sm"
                   onClick={toggleMobileView}
-                  className={`${isMobileView ? 'bg-orange-600 hover:bg-orange-700 text-[10px] px-1.5 h-6 min-w-0' : ''}`}
+                  className={`${isMobileView ? 'bg-orange-600 hover:bg-orange-700 text-[10px] px-1 h-5 min-w-0' : ''}`}
                   title={isMobileView ? "Switch to Desktop View" : "Switch to Mobile View"}
                 >
                   {isMobileView ? (
-                    <>
-                      <Monitor className="h-3 w-3" />
-                    </>
+                    <Monitor className="h-2.5 w-2.5" />
                   ) : (
                     <>
                       <Smartphone className="h-4 w-4 mr-2" />
@@ -87,9 +85,9 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   variant="outline" 
                   size="sm" 
                   onClick={handleLogout} 
-                  className={isMobileView ? 'text-[10px] px-1.5 h-6 min-w-0' : ''}
+                  className={isMobileView ? 'text-[10px] px-1 h-5 min-w-0' : ''}
                 >
-                  <LogOut className={`${isMobileView ? 'h-3 w-3' : 'h-4 w-4 mr-2'}`} />
+                  <LogOut className={`${isMobileView ? 'h-2.5 w-2.5' : 'h-4 w-4 mr-2'}`} />
                   {isMobileView ? '' : 'Logout'}
                 </Button>
               </div>

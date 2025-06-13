@@ -313,26 +313,26 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
         </div>
         
         {/* Filtering Controls Container */}
-        <div className={`${isMobileView ? 'w-full space-y-3' : 'flex items-center gap-4'}`}>
+        <div className={`${isMobileView ? 'w-full space-y-2 px-1' : 'flex items-center gap-4'}`}>
           {/* Date Selector */}
           <div className={`${isMobileView ? 'w-full' : ''}`}>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className={`justify-start text-left font-normal ${isMobileView ? 'w-full' : 'w-[280px]'} ${!calendarDate && "text-muted-foreground"}`}
+                  className={`justify-start text-left font-normal ${isMobileView ? 'w-full h-8 text-xs' : 'w-[280px]'} ${!calendarDate && "text-muted-foreground"}`}
                 >
-                  <CalendarDays className="mr-2 h-4 w-4 text-gray-500" />
+                  <CalendarDays className={`${isMobileView ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'} text-gray-500`} />
                   {calendarDate ? format(calendarDate, "PPP") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-4" align="start">
+              <PopoverContent className={`w-auto p-0 ${isMobileView ? 'max-w-[calc(100vw-1rem)]' : ''}`} align="start">
                 <Calendar
                   mode="single"
                   selected={calendarDate}
                   onSelect={handleDateSelect}
                   initialFocus
-                  className="[--cell-size:3.5rem] text-base"
+                  className={`${isMobileView ? '[--day-size:2rem] text-sm' : '[--day-size:2.5rem] text-base'}`}
                 />
               </PopoverContent>
             </Popover>
@@ -352,26 +352,26 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
           {/* Status Filter */}
           <div className={`${isMobileView ? 'w-full' : ''}`}>
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className={`${isMobileView ? 'w-full text-sm' : 'w-[200px]'}`}>
+              <SelectTrigger className={`${isMobileView ? 'w-full h-8 text-xs' : 'w-[200px]'}`}>
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className={isMobileView ? 'text-xs' : ''}>
                 <SelectItem value="all">All Orders</SelectItem>
                 <SelectItem value="pending">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-orange-500" />
+                    <div className={`${isMobileView ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full bg-orange-500`} />
                     Pending
                   </div>
                 </SelectItem>
                 <SelectItem value="assigned">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                    <div className={`${isMobileView ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full bg-blue-500`} />
                     Assigned
                   </div>
                 </SelectItem>
                 <SelectItem value="completed">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
+                    <div className={`${isMobileView ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full bg-green-500`} />
                     Completed
                   </div>
                 </SelectItem>
@@ -381,22 +381,22 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
 
           {/* Search Input */}
           <div className={`relative ${isMobileView ? 'w-full' : 'flex-1'}`}>
-            <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 ${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
+            <Search className={`absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 ${isMobileView ? 'h-3 w-3' : 'h-5 w-5'}`} />
             <Input
               type="text"
-              placeholder="Search orders by ID, product, or variant..."
+              placeholder="Search orders..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`pl-10 pr-10 ${isMobileView ? 'w-full text-sm' : ''}`}
+              className={`pl-7 pr-7 ${isMobileView ? 'w-full h-8 text-xs' : ''}`}
             />
             {searchQuery && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSearchQuery('')}
-                className={`absolute right-1 top-1/2 transform -translate-y-1/2 p-1 h-auto ${isMobileView ? 'w-6 h-6' : 'w-8 h-8'}`}
+                className={`absolute right-1 top-1/2 transform -translate-y-1/2 p-0.5 ${isMobileView ? 'h-5 w-5' : 'h-7 w-7'}`}
               >
-                <X className={`text-gray-400 ${isMobileView ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                <X className={`text-gray-400 ${isMobileView ? 'h-2.5 w-2.5' : 'h-4 w-4'}`} />
               </Button>
             )}
           </div>
@@ -406,47 +406,47 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
             variant="outline"
             size={isMobileView ? "sm" : "default"}
             onClick={toggleBatchMode}
-            className={`${isMobileView ? 'w-full text-sm h-9' : ''} ${isBatchMode ? 'bg-accent' : ''}`}
+            className={`${isMobileView ? 'w-full h-8 text-xs' : ''} ${isBatchMode ? 'bg-accent' : ''}`}
           >
-            <Users2 className={`${isMobileView ? 'h-4 w-4 mr-2' : 'h-5 w-5 mr-2'}`} />
+            <Users2 className={`${isMobileView ? 'h-3 w-3 mr-1' : 'h-5 w-5 mr-2'}`} />
             {isBatchMode ? 'Exit Batch Select' : 'Batch Select'}
           </Button>
         </div>
       </div>
 
       {/* Stats Overview */}
-      <div className={`grid ${isMobileView ? 'grid-cols-1 gap-3' : 'grid-cols-3 gap-6'}`}>
+      <div className={`grid ${isMobileView ? 'grid-cols-1 gap-2 px-1' : 'grid-cols-3 gap-6'}`}>
         <Card>
-          <CardContent className={`flex items-center ${isMobileView ? 'py-3 px-4' : 'py-6'}`}>
-            <div className={`${isMobileView ? 'w-8 h-8' : 'w-12 h-12'} rounded-full bg-orange-100 flex items-center justify-center mr-4`}>
-              <Clock className={`${isMobileView ? 'w-4 h-4' : 'w-6 h-6'} text-orange-600`} />
+          <CardContent className={`flex items-center ${isMobileView ? 'py-2 px-3' : 'py-6'}`}>
+            <div className={`${isMobileView ? 'w-7 h-7' : 'w-12 h-12'} rounded-full bg-orange-100 flex items-center justify-center mr-3`}>
+              <Clock className={`${isMobileView ? 'w-3.5 h-3.5' : 'w-6 h-6'} text-orange-600`} />
             </div>
             <div>
-              <div className={`font-bold text-orange-600 ${isMobileView ? 'text-xl' : 'text-2xl'}`}>{totalStats.pending}</div>
+              <div className={`font-bold text-orange-600 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.pending}</div>
               <p className={`text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>Pending Orders</p>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className={`flex items-center ${isMobileView ? 'py-3 px-4' : 'py-6'}`}>
-            <div className={`${isMobileView ? 'w-8 h-8' : 'w-12 h-12'} rounded-full bg-blue-100 flex items-center justify-center mr-4`}>
-              <UserCheck className={`${isMobileView ? 'w-4 h-4' : 'w-6 h-6'} text-blue-600`} />
+          <CardContent className={`flex items-center ${isMobileView ? 'py-2 px-3' : 'py-6'}`}>
+            <div className={`${isMobileView ? 'w-7 h-7' : 'w-12 h-12'} rounded-full bg-blue-100 flex items-center justify-center mr-3`}>
+              <UserCheck className={`${isMobileView ? 'w-3.5 h-3.5' : 'w-6 h-6'} text-blue-600`} />
             </div>
             <div>
-              <div className={`font-bold text-blue-600 ${isMobileView ? 'text-xl' : 'text-2xl'}`}>{totalStats.assigned}</div>
+              <div className={`font-bold text-blue-600 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.assigned}</div>
               <p className={`text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>Assigned Orders</p>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className={`flex items-center ${isMobileView ? 'py-3 px-4' : 'py-6'}`}>
-            <div className={`${isMobileView ? 'w-8 h-8' : 'w-12 h-12'} rounded-full bg-green-100 flex items-center justify-center mr-4`}>
-              <CheckCircle className={`${isMobileView ? 'w-4 h-4' : 'w-6 h-6'} text-green-600`} />
+          <CardContent className={`flex items-center ${isMobileView ? 'py-2 px-3' : 'py-6'}`}>
+            <div className={`${isMobileView ? 'w-7 h-7' : 'w-12 h-12'} rounded-full bg-green-100 flex items-center justify-center mr-3`}>
+              <CheckCircle className={`${isMobileView ? 'w-3.5 h-3.5' : 'w-6 h-6'} text-green-600`} />
             </div>
             <div>
-              <div className={`font-bold text-green-600 ${isMobileView ? 'text-xl' : 'text-2xl'}`}>{totalStats.completed}</div>
+              <div className={`font-bold text-green-600 ${isMobileView ? 'text-lg' : 'text-2xl'}`}>{totalStats.completed}</div>
               <p className={`text-gray-600 ${isMobileView ? 'text-xs' : 'text-sm'}`}>Completed Orders</p>
             </div>
           </CardContent>
