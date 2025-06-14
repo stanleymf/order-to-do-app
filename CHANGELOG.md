@@ -5,6 +5,26 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.29] - 14/06/2025
+
+### 🔧 Enhanced Context Binding Fix
+- **Explicit Method Binding**: Added explicit method binding in ShopifyApiService constructor
+  - **Root Cause**: JavaScript context binding issues in class methods when used as callbacks
+  - **Solution**: Explicitly bind all private methods in constructor to preserve `this` context
+  - **Methods Bound**: `mapShopifyOrderToLocal`, `extractDeliveryInfoFromTags`, `extractInstructions`, etc.
+  - **Impact**: Ensures all method calls maintain proper context regardless of how they're invoked
+
+### 🛠️ Technical Improvements
+- **Constructor Binding**: Added comprehensive method binding in ShopifyApiService constructor
+- **Context Preservation**: All private methods now explicitly bound to class instance
+- **Error Prevention**: Prevents "Cannot read properties of undefined" errors in method chains
+- **Reliability**: Ensures consistent behavior across different invocation patterns
+
+### 📋 User Impact
+- **Before**: Order sync could fail with context binding errors
+- **After**: Order sync works reliably with proper method context
+- **Affected Features**: All Shopify API operations, particularly order and product syncing
+
 ## [2.0.0-alpha.28] - 14/06/2025
 
 ### 🐛 Critical Bug Fix

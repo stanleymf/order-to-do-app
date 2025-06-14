@@ -2,9 +2,31 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import crypto from 'crypto';
+import { readFileSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Storage functions for server-side use
+function loadStores() {
+  try {
+    const data = readFileSync(join(__dirname, 'data', 'stores.json'), 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.warn('Could not load stores:', error.message);
+    return [];
+  }
+}
+
+function loadWebhookConfig() {
+  try {
+    const data = readFileSync(join(__dirname, 'data', 'webhook-config.json'), 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.warn('Could not load webhook config:', error.message);
+    return { stores: [] };
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 4321;
@@ -23,7 +45,7 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     webhookEndpoint: '/api/webhooks/shopify',
-    version: '2.0.0-alpha.28'
+    version: '2.0.0-alpha.29'
   });
 });
 
@@ -41,7 +63,7 @@ app.get('/api/status', (req, res) => {
       endpoint: '/api/webhooks/shopify',
       secretConfigured: !!process.env.SHOPIFY_WEBHOOK_SECRET
     },
-    version: '2.0.0-alpha.28'
+    version: '2.0.0-alpha.29'
   });
 });
 
@@ -206,6 +228,110 @@ app.post('/api/shopify/proxy', async (req, res) => {
   } catch (error) {
     console.error('Shopify proxy error:', error);
     res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
+// Test endpoint to examine order structure
+app.get('/api/test/order-structure', async (req, res) => {
+  try {
+    console.log('🔍 Testing order structure from Windflower Florist 2...');
+    
+    // Hardcoded values for testing - replace with your actual values
+    const shopDomain = 'windflowerflorist.myshopify.com';
+    const accessToken = req.query.token; // Pass token as query parameter for testing
+    
+    if (!accessToken) {
+      return res.status(400).json({ 
+        error: 'Access token required',
+        message: 'Please provide access token as query parameter: ?token=YOUR_TOKEN'
+      });
+    }
+    
+    // Make direct API call to get a single order
+    const apiUrl = `https://${shopDomain}/admin/api/2024-01/orders.json?limit=1&status=any`;
+    
+    console.log(`📡 Fetching from: ${apiUrl}`);
+    
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'X-Shopify-Access-Token': accessToken,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Shopify API Error:', response.status, errorText);
+      return res.status(response.status).json({
+        error: 'Shopify API Error',
+        status: response.status,
+        message: errorText
+      });
+    }
+    
+    const data = await response.json();
+    console.log('✅ Raw Shopify Response received');
+    
+    if (!data.orders || data.orders.length === 0) {
+      return res.json({
+        message: 'No orders found',
+        totalOrders: 0,
+        rawResponse: data
+      });
+    }
+    
+    const firstOrder = data.orders[0];
+    
+    // Extract key fields for analysis
+    const orderAnalysis = {
+      orderId: firstOrder.id,
+      orderName: firstOrder.name,
+      createdAt: firstOrder.created_at,
+      tags: firstOrder.tags,
+      tagsArray: firstOrder.tags ? firstOrder.tags.split(',').map(tag => tag.trim()) : [],
+      note: firstOrder.note,
+      lineItems: firstOrder.line_items.map(item => ({
+        id: item.id,
+        title: item.title,
+        variant_title: item.variant_title,
+        properties: item.properties
+      })),
+      customer: {
+        first_name: firstOrder.customer?.first_name,
+        last_name: firstOrder.customer?.last_name,
+        email: firstOrder.customer?.email
+      },
+      totalPrice: firstOrder.total_price,
+      currency: firstOrder.currency,
+      fulfillmentStatus: firstOrder.fulfillment_status,
+      financialStatus: firstOrder.financial_status
+    };
+    
+    res.json({
+      message: 'Order structure analysis',
+      store: {
+        domain: shopDomain
+      },
+      orderAnalysis,
+      // Include full order for complete analysis (be careful with sensitive data)
+      fullOrderSample: {
+        ...firstOrder,
+        // Remove sensitive customer data for safety
+        customer: {
+          first_name: firstOrder.customer?.first_name,
+          last_name: firstOrder.customer?.last_name
+        }
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error in test endpoint:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error.message,
+      stack: error.stack
+    });
   }
 });
 

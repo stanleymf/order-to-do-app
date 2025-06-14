@@ -291,6 +291,14 @@ export class ShopifyApiService {
       accessToken,
       apiVersion
     };
+    
+    // Explicitly bind methods to preserve context
+    this.mapShopifyOrderToLocal = this.mapShopifyOrderToLocal.bind(this);
+    this.mapShopifyProductToLocal = this.mapShopifyProductToLocal.bind(this);
+    this.extractDeliveryInfoFromTags = this.extractDeliveryInfoFromTags.bind(this);
+    this.extractInstructions = this.extractInstructions.bind(this);
+    this.extractCustomizations = this.extractCustomizations.bind(this);
+    this.formatCustomerName = this.formatCustomerName.bind(this);
   }
 
   private getBaseUrl(): string {
