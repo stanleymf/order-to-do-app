@@ -23,7 +23,7 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     webhookEndpoint: '/api/webhooks/shopify',
-    version: '2.0.0-alpha.21'
+    version: '2.0.0-alpha.22'
   });
 });
 
@@ -41,7 +41,7 @@ app.get('/api/status', (req, res) => {
       endpoint: '/api/webhooks/shopify',
       secretConfigured: !!process.env.SHOPIFY_WEBHOOK_SECRET
     },
-    version: '2.0.0-alpha.21'
+    version: '2.0.0-alpha.22'
   });
 });
 
@@ -129,11 +129,11 @@ app.post('/api/webhooks/shopify', (req, res) => {
         console.log('🆕 New product created:', webhookData.id);
         break;
         
-      case 'products/updated':
+      case 'products/update':
         console.log('🔄 Product updated:', webhookData.id);
         break;
         
-      case 'products/deleted':
+      case 'products/delete':
         console.log('🗑️ Product deleted:', webhookData.id);
         break;
         

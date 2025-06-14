@@ -4,8 +4,8 @@ export type WebhookTopic =
   | 'orders/updated' 
   | 'orders/cancelled'
   | 'products/create'
-  | 'products/updated'
-  | 'products/deleted'
+  | 'products/update'
+  | 'products/delete'
   | 'customers/create'
   | 'customers/updated';
 
@@ -260,8 +260,8 @@ export class MultiStoreWebhookManager {
       'orders/updated',
       'orders/cancelled',
       'products/create',
-      'products/updated',
-      'products/deleted'
+      'products/update',
+      'products/delete'
     ];
   }
 

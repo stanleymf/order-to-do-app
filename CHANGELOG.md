@@ -5,6 +5,26 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.22] - 2024-12-19
+
+### 🔧 Critical Webhook Topic Fix
+- **Fixed Webhook Topic Names**: Corrected product webhook topic names to match Shopify's exact API specification
+  - Changed `products/updated` to `products/update` (correct Shopify API format)
+  - Changed `products/deleted` to `products/delete` (correct Shopify API format)
+  - Resolves 422 "Unprocessable Content" errors when registering product webhooks
+
+### 🎯 Server-Side Updates
+- **Enhanced Webhook Processing**: Updated server-side webhook handlers to use correct topic names
+  - Product update events now properly recognized as `products/update`
+  - Product deletion events now properly recognized as `products/delete`
+  - Improved webhook topic validation and error handling
+
+### 📊 Webhook Registration Improvements
+- **Successful Registration**: Product webhooks now register successfully with Shopify
+  - No more 422 errors when auto-registering webhooks for stores
+  - Proper webhook status tracking for all product lifecycle events
+  - Enhanced webhook details display with correct topic names
+
 ## [2.0.0-alpha.21] - 2024-12-19
 
 ### 🔗 Enhanced Webhook Configuration - Additional Product Webhooks
