@@ -5,6 +5,20 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.11] - 2024-12-19
+
+### 🐛 Critical Bug Fix
+- **Data Service**: Fixed critical bug where DataService.getStores() was returning static mock data instead of actual localStorage data
+  - This was the root cause of deleted stores still appearing in webhook management
+  - StoreContext now properly receives updated store data from localStorage
+  - All store-dependent components now reflect real-time store changes
+  - Added debug logging to help track store updates and cleanup processes
+
+### 🔧 Technical Details
+- Updated DataService.getStores() to use getStoredStores() from storage utility
+- Maintains fallback to mock data if no stored data exists (for first-time users)
+- Enhanced debugging capabilities across StoreContext and MultiStoreWebhookManager
+
 ## [2.0.0-alpha.10] - 2024-12-19
 
 ### 🐛 Bug Fixes

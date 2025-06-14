@@ -1,11 +1,14 @@
 import { mockUsers, mockStores, mockProducts, mockOrders, mockFloristStats } from './mockData';
 import type { User, Store, Product, Order, FloristStats } from '../types';
+import { getStores as getStoredStores } from '../utils/storage';
 
 // Data Service Class for centralized data access
 export class DataService {
   // Store Management
   static getStores(): Store[] {
-    return mockStores;
+    // Get stores from localStorage, fallback to mock data if none exist
+    const storedStores = getStoredStores();
+    return storedStores.length > 0 ? storedStores : mockStores;
   }
 
   static getStoreById(storeId: string): Store | undefined {

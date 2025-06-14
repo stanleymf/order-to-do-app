@@ -34,13 +34,16 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
       setIsLoading(true);
       setError(null);
       
+      console.log('🔄 StoreContext: Loading stores from storage');
       const stores = DataService.getStores();
+      console.log('🏪 StoreContext: Loaded stores:', stores.map(s => s.name));
       setAllStores(stores);
       
       // Check if current store still exists
       if (currentStore) {
         const currentStoreExists = stores.find(store => store.id === currentStore.id);
         if (!currentStoreExists) {
+          console.log('⚠️  StoreContext: Current store was deleted, switching to first store');
           // Current store was deleted, fallback to first store
           setCurrentStore(stores[0] || null);
         }
@@ -69,6 +72,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
 
   // Refresh stores function that can be called externally
   const refreshStores = () => {
+    console.log('🔄 StoreContext: Refresh stores called externally');
     loadStores();
   };
 

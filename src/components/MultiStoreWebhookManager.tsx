@@ -45,26 +45,35 @@ export function MultiStoreWebhookManager() {
     syncInterval: 60 // 1 minute default
   });
 
-  // Load store configurations on component mount and when stores change
+  // Load store configurations on component mount
   useEffect(() => {
+    console.log('🔄 MultiStoreWebhookManager: Initial load');
     loadStoreConfigs();
     loadWebhookStatus();
   }, []);
 
   // Clean up orphaned webhook configurations when stores change
   useEffect(() => {
-    cleanupOrphanedConfigs();
-    loadStoreConfigs(); // Reload after cleanup
+    if (allStores.length > 0) {
+      console.log('🔄 MultiStoreWebhookManager: Store list changed, checking for orphaned configs');
+      console.log('Current stores:', allStores.map(s => s.name));
+      cleanupOrphanedConfigs();
+      loadStoreConfigs(); // Reload after cleanup
+    }
   }, [allStores]);
 
   const loadStoreConfigs = () => {
     const configs = multiStoreWebhookManager.getAllStoreConfigs();
+    console.log('📊 Loading webhook configs:', configs.map(c => ({ name: c.storeName, id: c.storeId })));
     setStoreConfigs(configs);
   };
 
   const cleanupOrphanedConfigs = () => {
     const configs = multiStoreWebhookManager.getAllStoreConfigs();
     const validStoreIds = allStores.map(store => store.id);
+    
+    console.log('🧹 Cleanup check - Valid store IDs:', validStoreIds);
+    console.log('🧹 Cleanup check - Current configs:', configs.map(c => ({ name: c.storeName, id: c.storeId })));
     
     // Find configurations for stores that no longer exist
     const orphanedConfigs = configs.filter(config => !validStoreIds.includes(config.storeId));
@@ -75,6 +84,8 @@ export function MultiStoreWebhookManager() {
         multiStoreWebhookManager.removeStoreConfig(config.storeId);
         console.log(`🧹 Removed orphaned webhook config for: ${config.storeName} (${config.storeId})`);
       });
+    } else {
+      console.log('✅ No orphaned webhook configurations found');
     }
   };
 
@@ -88,6 +99,8 @@ export function MultiStoreWebhookManager() {
   };
 
   const availableStores = allStores.filter(store => !storeConfigs.find(config => config.storeId === store.id));
+  
+  console.log('🏪 Available stores for webhook config:', availableStores.map(s => s.name));
 
   const handleAddStoreConfig = () => {
     if (!selectedStore || !newConfig.accessToken || !newConfig.shopDomain) {
