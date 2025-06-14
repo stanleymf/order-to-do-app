@@ -2,7 +2,9 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import crypto from 'crypto';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -28,6 +30,85 @@ function loadWebhookConfig() {
   }
 }
 
+// User account storage functions
+function ensureDataDirectory() {
+  const dataDir = join(__dirname, 'data');
+  if (!existsSync(dataDir)) {
+    mkdirSync(dataDir, { recursive: true });
+  }
+}
+
+function loadUsers() {
+  try {
+    ensureDataDirectory();
+    const data = readFileSync(join(__dirname, 'data', 'users.json'), 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.warn('Could not load users:', error.message);
+    return [];
+  }
+}
+
+function saveUsers(users) {
+  try {
+    ensureDataDirectory();
+    writeFileSync(join(__dirname, 'data', 'users.json'), JSON.stringify(users, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Could not save users:', error.message);
+    return false;
+  }
+}
+
+function loadUserData(userId) {
+  try {
+    ensureDataDirectory();
+    const data = readFileSync(join(__dirname, 'data', `user-${userId}.json`), 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.warn(`Could not load user data for ${userId}:`, error.message);
+    return {
+      orders: [],
+      products: [],
+      stores: [],
+      preferences: {},
+      shopifyConfigs: {}
+    };
+  }
+}
+
+function saveUserData(userId, userData) {
+  try {
+    ensureDataDirectory();
+    writeFileSync(join(__dirname, 'data', `user-${userId}.json`), JSON.stringify(userData, null, 2));
+    return true;
+  } catch (error) {
+    console.error(`Could not save user data for ${userId}:`, error.message);
+    return false;
+  }
+}
+
+// JWT secret - in production, use environment variable
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+
+// Middleware to verify JWT token
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid or expired token' });
+    }
+    req.user = user;
+    next();
+  });
+}
+
 const app = express();
 const PORT = process.env.PORT || 4321;
 
@@ -38,6 +119,364 @@ console.log(`🔐 Webhook secret configured: ${process.env.SHOPIFY_WEBHOOK_SECRE
 // Basic middleware
 app.use(express.json());
 
+// CORS middleware for development
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    if (req.method === 'OPTIONS') {
+      res.sendStatus(200);
+    } else {
+      next();
+    }
+  });
+}
+
+// Initialize default admin user if no users exist
+function initializeDefaultUsers() {
+  const users = loadUsers();
+  if (users.length === 0) {
+    console.log('🔧 No users found, creating default admin user...');
+    const defaultAdmin = {
+      id: 'admin-1',
+      name: 'Admin User',
+      email: 'admin@floralshop.com',
+      role: 'admin',
+      passwordHash: bcrypt.hashSync('admin123', 10),
+      createdAt: new Date().toISOString(),
+      isActive: true
+    };
+    
+    const defaultFlorist = {
+      id: 'florist-1',
+      name: 'Maya Florist',
+      email: 'maya@floralshop.com',
+      role: 'florist',
+      passwordHash: bcrypt.hashSync('password', 10),
+      createdAt: new Date().toISOString(),
+      isActive: true
+    };
+    
+    saveUsers([defaultAdmin, defaultFlorist]);
+    console.log('✅ Default users created');
+    console.log('📧 Admin: admin@floralshop.com / admin123');
+    console.log('📧 Florist: maya@floralshop.com / password');
+  }
+}
+
+// Initialize default users on startup
+initializeDefaultUsers();
+
+// User Account Management Endpoints
+
+// Register new user (admin only)
+app.post('/api/auth/register', authenticateToken, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins can register new users' });
+    }
+
+    const { name, email, role, password } = req.body;
+
+    if (!name || !email || !role || !password) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    if (!['admin', 'florist'].includes(role)) {
+      return res.status(400).json({ error: 'Role must be admin or florist' });
+    }
+
+    const users = loadUsers();
+    
+    // Check if email already exists
+    if (users.find(u => u.email === email)) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+
+    // Create new user
+    const newUser = {
+      id: `${role}-${Date.now()}`,
+      name,
+      email,
+      role,
+      passwordHash: await bcrypt.hash(password, 10),
+      createdAt: new Date().toISOString(),
+      isActive: true
+    };
+
+    users.push(newUser);
+    
+    if (saveUsers(users)) {
+      // Initialize empty user data
+      saveUserData(newUser.id, {
+        orders: [],
+        products: [],
+        stores: [],
+        preferences: {},
+        shopifyConfigs: {}
+      });
+
+      res.json({ 
+        message: 'User registered successfully',
+        user: {
+          id: newUser.id,
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role,
+          createdAt: newUser.createdAt,
+          isActive: newUser.isActive
+        }
+      });
+    } else {
+      res.status(500).json({ error: 'Failed to save user' });
+    }
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ error: 'Registration failed' });
+  }
+});
+
+// Login endpoint
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const users = loadUsers();
+    const user = users.find(u => u.email === email && u.isActive);
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        id: user.id, 
+        email: user.email, 
+        role: user.role 
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' } // Token expires in 7 days
+    );
+
+    res.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// Get current user profile
+app.get('/api/auth/profile', authenticateToken, (req, res) => {
+  try {
+    const users = loadUsers();
+    const user = users.find(u => u.id === req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+      isActive: user.isActive
+    });
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+});
+
+// Update user profile
+app.put('/api/auth/profile', authenticateToken, async (req, res) => {
+  try {
+    const { name, email, currentPassword, newPassword } = req.body;
+    const users = loadUsers();
+    const userIndex = users.findIndex(u => u.id === req.user.id);
+
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = users[userIndex];
+
+    // If changing password, verify current password
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ error: 'Current password required to change password' });
+      }
+
+      const isValidPassword = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!isValidPassword) {
+        return res.status(401).json({ error: 'Current password is incorrect' });
+      }
+
+      user.passwordHash = await bcrypt.hash(newPassword, 10);
+    }
+
+    // Update other fields
+    if (name) user.name = name;
+    if (email && email !== user.email) {
+      // Check if new email is already taken
+      if (users.find(u => u.email === email && u.id !== user.id)) {
+        return res.status(400).json({ error: 'Email already in use' });
+      }
+      user.email = email;
+    }
+
+    user.updatedAt = new Date().toISOString();
+
+    if (saveUsers(users)) {
+      res.json({
+        message: 'Profile updated successfully',
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        }
+      });
+    } else {
+      res.status(500).json({ error: 'Failed to update profile' });
+    }
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// Get all users (admin only)
+app.get('/api/users', authenticateToken, (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const users = loadUsers();
+    const safeUsers = users.map(u => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      createdAt: u.createdAt,
+      updatedAt: u.updatedAt,
+      isActive: u.isActive
+    }));
+
+    res.json(safeUsers);
+  } catch (error) {
+    console.error('Users fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Deactivate user (admin only)
+app.put('/api/users/:userId/deactivate', authenticateToken, (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { userId } = req.params;
+    const users = loadUsers();
+    const userIndex = users.findIndex(u => u.id === userId);
+
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Prevent admin from deactivating themselves
+    if (userId === req.user.id) {
+      return res.status(400).json({ error: 'Cannot deactivate your own account' });
+    }
+
+    users[userIndex].isActive = false;
+    users[userIndex].updatedAt = new Date().toISOString();
+
+    if (saveUsers(users)) {
+      res.json({ message: 'User deactivated successfully' });
+    } else {
+      res.status(500).json({ error: 'Failed to deactivate user' });
+    }
+  } catch (error) {
+    console.error('User deactivation error:', error);
+    res.status(500).json({ error: 'Failed to deactivate user' });
+  }
+});
+
+// User Data Management Endpoints
+
+// Get user's data (orders, stores, etc.)
+app.get('/api/user/data', authenticateToken, (req, res) => {
+  try {
+    const userData = loadUserData(req.user.id);
+    res.json(userData);
+  } catch (error) {
+    console.error('User data fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch user data' });
+  }
+});
+
+// Save user's data
+app.post('/api/user/data', authenticateToken, (req, res) => {
+  try {
+    const userData = req.body;
+    
+    if (saveUserData(req.user.id, userData)) {
+      res.json({ message: 'User data saved successfully' });
+    } else {
+      res.status(500).json({ error: 'Failed to save user data' });
+    }
+  } catch (error) {
+    console.error('User data save error:', error);
+    res.status(500).json({ error: 'Failed to save user data' });
+  }
+});
+
+// Save specific user data section
+app.post('/api/user/data/:section', authenticateToken, (req, res) => {
+  try {
+    const { section } = req.params;
+    const sectionData = req.body;
+    
+    const userData = loadUserData(req.user.id);
+    userData[section] = sectionData;
+    userData.lastUpdated = new Date().toISOString();
+    
+    if (saveUserData(req.user.id, userData)) {
+      res.json({ message: `${section} data saved successfully` });
+    } else {
+      res.status(500).json({ error: `Failed to save ${section} data` });
+    }
+  } catch (error) {
+    console.error(`User ${req.params.section} data save error:`, error);
+    res.status(500).json({ error: `Failed to save ${req.params.section} data` });
+  }
+});
+
 // Health check endpoint for Railway monitoring  
 app.get('/health', (req, res) => {
   res.json({ 
@@ -45,7 +484,7 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     webhookEndpoint: '/api/webhooks/shopify',
-    version: '2.0.0-alpha.29'
+    version: '2.0.0-alpha.33'
   });
 });
 
@@ -63,7 +502,7 @@ app.get('/api/status', (req, res) => {
       endpoint: '/api/webhooks/shopify',
       secretConfigured: !!process.env.SHOPIFY_WEBHOOK_SECRET
     },
-    version: '2.0.0-alpha.29'
+    version: '2.0.0-alpha.33'
   });
 });
 

@@ -3,6 +3,9 @@ export interface User {
   name: string;
   role: 'admin' | 'florist';
   email: string;
+  createdAt?: string;
+  updatedAt?: string;
+  isActive?: boolean;
 }
 
 export interface Store {

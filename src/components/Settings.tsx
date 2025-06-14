@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Settings as SettingsIcon, Webhook, CheckCircle, Loader2, Store, Database, ChevronDown, RefreshCw } from 'lucide-react';
+import { Settings as SettingsIcon, Webhook, CheckCircle, Loader2, Store, Database, ChevronDown, RefreshCw, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { type User as UserType } from '../types';
 import { useMobileView } from './Dashboard';
@@ -11,6 +11,7 @@ import { MultiStoreWebhookManager } from './MultiStoreWebhookManager';
 import { StoreManagement } from './StoreManagement';
 import { DataPersistenceManager } from './DataPersistenceManager';
 import { StoreOrderMapping } from './StoreOrderMapping';
+import { UserManagement } from './UserManagement';
 
 interface SettingsProps {
   currentUser: UserType;
@@ -110,9 +111,27 @@ export function Settings({ currentUser }: SettingsProps) {
           <h1 className={`font-bold text-gray-900 ${isMobileView ? 'text-xl' : 'text-2xl'}`}>
             Settings
           </h1>
-          <p className="text-gray-600 mt-1">Configure app settings and store-specific order mapping</p>
+          <p className="text-gray-600 mt-1">Configure app settings, user accounts, and store-specific order mapping</p>
         </div>
       </div>
+
+      {/* User Management Section */}
+      {isAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-gray-500" />
+              User Account Management
+            </CardTitle>
+            <p className="text-sm text-gray-600 mt-1">
+              Manage user accounts, registration, and permissions
+            </p>
+          </CardHeader>
+          <CardContent>
+            <UserManagement currentUser={currentUser} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Store Management Section */}
       {isAdmin && (
@@ -205,89 +224,78 @@ export function Settings({ currentUser }: SettingsProps) {
                   variant="outline"
                 >
                   {isWebhookLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
-                    <CheckCircle className="h-4 w-4" />
+                    <CheckCircle className="mr-2 h-4 w-4" />
                   )}
-                  Test
+                  Test Connectivity
                 </Button>
               </div>
 
               {webhookStatus && (
-                <div className="bg-gray-50 border rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Webhook className="h-4 w-4 text-gray-500" />
-                    <span className="font-medium">Webhook Status</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div className="text-center">
-                      <div className="text-green-600 font-medium">{webhookStatus.registered.length}</div>
-                      <div className="text-gray-600">Registered</div>
+                <div className="mt-4 space-y-2">
+                  {webhookStatus.registered.length > 0 && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <p className="text-sm text-green-800 font-medium">
+                        ✅ Registered {webhookStatus.registered.length} webhooks
+                      </p>
                     </div>
-                    <div className="text-center">
-                      <div className="text-blue-600 font-medium">{webhookStatus.existing.length}</div>
-                      <div className="text-gray-600">Existing</div>
+                  )}
+                  
+                  {webhookStatus.existing.length > 0 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-sm text-blue-800 font-medium">
+                        ℹ️ Found {webhookStatus.existing.length} existing webhooks
+                      </p>
                     </div>
-                    <div className="text-center">
-                      <div className="text-red-600 font-medium">{webhookStatus.errors.length}</div>
-                      <div className="text-gray-600">Errors</div>
-                    </div>
-                  </div>
-
+                  )}
+                  
                   {webhookStatus.errors.length > 0 && (
-                    <details className="mt-2">
-                      <summary className="cursor-pointer text-xs text-red-600">View Errors</summary>
-                      <ul className="mt-1 text-xs text-red-600 space-y-1">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <p className="text-sm text-red-800 font-medium">
+                        ❌ {webhookStatus.errors.length} errors occurred
+                      </p>
+                      <ul className="mt-2 text-xs text-red-700">
                         {webhookStatus.errors.map((error, index) => (
                           <li key={index}>• {error}</li>
                         ))}
                       </ul>
-                    </details>
+                    </div>
                   )}
                 </div>
               )}
-
-              <div className="text-xs text-gray-500 space-y-1">
-                <p>• <strong>Auto-Register:</strong> Creates webhooks for orders and products</p>
-                <p>• <strong>Cleanup:</strong> Removes old webhooks pointing to different URLs</p>
-                <p>• <strong>Test:</strong> Verifies webhook endpoint is accessible</p>
-                <p className="text-amber-600 font-medium">Note: Webhooks will be registered for your current deployment URL</p>
-              </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Data Persistence Management Section - Collapsible */}
-      {isAdmin && (
-        <Collapsible open={isDataPersistenceExpanded} onOpenChange={setIsDataPersistenceExpanded}>
-          <Card>
-            <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Database className="h-5 w-5 text-gray-500" />
-                    Data Persistence & Backup
-                  </div>
-                  <ChevronDown 
-                    className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
-                      isDataPersistenceExpanded ? 'rotate-180' : ''
-                    }`} 
-                  />
-                </CardTitle>
-                <p className="text-sm text-gray-600 mt-1">
-                  Manage data persistence, create backups, and ensure your settings never disappear
-                </p>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent>
-                <DataPersistenceManager />
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
-      )}
+      {/* Data Persistence Management Section */}
+      <Collapsible 
+        open={isDataPersistenceExpanded} 
+        onOpenChange={setIsDataPersistenceExpanded}
+      >
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Database className="h-5 w-5 text-gray-500" />
+                  Data Persistence Management
+                </div>
+                <ChevronDown className={`h-4 w-4 transition-transform ${isDataPersistenceExpanded ? 'rotate-180' : ''}`} />
+              </CardTitle>
+              <p className="text-sm text-gray-600 mt-1 text-left">
+                Backup, restore, and manage your application data
+              </p>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent>
+              <DataPersistenceManager />
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
     </div>
   );
 } 

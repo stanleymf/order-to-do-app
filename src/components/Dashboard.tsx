@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { LogOut, Calendar, BarChart3, Package, Smartphone, Monitor, Settings } from 'lucide-react';
 import StoreIndicator from './StoreIndicator';
 import type { User } from '../types';
-import { logout } from '../utils/storage';
+import { AuthService } from '../utils/authService';
 import { NavLink, useLocation } from 'react-router-dom';
 
 interface DashboardProps {
@@ -34,7 +34,7 @@ export function Dashboard({ user, onLogout, children }: DashboardProps) {
   };
 
   const handleLogout = () => {
-    logout();
+    AuthService.logout();
     onLogout();
   };
 

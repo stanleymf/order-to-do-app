@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { login } from '../utils/storage';
+import { AuthService } from '../utils/authService';
 import type { User } from '../types';
 
 interface LoginProps {
@@ -22,12 +22,14 @@ export function Login({ onLogin }: LoginProps) {
     setIsLoading(true);
     setError('');
 
-    const user = login(email, password);
-    if (user) {
-      onLogin(user);
+    const result = await AuthService.login(email, password);
+    
+    if (result.success && result.user) {
+      onLogin(result.user);
     } else {
-      setError('Invalid email or password');
+      setError(result.error || 'Login failed');
     }
+    
     setIsLoading(false);
   };
 
@@ -35,7 +37,7 @@ export function Login({ onLogin }: LoginProps) {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-green-700">Florist Dashboard</CardTitle>
+          <CardTitle className="text-2xl font-bold text-green-700">Order To-Do</CardTitle>
           <CardDescription>Sign in to manage your daily orders</CardDescription>
         </CardHeader>
         <CardContent>
@@ -49,6 +51,7 @@ export function Login({ onLogin }: LoginProps) {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -60,6 +63,7 @@ export function Login({ onLogin }: LoginProps) {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 required
+                disabled={isLoading}
               />
             </div>
             {error && (
@@ -67,17 +71,25 @@ export function Login({ onLogin }: LoginProps) {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              className="w-full bg-green-600 hover:bg-green-700" 
+              disabled={isLoading}
+            >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
             <p className="text-sm font-medium text-blue-900 mb-2">Demo Credentials:</p>
             <div className="text-xs text-blue-700 space-y-1">
-              <p><strong>Admin:</strong> sarah@floralshop.com</p>
-              <p><strong>Florist:</strong> maya@floralshop.com</p>
-              <p><strong>Password:</strong> password</p>
+              <p><strong>Admin:</strong> admin@floralshop.com / admin123</p>
+              <p><strong>Florist:</strong> maya@floralshop.com / password</p>
             </div>
+          </div>
+          <div className="mt-4 p-3 bg-green-50 rounded-lg">
+            <p className="text-xs text-green-700">
+              <strong>✅ Server-Side Authentication:</strong> Your credentials and data are now stored securely on the server and will persist across all devices and browsers.
+            </p>
           </div>
         </CardContent>
       </Card>

@@ -9,7 +9,8 @@ import { Settings } from './components/Settings';
 import { Toaster } from './components/ui/sonner';
 import { StoreProvider } from './contexts/StoreContext';
 import type { User } from './types';
-import { getAuthState, initializeStorage } from './utils/storage';
+import { AuthService } from './utils/authService';
+import { initializeStorage } from './utils/storage';
 
 // Protected Route Component
 function ProtectedRoute({ children, user, requiredRole }: { 
@@ -48,13 +49,25 @@ function App() {
     // This preserves user data on refresh
     initializeStorage();
     
-    // Check if user is already logged in
-    const authState = getAuthState();
+    // Initialize authentication state from server
+    const authState = AuthService.initialize();
     if (authState.isAuthenticated && authState.user) {
       setUser(authState.user);
+      
+      // Verify token is still valid by fetching profile
+      AuthService.getProfile().then(result => {
+        if (result.success && result.user) {
+          setUser(result.user);
+        } else {
+          // Token is invalid, clear auth state
+          AuthService.logout();
+          setUser(null);
+        }
+        setIsLoading(false);
+      });
+    } else {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   }, []);
 
   const handleLogin = (loggedInUser: User) => {
@@ -62,6 +75,7 @@ function App() {
   };
 
   const handleLogout = () => {
+    AuthService.logout();
     setUser(null);
   };
 
