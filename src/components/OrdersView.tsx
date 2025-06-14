@@ -27,10 +27,19 @@ interface OrdersViewProps {
   currentUser: User;
 }
 
+// Helper function to format date in local timezone (YYYY-MM-DD)
+const formatDateLocal = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export function OrdersView({ currentUser }: OrdersViewProps) {
+
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    return formatDateLocal(today);
   });
   const [calendarDate, setCalendarDate] = useState<Date>(new Date());
   const [selectedStore, setSelectedStore] = useState<string>('all');
@@ -383,7 +392,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setCalendarDate(date);
-      setSelectedDate(date.toISOString().split('T')[0]);
+      setSelectedDate(formatDateLocal(date));
     }
   };
 
@@ -456,7 +465,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
 
   // Filter orders based on date, search query, and selected status
   const filteredOrders = useCallback(() => {
-    const dateStr = calendarDate?.toISOString().split('T')[0];
+    const dateStr = calendarDate ? formatDateLocal(calendarDate) : selectedDate;
     return orders.filter(order => {
       // Date filter
       const orderDate = order.date;
@@ -491,7 +500,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
       
       return true;
     });
-  }, [orders, calendarDate, selectedStatus, searchQuery, selectedStore]);
+  }, [orders, calendarDate, selectedDate, selectedStatus, searchQuery, selectedStore]);
 
   // Group filtered orders by store
   const ordersByStore = useCallback(() => {

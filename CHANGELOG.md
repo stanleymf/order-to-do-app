@@ -5,6 +5,31 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.31] - 14/06/2025
+
+### 🕐 Timezone-Safe Date Handling Fix
+- **Date Picker Timezone Issue**: Fixed date picker showing orders from the previous day
+  - **Root Cause**: `toISOString()` was converting local dates to UTC, causing timezone offset issues
+  - **Solution**: Created `formatDateLocal()` function to handle dates in local timezone
+  - **Impact**: Date picker now correctly shows orders for the selected date in user's timezone
+
+### 🔧 Technical Improvements
+- **Local Date Formatting**: Added timezone-safe date formatting function
+  - **Before**: `date.toISOString().split('T')[0]` (UTC conversion)
+  - **After**: `formatDateLocal(date)` (local timezone preservation)
+- **Consistent Date Handling**: Applied local date formatting to both date selection and filtering
+- **State Management**: Updated date state initialization to use local timezone
+
+### 📋 User Impact
+- **Before**: Selecting "June 14, 2025" could show "June 13, 2025" orders due to timezone conversion
+- **After**: Selecting "June 14, 2025" correctly shows orders for June 14, 2025 in user's timezone
+- **Affected Features**: Date picker, order filtering, date-based order display
+
+### 🌍 Timezone Considerations
+- **Local Timezone**: All date operations now respect user's local timezone
+- **Cross-Timezone Compatibility**: System works correctly regardless of user's timezone
+- **Date Consistency**: Selected dates match displayed order dates without offset
+
 ## [2.0.0-alpha.30] - 14/06/2025
 
 ### 🛡️ Comprehensive Safety Checks
