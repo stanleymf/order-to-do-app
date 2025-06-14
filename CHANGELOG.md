@@ -5,6 +5,13 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.20] - 2024-12-19
+
+### 🔧 TypeScript Build Fixes
+- **Import Cleanup**: Removed unused `AlertTriangle` import from MultiStoreWebhookManager
+- **Function Parameter Fix**: Removed unused `webhook` parameter from `getWebhookStatusIcon` function
+- **Build Optimization**: Ensures clean TypeScript compilation without unused code warnings
+
 ## [2.0.0-alpha.19] - 2024-12-19
 
 ### 🔍 Expandable Webhook Details Feature

@@ -19,7 +19,6 @@ import {
   ExternalLink,
   Clock,
   CheckCircle,
-  AlertTriangle,
   XCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -163,7 +162,7 @@ export function MultiStoreWebhookManager() {
     ).join(' ');
   };
 
-  const getWebhookStatusIcon = (webhook: any) => {
+  const getWebhookStatusIcon = () => {
     // You can add logic here to determine webhook health
     // For now, we'll assume all fetched webhooks are active
     return <CheckCircle className="h-4 w-4 text-green-500" />;
@@ -710,7 +709,7 @@ export function MultiStoreWebhookManager() {
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2 mb-1">
-                                    {getWebhookStatusIcon(webhook)}
+                                    {getWebhookStatusIcon()}
                                     <span className="font-medium text-sm">
                                       {formatWebhookTopic(webhook.topic)}
                                     </span>
