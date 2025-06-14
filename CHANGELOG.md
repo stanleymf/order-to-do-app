@@ -5,6 +5,37 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.19] - 2024-12-19
+
+### 🔍 Expandable Webhook Details Feature
+- **Interactive Webhook Inspection**: Added expandable webhook details in store configuration cards
+  - Click "Webhooks" button to expand/collapse webhook information for each store
+  - Real-time webhook status display with visual indicators
+  - Detailed webhook information including topic, endpoint URL, creation/update dates
+  - Webhook ID tracking and format display (JSON/XML)
+  - Loading states and error handling for webhook data fetching
+
+### 🎯 Enhanced Store Configuration UI
+- **Improved Store Cards**: Enhanced store configuration cards with better organization
+  - Webhook status badges with color-coded indicators
+  - Expandable sections for detailed webhook inspection
+  - Refresh functionality to reload webhook data on demand
+  - Better visual hierarchy and information density
+
+### 📊 Webhook Management Features
+- **Active Webhook Monitoring**: Real-time display of configured webhooks
+  - Visual status indicators (active/inactive/error states)
+  - Webhook topic formatting for better readability
+  - Endpoint URL display with external link indicators
+  - Creation and modification timestamps
+  - Total webhook count per store
+
+### 🔧 Technical Improvements
+- **State Management**: Enhanced component state management for expansion tracking
+- **Error Handling**: Comprehensive error handling for webhook API calls
+- **Performance**: Lazy loading of webhook details only when expanded
+- **UI/UX**: Improved user experience with loading indicators and empty states
+
 ## [2.0.0-alpha.18] - 2024-12-19
 
 ### 🔧 Additional TypeScript Build Fixes

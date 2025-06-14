@@ -16,7 +16,7 @@ const STORAGE_KEYS = {
 };
 
 // Current data version for migration purposes
-const CURRENT_DATA_VERSION = '2.0.0-alpha.18';
+const CURRENT_DATA_VERSION = '2.0.0-alpha.19';
 
 // Default product labels
 const defaultProductLabels: ProductLabel[] = [

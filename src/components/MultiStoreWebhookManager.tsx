@@ -13,7 +13,14 @@ import {
   RefreshCw, 
   Loader2,
   Settings,
-  Store
+  Store,
+  ChevronDown,
+  ChevronRight,
+  ExternalLink,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  XCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useStore } from '../contexts/StoreContext';
@@ -33,6 +40,14 @@ export function MultiStoreWebhookManager() {
     missingTopics: string[];
     status: 'complete' | 'partial' | 'none';
   }[]>([]);
+  const [expandedStores, setExpandedStores] = useState<Set<string>>(new Set());
+  const [storeWebhookDetails, setStoreWebhookDetails] = useState<{
+    [storeId: string]: {
+      webhooks: any[];
+      loading: boolean;
+      error?: string;
+    }
+  }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [selectedStore, setSelectedStore] = useState<string>('');
   const [newConfig, setNewConfig] = useState<Partial<StoreWebhookConfig>>({
@@ -95,6 +110,76 @@ export function MultiStoreWebhookManager() {
       setWebhookStatus(status);
     } catch (error) {
       console.error('Error loading webhook status:', error);
+    }
+  };
+
+  const toggleStoreExpansion = async (storeId: string) => {
+    const newExpanded = new Set(expandedStores);
+    
+    if (expandedStores.has(storeId)) {
+      newExpanded.delete(storeId);
+    } else {
+      newExpanded.add(storeId);
+      // Load webhook details if not already loaded
+      if (!storeWebhookDetails[storeId]) {
+        await loadWebhookDetails(storeId);
+      }
+    }
+    
+    setExpandedStores(newExpanded);
+  };
+
+  const loadWebhookDetails = async (storeId: string) => {
+    const config = storeConfigs.find(c => c.storeId === storeId);
+    if (!config) return;
+
+    setStoreWebhookDetails(prev => ({
+      ...prev,
+      [storeId]: { webhooks: [], loading: true }
+    }));
+
+    try {
+      const webhooks = await multiStoreWebhookManager.getExistingWebhooks(config);
+      setStoreWebhookDetails(prev => ({
+        ...prev,
+        [storeId]: { webhooks, loading: false }
+      }));
+    } catch (error) {
+      console.error(`Error loading webhook details for ${config.storeName}:`, error);
+      setStoreWebhookDetails(prev => ({
+        ...prev,
+        [storeId]: { 
+          webhooks: [], 
+          loading: false, 
+          error: error instanceof Error ? error.message : 'Failed to load webhooks'
+        }
+      }));
+    }
+  };
+
+  const formatWebhookTopic = (topic: string): string => {
+    return topic.split('/').map(part => 
+      part.charAt(0).toUpperCase() + part.slice(1)
+    ).join(' ');
+  };
+
+  const getWebhookStatusIcon = (webhook: any) => {
+    // You can add logic here to determine webhook health
+    // For now, we'll assume all fetched webhooks are active
+    return <CheckCircle className="h-4 w-4 text-green-500" />;
+  };
+
+  const formatDate = (dateString: string): string => {
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return dateString;
     }
   };
 
@@ -482,6 +567,8 @@ export function MultiStoreWebhookManager() {
           storeConfigs.map(config => {
             const status = webhookStatus.find(s => s.storeId === config.storeId);
             const store = allStores.find(s => s.id === config.storeId);
+            const isExpanded = expandedStores.has(config.storeId);
+            const webhookDetails = storeWebhookDetails[config.storeId];
             
             return (
               <Card key={config.storeId}>
@@ -522,6 +609,15 @@ export function MultiStoreWebhookManager() {
                       </div>
                       
                       <Button
+                        onClick={() => toggleStoreExpansion(config.storeId)}
+                        variant="outline"
+                        size="sm"
+                      >
+                        {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        Webhooks
+                      </Button>
+                      
+                      <Button
                         onClick={() => handleRegisterWebhooksForStore(config.storeId)}
                         disabled={isLoading || !config.enabled}
                         size="sm"
@@ -556,6 +652,109 @@ export function MultiStoreWebhookManager() {
                                 {topic}
                               </Badge>
                             ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Expandable Webhook Details */}
+                  {isExpanded && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="font-medium text-gray-900">Active Webhooks</h5>
+                        <Button
+                          onClick={() => loadWebhookDetails(config.storeId)}
+                          variant="outline"
+                          size="sm"
+                          disabled={webhookDetails?.loading}
+                        >
+                          {webhookDetails?.loading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <RefreshCw className="h-4 w-4" />
+                          )}
+                          Refresh
+                        </Button>
+                      </div>
+
+                      {webhookDetails?.loading && (
+                        <div className="flex items-center justify-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                          <span className="ml-2 text-gray-500">Loading webhooks...</span>
+                        </div>
+                      )}
+
+                      {webhookDetails?.error && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                          <div className="flex items-center gap-2">
+                            <XCircle className="h-4 w-4 text-red-500" />
+                            <span className="text-sm text-red-700">Error loading webhooks</span>
+                          </div>
+                          <p className="text-xs text-red-600 mt-1">{webhookDetails.error}</p>
+                        </div>
+                      )}
+
+                      {webhookDetails?.webhooks && webhookDetails.webhooks.length === 0 && !webhookDetails.loading && !webhookDetails.error && (
+                        <div className="text-center py-8 text-gray-500">
+                          <Webhook className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                          <p className="text-sm">No webhooks configured</p>
+                          <p className="text-xs">Click "Register" to create webhooks</p>
+                        </div>
+                      )}
+
+                      {webhookDetails?.webhooks && webhookDetails.webhooks.length > 0 && (
+                        <div className="space-y-3">
+                          {webhookDetails.webhooks.map((webhook, index) => (
+                            <div key={webhook.id || index} className="bg-gray-50 rounded-lg p-3">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    {getWebhookStatusIcon(webhook)}
+                                    <span className="font-medium text-sm">
+                                      {formatWebhookTopic(webhook.topic)}
+                                    </span>
+                                    <Badge variant="outline" className="text-xs">
+                                      {webhook.format || 'json'}
+                                    </Badge>
+                                  </div>
+                                  
+                                  <div className="text-xs text-gray-600 space-y-1">
+                                    <div className="flex items-center gap-1">
+                                      <ExternalLink className="h-3 w-3" />
+                                      <span className="font-mono break-all">{webhook.address}</span>
+                                    </div>
+                                    
+                                    {webhook.created_at && (
+                                      <div className="flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        <span>Created: {formatDate(webhook.created_at)}</span>
+                                      </div>
+                                    )}
+                                    
+                                    {webhook.updated_at && webhook.updated_at !== webhook.created_at && (
+                                      <div className="flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        <span>Updated: {formatDate(webhook.updated_at)}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                
+                                <div className="flex items-center gap-1 ml-2">
+                                  <Badge 
+                                    variant={webhook.id ? "default" : "secondary"}
+                                    className="text-xs"
+                                  >
+                                    ID: {webhook.id || 'N/A'}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          
+                          <div className="text-xs text-gray-500 text-center pt-2">
+                            Total: {webhookDetails.webhooks.length} webhook{webhookDetails.webhooks.length !== 1 ? 's' : ''}
                           </div>
                         </div>
                       )}
