@@ -9,11 +9,40 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 4321;
 
-// Middleware to parse JSON bodies
-app.use(express.json());
+console.log(`🚀 Starting server on port ${PORT}`);
+console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+console.log(`🔐 Webhook secret configured: ${process.env.SHOPIFY_WEBHOOK_SECRET ? 'YES' : 'NO (using default)'}`);
 
 // Middleware to get raw body for webhook verification
 app.use('/api/webhooks', express.raw({ type: 'application/json' }));
+
+// Parse JSON for other routes
+app.use(express.json());
+
+// Serve static files from dist directory
+app.use(express.static(join(__dirname, 'dist')));
+
+// Health check endpoint for Railway monitoring
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    webhookEndpoint: '/api/webhooks/shopify'
+  });
+});
+
+// API status endpoint
+app.get('/api/status', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    webhook: {
+      endpoint: '/api/webhooks/shopify',
+      secretConfigured: !!process.env.SHOPIFY_WEBHOOK_SECRET
+    }
+  });
+});
 
 // Simple rate limiting for Shopify API calls
 const rateLimitMap = new Map();
@@ -55,14 +84,6 @@ function verifyWebhook(data, signature, secret) {
   const digest = hmac.update(data, 'utf8').digest('base64');
   return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest));
 }
-
-// Serve static files from the dist directory
-app.use(express.static(join(__dirname, 'dist')));
-
-// Healthcheck endpoint for Railway
-app.get('/healthz', (req, res) => {
-  res.status(200).send('OK');
-});
 
 // Shopify webhook endpoint
 app.post('/api/webhooks/shopify', (req, res) => {
@@ -185,19 +206,13 @@ app.post('/api/shopify/proxy', async (req, res) => {
   }
 });
 
-// Use a simple middleware to handle all other routes for SPA
-app.use((req, res, next) => {
-  // Skip if it's the healthcheck, API routes, or static files
-  if (req.path === '/healthz' || req.path.startsWith('/api/') || req.path.startsWith('/assets/') || req.path === '/') {
-    return next();
-  }
-  
-  // For all other routes, serve index.html
+// Catch-all handler for SPA
+app.get('*', (req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Order To-Do App running on port ${PORT}`);
-  console.log(`🌐 Access your app at: http://localhost:${PORT}`);
-  console.log(`📦 Webhook endpoint: http://localhost:${PORT}/api/webhooks/shopify`);
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port: ${PORT}`);
+  console.log(`🔗 Webhook endpoint: ${process.env.NODE_ENV === 'production' ? 'https://[your-domain]' : 'http://localhost:' + PORT}/api/webhooks/shopify`);
+  console.log(`💚 Health check: ${process.env.NODE_ENV === 'production' ? 'https://[your-domain]' : 'http://localhost:' + PORT}/health`);
 }); 

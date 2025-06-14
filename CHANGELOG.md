@@ -5,6 +5,31 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.12] - 2024-12-19
+
+### 🚀 Railway Deployment Optimization
+- **Environment Setup**: Created comprehensive Railway environment variable setup guide
+  - Required variables: `SHOPIFY_WEBHOOK_SECRET` for webhook verification
+  - Optional performance variables: `NODE_ENV`, `RAILWAY_HEALTHCHECK_TIMEOUT_SEC`, `RAILWAY_DEPLOYMENT_OVERLAP_SECONDS`
+  - Detailed security best practices and variable sealing guidance
+
+### 🔧 Server Improvements
+- **Health Monitoring**: Added multiple monitoring endpoints
+  - `/health` - Railway health check endpoint with detailed status
+  - `/api/status` - API status with webhook configuration info
+  - Enhanced startup logging with environment and configuration status
+- **Performance**: Improved server configuration for Railway deployment
+  - Better error handling and zero-downtime deployment support
+  - Optimized for production environments
+
+### 📚 Documentation
+- **Railway Setup Guide**: Complete RAILWAY_ENVIRONMENT_SETUP.md with:
+  - Step-by-step variable configuration
+  - Security best practices and variable sealing
+  - Troubleshooting guide with common issues and solutions
+  - Multi-store configuration guidance
+  - Performance optimization recommendations
+
 ## [2.0.0-alpha.11] - 2024-12-19
 
 ### 🐛 Critical Bug Fix
