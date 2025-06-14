@@ -5,6 +5,42 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.26] - 2025-01-27
+
+### 🚀 Major Feature: URL Routing Implementation
+- **Complete URL Routing System**: Implemented proper React Router-based navigation
+  - **Clean URLs**: Each page now has its own URL (`/orders`, `/analytics`, `/products`, `/settings`)
+  - **Browser Navigation**: Full support for browser back/forward buttons and bookmarking
+  - **Protected Routes**: Role-based route protection with automatic redirects
+  - **Public Routes**: Login page with redirect prevention for authenticated users
+
+### 🔧 Navigation Overhaul
+- **Replaced Tab System**: Removed tab-based navigation in favor of proper URL routing
+- **Enhanced NavLink Integration**: Active state management based on current URL location
+- **Mobile-Responsive Navigation**: Improved mobile navigation with URL-aware styling
+- **Dynamic Page Titles**: Mobile view shows current page title in header
+
+### 🛡️ Security & UX Improvements
+- **Route Guards**: Automatic redirects for unauthorized access attempts
+- **Loading States**: Added loading spinner during authentication check
+- **State Preservation**: Login state preserved across page refreshes
+- **Fallback Handling**: Proper 404 handling with redirects to main pages
+
+### 🏗️ Architecture Changes
+- **Component Restructure**: Dashboard now accepts children components instead of managing tabs
+- **Nested Routing**: Implemented nested route structure for better organization
+- **Location-Aware UI**: Components now respond to URL changes for better user experience
+
+### 📱 Mobile Experience
+- **URL-Responsive Mobile UI**: Mobile navigation adapts to current page
+- **Consistent Routing**: Same routing behavior across desktop and mobile views
+- **Touch-Friendly Navigation**: Improved mobile navigation with proper touch targets
+
+### 🔄 Migration Notes
+- **Breaking Change**: Tab-based navigation completely replaced with URL routing
+- **Backward Compatibility**: All existing functionality preserved with new routing system
+- **Performance**: Improved performance with proper route-based code splitting preparation
+
 ## [2.0.0-alpha.25] - 2024-12-19
 
 ### 🔧 TypeScript Build Fix

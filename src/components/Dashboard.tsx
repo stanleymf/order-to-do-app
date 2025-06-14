@@ -1,19 +1,15 @@
 import { useState, createContext, useContext } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { LogOut, Calendar, BarChart3, Package, Smartphone, Monitor, Settings } from 'lucide-react';
-import { OrdersView } from './OrdersView';
-import { Analytics } from './Analytics';
-import { ProductManagement } from './ProductManagement';
-import { Settings as SettingsComponent } from './Settings';
 import StoreIndicator from './StoreIndicator';
 import type { User } from '../types';
 import { logout } from '../utils/storage';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 
 interface DashboardProps {
   user: User;
   onLogout: () => void;
+  children: React.ReactNode;
 }
 
 // Mobile View Context
@@ -29,9 +25,9 @@ const MobileViewContext = createContext<MobileViewContextType>({
 
 export const useMobileView = () => useContext(MobileViewContext);
 
-export function Dashboard({ user, onLogout }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState('orders');
+export function Dashboard({ user, onLogout, children }: DashboardProps) {
   const [isMobileView, setIsMobileView] = useState(false);
+  const location = useLocation();
 
   const toggleMobileView = () => {
     setIsMobileView(!isMobileView);
@@ -42,6 +38,22 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     onLogout();
   };
 
+  // Get current page title based on location
+  const getCurrentPageTitle = () => {
+    switch (location.pathname) {
+      case '/orders':
+        return 'Orders';
+      case '/analytics':
+        return 'Analytics';
+      case '/products':
+        return 'Products';
+      case '/settings':
+        return 'Settings';
+      default:
+        return 'Order To-Do';
+    }
+  };
+
   return (
     <MobileViewContext.Provider value={{ isMobileView, toggleMobileView }}>
       <div className={`min-h-screen bg-gray-50 ${isMobileView ? 'max-w-[393px] mx-auto border-x-4 border-gray-400 shadow-2xl' : ''}`}>
@@ -50,7 +62,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             <div className={`flex justify-between items-center h-16 ${isMobileView ? 'gap-1.5' : ''}`}>
               <div className="flex items-center min-w-0 flex-shrink-0">
                 <h1 className={`font-semibold text-gray-900 ${isMobileView ? 'text-xs truncate max-w-[100px]' : 'text-xl'}`}>
-                  {isMobileView ? 'Order To-Do' : 'Order To-Do'}
+                  {isMobileView ? getCurrentPageTitle() : 'Order To-Do'}
                 </h1>
                 <span className={`px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded-full ${isMobileView ? 'ml-1 flex-shrink-0 text-[10px]' : 'ml-4 text-xs'}`}>
                   {user.role}
@@ -111,103 +123,80 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
           </div>
         </header>
 
-        <main className={`mx-auto py-4 ${isMobileView ? 'px-3' : 'max-w-7xl px-4 sm:px-6 lg:px-8 py-8'}`}>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className={`${isMobileView ? 'space-y-4' : 'space-y-6'}`}>
-            <TabsList className={`grid w-full ${isMobileView ? 'grid-cols-2 h-10' : 'grid-cols-4'}`}>
-              <TabsTrigger value="orders" className={`flex items-center gap-2 ${isMobileView ? 'text-xs px-2' : ''}`}>
+        {/* Navigation Menu */}
+        <nav className={`bg-white border-b ${isMobileView ? 'px-2 py-2' : 'px-4 sm:px-6 lg:px-8 py-3'}`}>
+          <div className={`mx-auto ${isMobileView ? '' : 'max-w-7xl'}`}>
+            <div className={`flex ${isMobileView ? 'flex-wrap gap-1' : 'gap-6'}`}>
+              <NavLink 
+                to="/orders" 
+                className={({ isActive }) => `
+                  flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors
+                  ${isActive 
+                    ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }
+                  ${isMobileView ? 'text-xs flex-1 justify-center' : 'text-sm'}
+                `}
+              >
                 <Calendar className={`${isMobileView ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 Orders
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className={`flex items-center gap-2 ${isMobileView ? 'text-xs px-2' : ''}`}>
+              </NavLink>
+              
+              <NavLink 
+                to="/analytics" 
+                className={({ isActive }) => `
+                  flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors
+                  ${isActive 
+                    ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }
+                  ${isMobileView ? 'text-xs flex-1 justify-center' : 'text-sm'}
+                `}
+              >
                 <BarChart3 className={`${isMobileView ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 Analytics
-              </TabsTrigger>
+              </NavLink>
+              
               {user.role === 'admin' && (
-                <TabsTrigger value="products" className={`flex items-center gap-2 ${isMobileView ? 'text-xs px-2' : ''}`}>
+                <NavLink 
+                  to="/products" 
+                  className={({ isActive }) => `
+                    flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors
+                    ${isActive 
+                      ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }
+                    ${isMobileView ? 'text-xs flex-1 justify-center' : 'text-sm'}
+                  `}
+                >
                   <Package className={`${isMobileView ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   Products
-                </TabsTrigger>
+                </NavLink>
               )}
+              
               {user.role === 'admin' && (
-                <TabsTrigger value="settings" className={`flex items-center gap-2 ${isMobileView ? 'text-xs px-2' : ''}`}>
+                <NavLink 
+                  to="/settings" 
+                  className={({ isActive }) => `
+                    flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors
+                    ${isActive 
+                      ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }
+                    ${isMobileView ? 'text-xs flex-1 justify-center' : 'text-sm'}
+                  `}
+                >
                   <Settings className={`${isMobileView ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   Settings
-                </TabsTrigger>
+                </NavLink>
               )}
-            </TabsList>
+            </div>
+          </div>
+        </nav>
 
-            <TabsContent value="orders">
-              <OrdersView currentUser={user} />
-            </TabsContent>
-
-            <TabsContent value="analytics">
-              <Analytics />
-            </TabsContent>
-
-            {user.role === 'admin' && (
-              <TabsContent value="products">
-                <ProductManagement />
-              </TabsContent>
-            )}
-
-            {user.role === 'admin' && (
-              <TabsContent value="settings">
-                <SettingsComponent currentUser={user} />
-              </TabsContent>
-            )}
-          </Tabs>
-
-          {/* Navigation Menu */}
-          <nav className={`flex ${isMobileView ? 'flex-wrap gap-4 mt-4 px-4' : 'gap-8'}`}>
-            <NavLink 
-              to="/orders" 
-              className={({ isActive }) => `
-                flex items-center gap-2 px-4 py-2 rounded-lg
-                ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-100'}
-                ${isMobileView ? 'text-sm w-full' : ''}
-              `}
-            >
-              <Calendar className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
-              Orders
-            </NavLink>
-            <NavLink 
-              to="/analytics" 
-              className={({ isActive }) => `
-                flex items-center gap-2 px-4 py-2 rounded-lg
-                ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-100'}
-                ${isMobileView ? 'text-sm w-full' : ''}
-              `}
-            >
-              <BarChart3 className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
-              Analytics
-            </NavLink>
-            {user.role === 'admin' && (
-              <NavLink 
-                to="/products" 
-                className={({ isActive }) => `
-                  flex items-center gap-2 px-4 py-2 rounded-lg
-                  ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-100'}
-                  ${isMobileView ? 'text-sm w-full' : ''}
-                `}
-              >
-                <Package className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
-                Products
-              </NavLink>
-            )}
-            {user.role === 'admin' && (
-              <NavLink 
-                to="/settings" 
-                className={({ isActive }) => `
-                  flex items-center gap-2 px-4 py-2 rounded-lg
-                  ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-100'}
-                  ${isMobileView ? 'text-sm w-full' : ''}
-                `}
-              >
-                <Settings className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
-                Settings
-              </NavLink>
-            )}
-          </nav>
+        {/* Main Content */}
+        <main className={`mx-auto ${isMobileView ? 'px-3 py-4' : 'max-w-7xl px-4 sm:px-6 lg:px-8 py-8'}`}>
+          {children}
         </main>
       </div>
     </MobileViewContext.Provider>
