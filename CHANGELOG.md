@@ -1081,4 +1081,50 @@ node scripts/version.js set 1.5.0
 - **Edge Case Handling**: Better support for short store names and hyphens
 - **User Experience**: Reduced false negatives in domain validation
 
+---
+
+## [2.0.0-alpha.8] - 2025-06-13
+
+### 🚀 **Product Management Integration - Smart Multi-Store Sync**
+
+#### **Major Integration Features**
+- **Smart Store Configuration Detection**: Product sync now uses the new multi-store API configurations
+- **Configuration Status Display**: Visual indicators showing which stores are ready for sync
+- **Guided User Experience**: Clear guidance for configuring stores before syncing products
+- **Per-Store API Integration**: Each store uses its own configured API credentials for product sync
+
+#### **Enhanced Product Sync System**
+- **Store-Specific API Calls**: Uses individual store API configurations from `MultiStoreWebhookManager`
+- **Configuration Validation**: Checks for complete API setup before allowing sync
+- **Better Error Handling**: Specific error messages for authentication, permissions, and domain issues
+- **Status-Based UI**: Different UI states based on store configuration status (ready/disabled/incomplete/missing)
+
+#### **Improved User Interface**
+- **Configuration Status Badges**: 
+  - ✅ **Ready** - Store configured and ready for sync
+  - ⚠️ **Disabled** - Configuration exists but disabled
+  - ⚠️ **Incomplete** - Missing API credentials
+  - ❌ **Not Configured** - No configuration found
+- **Smart Sync Buttons**: Only enabled for properly configured stores
+- **Configuration Guidance**: Help panel with steps to configure stores
+- **Visual Store Indicators**: Color-coded store identification
+
+#### **Technical Improvements**
+- **Decoupled from Legacy Config**: Removed dependency on old `shopify-mapping-config` localStorage
+- **Multi-Store Architecture**: Full integration with the new store management system
+- **Type Safety**: Complete TypeScript coverage for store configurations
+- **Enhanced Error Messages**: User-friendly error descriptions with configuration guidance
+
+#### **User Workflow Integration**
+- **Phase 1**: Create stores in Store Management
+- **Phase 2**: Configure API credentials per store
+- **Phase 3**: Sync products with validated configurations
+- **Seamless Flow**: Clear progression from store creation to product sync
+
+#### **Developer Experience**
+- **Clean Architecture**: Proper separation between store management and product sync
+- **Maintainable Code**: Modular functions for configuration checking and status display
+- **Consistent Patterns**: Follows established patterns from other multi-store components
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+
 --- 
