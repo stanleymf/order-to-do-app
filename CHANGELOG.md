@@ -5,6 +5,29 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.13] - 2024-12-19
+
+### 🚨 Critical Railway Healthcheck Fix
+- **Server Configuration**: Fixed Railway deployment healthcheck failures
+  - Added root route handler (`/`) for Railway healthcheck compatibility  
+  - Added multiple healthcheck endpoints: `/`, `/health`, `/healthz`
+  - Improved error handling and server startup resilience
+  - Fixed middleware order and static file serving
+
+### 🔧 Railway Configuration
+- **Railway Config**: Added `railway.toml` with proper deployment settings
+  - Custom healthcheck path configuration
+  - Increased healthcheck timeout to 300 seconds
+  - Explicit port and protocol configuration
+  - Production environment defaults
+
+### 🛠️ Server Improvements
+- **Error Handling**: Enhanced server error handling and logging
+  - Graceful handling of missing dist directory
+  - Better error responses for API endpoints
+  - Server startup error detection and exit
+  - Production-ready error middleware
+
 ## [2.0.0-alpha.12] - 2024-12-19
 
 ### 🚀 Railway Deployment Optimization

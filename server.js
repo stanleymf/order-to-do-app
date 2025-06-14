@@ -19,10 +19,17 @@ app.use('/api/webhooks', express.raw({ type: 'application/json' }));
 // Parse JSON for other routes
 app.use(express.json());
 
-// Serve static files from dist directory
-app.use(express.static(join(__dirname, 'dist')));
+// Root route for Railway healthcheck
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    service: 'order-to-do-app',
+    timestamp: new Date().toISOString(),
+    version: '2.0.0-alpha.12'
+  });
+});
 
-// Health check endpoint for Railway monitoring
+// Health check endpoint for Railway monitoring  
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
@@ -30,6 +37,11 @@ app.get('/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     webhookEndpoint: '/api/webhooks/shopify'
   });
+});
+
+// Railway specific healthcheck (some deployments expect this)
+app.get('/healthz', (req, res) => {
+  res.status(200).send('OK');
 });
 
 // API status endpoint
@@ -43,6 +55,16 @@ app.get('/api/status', (req, res) => {
     }
   });
 });
+
+// Serve static files from dist directory with error handling
+try {
+  app.use(express.static(join(__dirname, 'dist'), {
+    fallthrough: true,
+    maxAge: '1d' // Cache static files for 1 day in production
+  }));
+} catch (error) {
+  console.warn('⚠️  Could not serve static files from dist directory:', error.message);
+}
 
 // Simple rate limiting for Shopify API calls
 const rateLimitMap = new Map();
@@ -206,13 +228,41 @@ app.post('/api/shopify/proxy', async (req, res) => {
   }
 });
 
-// Catch-all handler for SPA
+// Catch-all handler for SPA (must be last)
 app.get('*', (req, res) => {
-  res.sendFile(join(__dirname, 'dist', 'index.html'));
+  // Only serve index.html for non-API routes
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  
+  try {
+    res.sendFile(join(__dirname, 'dist', 'index.html'));
+  } catch (error) {
+    console.error('❌ Error serving index.html:', error);
+    res.status(500).json({ 
+      error: 'Application not available',
+      message: 'Please ensure the application is properly built'
+    });
+  }
 });
 
-app.listen(PORT, () => {
+// Error handling middleware
+app.use((error, req, res, next) => {
+  console.error('❌ Unhandled error:', error);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+  });
+});
+
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on port: ${PORT}`);
   console.log(`🔗 Webhook endpoint: ${process.env.NODE_ENV === 'production' ? 'https://[your-domain]' : 'http://localhost:' + PORT}/api/webhooks/shopify`);
-  console.log(`💚 Health check: ${process.env.NODE_ENV === 'production' ? 'https://[your-domain]' : 'http://localhost:' + PORT}/health`);
+  console.log(`💚 Health check endpoints:`);
+  console.log(`   - / (root)`);
+  console.log(`   - /health`);
+  console.log(`   - /healthz`);
+}).on('error', (error) => {
+  console.error('❌ Server failed to start:', error);
+  process.exit(1);
 }); 

@@ -1,0 +1,14 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+startCommand = "node server.js"
+
+[[ports]]
+port = 4321
+protocol = "http"
+
+[env]
+NODE_ENV = "production" 
