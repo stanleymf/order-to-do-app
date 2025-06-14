@@ -20,7 +20,6 @@ import {
   assignOrder,
   syncOrdersFromShopifyToStorage
 } from '../utils/storage';
-import { StoreSelector } from '@/components/StoreSelector';
 import { toast } from 'sonner';
 
 interface OrdersViewProps {
@@ -33,7 +32,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
     return today.toISOString().split('T')[0];
   });
   const [calendarDate, setCalendarDate] = useState<Date | undefined>(new Date());
-  const [selectedStore, setSelectedStore] = useState<string>('all');
+  const [selectedStore] = useState<string>('all');
   const [selectedDifficultyLabel] = useState<string>('all');
   const [selectedProductTypeLabel] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all'); // New status filter
@@ -43,7 +42,6 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
   const [florists, setFlorists] = useState<User[]>([]);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const [isBatchMode, setIsBatchMode] = useState<boolean>(false);
-  const [orderCountsByStore, setOrderCountsByStore] = useState<Record<string, number>>({});
   const [isLoadingOrders, setIsLoadingOrders] = useState<boolean>(false);
   
   // Get mobile view context
@@ -383,19 +381,6 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
 
   const totalStats = getOrderStats(unfilteredOrders);
 
-  // Update the store selection handler
-  const handleStoreChange = (storeId: string | null) => {
-    setSelectedStore(storeId || 'all');
-    // Update order counts if needed
-    const counts = stores.reduce((acc, store) => {
-      acc[store.id] = orders.filter(order => order.storeId === store.id).length;
-      return acc;
-    }, {} as Record<string, number>);
-    setOrderCountsByStore(counts);
-  };
-
-  const selectedStoreObj = stores.find(s => s.id === selectedStore);
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-4">
@@ -460,18 +445,8 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
                 </Popover>
               </div>
 
-              {/* Store Selector */}
-              <div className={`${isMobileView ? 'w-full relative z-20' : ''}`}>
-                <StoreSelector
-                  stores={stores}
-                  selectedStoreId={selectedStore}
-                  onStoreChange={handleStoreChange}
-                  showOrderCounts
-                  orderCounts={orderCountsByStore}
-                  isMobileView={isMobileView}
-                />
-              </div>
-
+              {/* Store Selector - Removed since store selection is now handled at Dashboard level */}
+              
               {/* Status Filter */}
               <div className={`${isMobileView ? 'w-full relative z-10' : ''}`}>
                 <Select value={selectedStatus} onValueChange={setSelectedStatus}>
@@ -774,10 +749,10 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
               <div className={`flex ${isMobileView ? 'items-center gap-2' : 'items-center gap-4'}`}>
                 <div 
                   className={`${isMobileView ? 'w-3 h-3' : 'w-4 h-4'} rounded-full`} 
-                  style={{ backgroundColor: selectedStoreObj?.color || '#gray' }}
+                  style={{ backgroundColor: selectedStore === 'all' ? '#gray' : '#gray' }}
                 />
                 <CardTitle className={`${isMobileView ? 'text-base' : ''}`}>
-                  {selectedStoreObj?.name || 'Unknown Store'}
+                  {selectedStore === 'all' ? 'Unknown Store' : 'Unknown Store'}
                 </CardTitle>
                 <Badge variant="secondary" className={`${isMobileView ? 'text-xs' : ''}`}>
                   {filteredOrders().length} orders

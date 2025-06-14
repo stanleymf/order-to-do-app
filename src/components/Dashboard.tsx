@@ -6,6 +6,8 @@ import { OrdersView } from './OrdersView';
 import { Analytics } from './Analytics';
 import { ProductManagement } from './ProductManagement';
 import { Settings as SettingsComponent } from './Settings';
+import StoreSelector from './StoreSelector';
+import StoreIndicator from './StoreIndicator';
 import type { User } from '../types';
 import { logout } from '../utils/storage';
 import { NavLink } from 'react-router-dom';
@@ -55,11 +57,24 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   {user.role}
                 </span>
                 {isMobileView && (
-                  <span className="ml-1 px-1 py-0.5 bg-orange-100 text-orange-800 text-[10px] rounded-full flex-shrink-0">
-                    📱
-                  </span>
+                  <>
+                    <span className="ml-1 px-1 py-0.5 bg-orange-100 text-orange-800 text-[10px] rounded-full flex-shrink-0">
+                      📱
+                    </span>
+                    <div className="ml-2">
+                      <StoreIndicator />
+                    </div>
+                  </>
                 )}
               </div>
+              
+              {/* Store Selector - only show on desktop */}
+              {!isMobileView && (
+                <div className="flex items-center">
+                  <StoreSelector />
+                </div>
+              )}
+              
               <div className={`flex items-center ${isMobileView ? 'space-x-1 flex-shrink-0' : 'space-x-4'}`}>
                 {!isMobileView && (
                   <span className="text-sm text-gray-700">Welcome, {user.name}</span>

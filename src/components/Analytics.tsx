@@ -2,26 +2,26 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { StoreSelector } from './StoreSelector';
 import { useMobileView } from './Dashboard';
-import type { FloristStats, TimeFrame, Store } from '../types';
-import { getFloristStats, updateFloristStats, getStores } from '../utils/storage';
+import { useStore } from '../contexts/StoreContext';
+import type { FloristStats, TimeFrame } from '../types';
+import { getFloristStats, updateFloristStats } from '../utils/storage';
 
 export function Analytics() {
   const [timeFrame, setTimeFrame] = useState<TimeFrame>('weekly');
-  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const [stats, setStats] = useState<FloristStats[]>([]);
-  const [stores, setStores] = useState<Store[]>([]);
   
   // Get mobile view context
   const { isMobileView } = useMobileView();
+  
+  // Get store context
+  const { currentStore, allStores } = useStore();
 
   useEffect(() => {
     // Update stats from current orders and then get them
     updateFloristStats();
     const floristStats = getFloristStats();
     setStats(floristStats);
-    setStores(getStores());
   }, []);
 
   const formatTime = (minutes: number): string => {
@@ -43,12 +43,12 @@ export function Analytics() {
     }
   };
 
-  // Filter stats by store if selected
+  // Filter stats by current store
   const getFilteredStats = () => {
-    if (!selectedStoreId) return stats;
+    if (!currentStore) return stats;
     
     return stats.map(stat => {
-      const storeData = stat.storeBreakdown?.[selectedStoreId];
+      const storeData = stat.storeBreakdown?.[currentStore.id];
       if (!storeData) {
         return {
           ...stat,
@@ -67,8 +67,6 @@ export function Analytics() {
   const filteredStats = getFilteredStats();
   const sortedStats = [...filteredStats].sort((a, b) => b.completedOrders - a.completedOrders);
 
-  const selectedStore = stores.find(s => s.id === selectedStoreId);
-
   return (
     <div className={`${isMobileView ? 'p-3' : 'p-6'} max-w-6xl mx-auto`}>
       <div className={`flex justify-between ${isMobileView ? 'flex-col gap-3 mb-4' : 'items-center mb-6'}`}>
@@ -76,11 +74,6 @@ export function Analytics() {
           {isMobileView ? 'Analytics' : 'Analytics Dashboard'}
         </h2>
         <div className={`flex ${isMobileView ? 'flex-col gap-2' : 'items-center space-x-4'}`}>
-          <StoreSelector
-            stores={stores}
-            selectedStoreId={selectedStoreId}
-            onStoreChange={setSelectedStoreId}
-          />
           <Select value={timeFrame} onValueChange={(value: TimeFrame) => setTimeFrame(value)}>
             <SelectTrigger className={`${isMobileView ? 'w-full' : 'w-[180px]'}`}>
               <SelectValue placeholder="Select timeframe" />
@@ -94,17 +87,17 @@ export function Analytics() {
         </div>
       </div>
 
-      {selectedStore && (
+      {currentStore && (
         <div className={`${isMobileView ? 'mb-4' : 'mb-6'}`}>
-          <Card className="border-l-4" style={{ borderLeftColor: selectedStore.color }}>
+          <Card className="border-l-4" style={{ borderLeftColor: currentStore.color }}>
             <CardContent className={`${isMobileView ? 'p-3' : 'p-4'}`}>
               <div className="flex items-center">
                 <div 
                   className={`${isMobileView ? 'w-3 h-3 mr-2' : 'w-4 h-4 mr-3'} rounded-full`} 
-                  style={{ backgroundColor: selectedStore.color }}
+                  style={{ backgroundColor: currentStore.color }}
                 />
                 <span className={`font-medium ${isMobileView ? 'text-sm' : ''}`}>
-                  {isMobileView ? selectedStore.name : `Showing analytics for ${selectedStore.name}`}
+                  {isMobileView ? currentStore.name : `Showing analytics for ${currentStore.name}`}
                 </span>
               </div>
             </CardContent>
@@ -124,7 +117,7 @@ export function Analytics() {
             </div>
             <p className={`text-gray-500 mt-1 ${isMobileView ? 'text-[10px]' : 'text-xs'}`}>
               {getTimeFrameLabel(timeFrame)}
-              {selectedStore && !isMobileView && ` • ${selectedStore.name}`}
+              {currentStore && !isMobileView && ` • ${currentStore.name}`}
             </p>
           </CardContent>
         </Card>
@@ -164,63 +157,63 @@ export function Analytics() {
       </div>
 
       {/* Store Breakdown for All Stores View */}
-      {!selectedStoreId && (
-        <div className={`${isMobileView ? 'mb-6' : 'mb-8'}`}>
-          <Card>
-            <CardHeader className={`${isMobileView ? 'pb-2' : ''}`}>
-              <CardTitle className={`${isMobileView ? 'text-base' : ''}`}>
-                {isMobileView ? 'By Store' : `Performance by Store - ${getTimeFrameLabel(timeFrame)}`}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`grid gap-4 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
-                {stores.map(store => {
-                  const storeStats = stats.map(stat => ({
-                    ...stat,
-                    completedOrders: stat.storeBreakdown?.[store.id]?.orders || 0,
-                    averageCompletionTime: stat.storeBreakdown?.[store.id]?.avgTime || 0
-                  }));
-                  const totalOrders = storeStats.reduce((sum, stat) => sum + stat.completedOrders, 0);
-                  const avgTime = storeStats.length > 0 
-                    ? Math.round(storeStats.reduce((sum, stat) => sum + stat.averageCompletionTime, 0) / storeStats.length)
-                    : 0;
+      <div className={`${isMobileView ? 'mb-6' : 'mb-8'}`}>
+        <Card>
+          <CardHeader className={`${isMobileView ? 'pb-2' : ''}`}>
+            <CardTitle className={`${isMobileView ? 'text-base' : ''}`}>
+              {isMobileView ? 'By Store' : `Performance by Store - ${getTimeFrameLabel(timeFrame)}`}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className={`grid gap-4 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
+              {allStores.map(store => {
+                const storeStats = stats.map(stat => ({
+                  ...stat,
+                  completedOrders: stat.storeBreakdown?.[store.id]?.orders || 0,
+                  averageCompletionTime: stat.storeBreakdown?.[store.id]?.avgTime || 0
+                }));
+                const totalOrders = storeStats.reduce((sum, stat) => sum + stat.completedOrders, 0);
+                const avgTime = storeStats.length > 0 
+                  ? Math.round(storeStats.reduce((sum, stat) => sum + stat.averageCompletionTime, 0) / storeStats.length)
+                  : 0;
 
-                                      return (
-                      <Card key={store.id} className="border-l-4" style={{ borderLeftColor: store.color }}>
-                        <CardContent className={`${isMobileView ? 'p-3' : 'p-4'}`}>
-                          <div className={`flex items-center ${isMobileView ? 'mb-2' : 'mb-3'}`}>
-                            <div 
-                              className={`${isMobileView ? 'w-2 h-2 mr-2' : 'w-3 h-3 mr-2'} rounded-full`} 
-                              style={{ backgroundColor: store.color }}
-                            />
-                            <span className={`font-medium ${isMobileView ? 'text-xs' : 'text-sm'}`}>{store.name}</span>
+                return (
+                  <Card key={store.id} className="border-l-4" style={{ borderLeftColor: store.color }}>
+                    <CardContent className={`${isMobileView ? 'p-3' : 'p-4'}`}>
+                      <div className={`flex items-center ${isMobileView ? 'mb-2' : 'mb-3'}`}>
+                        <div 
+                          className={`${isMobileView ? 'w-2 h-2 mr-2' : 'w-3 h-3 mr-2'} rounded-full`} 
+                          style={{ backgroundColor: store.color }}
+                        />
+                        <span className={`font-medium ${isMobileView ? 'text-xs' : 'text-sm'}`}>{store.name}</span>
+                      </div>
+                      <div className={`${isMobileView ? 'space-y-1' : 'space-y-2'}`}>
+                        <div>
+                          <div className={`font-bold text-green-600 ${isMobileView ? 'text-base' : 'text-lg'}`}>{totalOrders}</div>
+                          <div className={`text-gray-500 ${isMobileView ? 'text-[10px]' : 'text-xs'}`}>Orders Completed</div>
+                        </div>
+                        <div>
+                          <div className={`font-bold text-blue-600 ${isMobileView ? 'text-base' : 'text-lg'}`}>
+                            {formatTime(avgTime)}
                           </div>
-                          <div className={`${isMobileView ? 'space-y-1' : 'space-y-2'}`}>
-                            <div>
-                              <div className={`font-bold text-green-600 ${isMobileView ? 'text-base' : 'text-lg'}`}>{totalOrders}</div>
-                              <div className={`text-gray-500 ${isMobileView ? 'text-[10px]' : 'text-xs'}`}>Orders Completed</div>
-                            </div>
-                            <div>
-                              <div className={`font-bold text-blue-600 ${isMobileView ? 'text-base' : 'text-lg'}`}>{formatTime(avgTime)}</div>
-                              <div className={`text-gray-500 ${isMobileView ? 'text-[10px]' : 'text-xs'}`}>Avg. Time</div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+                          <div className={`text-gray-500 ${isMobileView ? 'text-[10px]' : 'text-xs'}`}>Avg. Completion Time</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Detailed Stats Table */}
       <Card>
         <CardHeader className={`${isMobileView ? 'pb-2' : ''}`}>
           <CardTitle className={`${isMobileView ? 'text-base' : ''}`}>
             {isMobileView ? 'Florist Performance' : `Florist Performance - ${getTimeFrameLabel(timeFrame)}`}
-            {selectedStore && !isMobileView && ` • ${selectedStore.name}`}
+            {currentStore && !isMobileView && ` • ${currentStore.name}`}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -274,11 +267,11 @@ export function Analytics() {
                         )}
                       </div>
                       
-                      {!selectedStoreId && (
+                      {!currentStore && (
                         <div className="mt-2">
                           <div className="text-[10px] text-gray-500 mb-1">Store Breakdown</div>
                           <div className="flex flex-wrap gap-1">
-                            {stores.map(store => {
+                            {allStores.map((store: any) => {
                               const storeData = stat.storeBreakdown?.[store.id];
                               if (!storeData || storeData.orders === 0) return null;
                               return (
@@ -310,7 +303,7 @@ export function Analytics() {
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Orders Completed</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Avg. Completion Time</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Performance</th>
-                    {!selectedStoreId && (
+                    {!currentStore && (
                       <th className="text-left py-3 px-4 font-medium text-gray-600">Store Breakdown</th>
                     )}
                   </tr>
@@ -363,10 +356,10 @@ export function Analytics() {
                           )}
                         </div>
                       </td>
-                      {!selectedStoreId && (
+                      {!currentStore && (
                         <td className="py-3 px-4">
                           <div className="flex flex-wrap gap-1">
-                            {stores.map(store => {
+                            {allStores.map((store: any) => {
                               const storeData = stat.storeBreakdown?.[store.id];
                               if (!storeData || storeData.orders === 0) return null;
                               return (

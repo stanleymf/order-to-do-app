@@ -5,6 +5,134 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.2] - 2025-06-13
+
+### 🚀 **Phase 1: Multi-Store Data Structure Migration - COMPLETE**
+
+#### **🎯 Core Implementation**
+- **Data Service Layer**: Created comprehensive `DataService` class for centralized data access
+  - Store-specific filtering and operations
+  - Analytics and reporting methods
+  - Search and validation functionality
+  - Backward compatibility with existing data structure
+
+- **Store Context Management**: Implemented React context for global store state
+  - `StoreProvider` component for app-wide store selection
+  - `useStore` and `useStoreData` hooks for easy access
+  - Automatic store loading and error handling
+  - Default store selection (Windflower Florist)
+
+#### **🎨 User Interface Enhancements**
+- **Store Selection UI**:
+  - **Desktop**: `StoreSelector` component with dropdown interface
+  - **Mobile**: `StoreIndicator` component for compact display
+  - Visual store identification with colored dots
+  - Smooth transitions and responsive design
+  - Store domain display in dropdown
+
+- **Dashboard Integration**:
+  - Store selector integrated into main header
+  - Mobile store indicator in compact format
+  - Responsive design for all screen sizes
+  - Visual store branding throughout the app
+
+#### **🔧 Technical Architecture**
+- **Enhanced Type Definitions**: All types already support multi-store structure
+  - Store, Product, Order, and User types with storeId fields
+  - FloristStats with store-specific breakdowns
+  - Complete type safety throughout the application
+
+- **Context-Based State Management**:
+  - Global store selection state
+  - Automatic data filtering by current store
+  - Efficient re-rendering with context optimization
+  - Error boundaries for failed store operations
+
+#### **📊 Analytics & Reporting**
+- **Store-Specific Analytics**: Updated Analytics component to use store context
+  - Current store filtering for all metrics
+  - Store comparison views for all stores
+  - Performance metrics by store
+  - Florist performance breakdown by store
+
+- **Data Visualization**:
+  - Store-specific color coding
+  - Visual store indicators in all views
+  - Responsive analytics dashboard
+  - Mobile-optimized analytics display
+
+#### **🔄 Data Flow & Performance**
+- **Efficient Data Filtering**: Store-specific operations at the service layer
+- **Minimal Re-renders**: Context optimization for better performance
+- **Lazy Loading**: Store-specific data loaded on demand
+- **Error Handling**: Graceful fallbacks for missing stores
+
+#### **📱 Mobile Experience**
+- **Compact Store Indicator**: Mobile-optimized store display
+- **Responsive Design**: All components adapt to screen size
+- **Touch-Friendly**: Optimized for mobile interaction
+- **Performance**: Efficient mobile rendering
+
+#### **🔒 Security & Validation**
+- **Data Validation**: Store ID validation throughout the app
+- **Error Boundaries**: Graceful error handling
+- **Type Safety**: Complete TypeScript coverage
+- **Backward Compatibility**: Existing functionality preserved
+
+#### **🚀 Ready for Phase 2**
+- **Foundation Complete**: All data structures support multi-store
+- **UI Framework**: Store selection and display ready
+- **Context System**: Global state management implemented
+- **Analytics Ready**: Store-specific reporting framework
+
+---
+
+## [2.0.0-alpha.1] - 2025-06-13
+
+### 🚀 **Major Upgrade Planning: Multi-Store Architecture**
+
+#### **Planning & Design**
+- **Multi-Store Architecture**: Complete redesign for handling multiple Shopify stores
+- **Store Management System**: Individual store configurations and isolation
+- **Enhanced Order Management**: Multi-store order handling with unified interface
+- **Scalable Webhook Management**: Per-store webhook registration and monitoring
+
+#### **Architecture Changes**
+- **Store Configuration**: Each store has its own API credentials and settings
+- **Order Structure**: Enhanced with storeId and storeName for proper isolation
+- **Settings Evolution**: Split into Store Management and Global Settings
+- **Webhook Management**: Multi-store webhook registration and monitoring
+
+#### **UI/UX Enhancements**
+- **Store Management Interface**: Add, edit, remove stores with individual configurations
+- **Enhanced Order Tab**: Store tabs, unified view, and store-specific actions
+- **Store Indicators**: Color-coded store identification throughout the app
+- **Bulk Operations**: Sync all stores, manage all webhooks from single interface
+
+#### **Technical Foundation**
+- **Type Definitions**: Updated for multi-store data structures
+- **Migration Strategy**: Backward compatibility with existing single-store setup
+- **Performance Optimization**: Store-specific operations and caching
+- **Security Enhancement**: Store-specific API credentials and webhook secrets
+
+#### **Implementation Plan**
+- **Phase 1**: Data structure migration and type updates
+- **Phase 2**: Store management interface development
+- **Phase 3**: Enhanced order management with multi-store support
+- **Phase 4**: Advanced webhook management for multiple stores
+
+#### **Benefits**
+- **Scalability**: Handle unlimited Shopify stores
+- **Flexibility**: Different configurations per store
+- **Efficiency**: Unified management interface
+- **Growth**: Easy addition of new stores
+- **Isolation**: Store-specific data and settings
+- **Performance**: Optimized per-store operations
+
+---
+
+**Note**: This is an alpha release for planning and design. The full multi-store implementation will be developed in subsequent versions.
+
 ## [1.0.37] - 2025-06-13
 
 ### Fixed

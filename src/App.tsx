@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Login } from './components/Login';
 import { Dashboard } from './components/Dashboard';
 import { Toaster } from './components/ui/sonner';
+import { StoreProvider } from './contexts/StoreContext';
 import type { User } from './types';
 import { getAuthState, initializeStorage, refreshMockData } from './utils/storage';
 
@@ -40,10 +41,10 @@ function App() {
   }
 
   return (
-    <>
+    <StoreProvider defaultStoreId="store-1">
       <Dashboard user={user} onLogout={handleLogout} />
       <Toaster />
-    </>
+    </StoreProvider>
   );
 }
 
