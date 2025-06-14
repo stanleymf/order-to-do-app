@@ -477,12 +477,547 @@ app.post('/api/user/data/:section', authenticateToken, (req, res) => {
   }
 });
 
+// ===== COMPREHENSIVE CONFIGURATION STORAGE ENDPOINTS =====
+
+// Global Shopify Mapping Configuration Endpoints
+app.get('/api/config/shopify-mapping', authenticateToken, (req, res) => {
+  try {
+    const userData = loadUserData(req.user.id);
+    const config = userData.shopifyMappingConfig || {
+      // Default global baseline configuration
+      api: {
+        accessToken: '',
+        shopDomain: '',
+        apiVersion: '2024-01',
+        webhookSecret: '',
+        autoSync: true,
+        syncInterval: 60
+      },
+      dateSource: 'tags',
+      dateTagPattern: '(\\d{1,2})[/\\-](\\d{1,2})[/\\-](\\d{2,4})',
+      dateFormat: 'DD/MM/YYYY',
+      timeslotSource: 'tags',
+      timeslotTagPattern: '(\\d{1,2}):(\\d{2})-(\\d{1,2}):(\\d{2})',
+      timeslotFormat: 'HH:MM-HH:MM',
+      deliveryTypeSource: 'tags',
+      deliveryTypeKeywords: {
+        delivery: ['delivery', 'deliver'],
+        collection: ['collection', 'pickup', 'collect'],
+        express: ['express', 'urgent', 'rush']
+      },
+      instructionsSource: 'line_item_properties',
+      instructionsPropertyName: 'Special Instructions',
+      instructionsKeywords: ['instruction', 'note', 'special', 'request', 'preference'],
+      customizationsSource: 'line_item_properties',
+      excludeProperties: ['Delivery Time', 'Special Instructions', 'delivery', 'time', 'instruction', 'note', 'special'],
+      customerNameFormat: 'first_last',
+      includeCustomerPhone: true,
+      includeCustomerEmail: true
+    };
+    
+    res.json(config);
+  } catch (error) {
+    console.error('Shopify mapping config fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch Shopify mapping configuration' });
+  }
+});
+
+app.post('/api/config/shopify-mapping', authenticateToken, (req, res) => {
+  try {
+    const config = req.body;
+    const userData = loadUserData(req.user.id);
+    
+    userData.shopifyMappingConfig = {
+      ...config,
+      lastUpdated: new Date().toISOString()
+    };
+    
+    if (saveUserData(req.user.id, userData)) {
+      res.json({ message: 'Shopify mapping configuration saved successfully' });
+    } else {
+      res.status(500).json({ error: 'Failed to save Shopify mapping configuration' });
+    }
+  } catch (error) {
+    console.error('Shopify mapping config save error:', error);
+    res.status(500).json({ error: 'Failed to save Shopify mapping configuration' });
+  }
+});
+
+// Store-Specific Order Mapping Configuration Endpoints
+app.get('/api/config/store-order-mappings', authenticateToken, (req, res) => {
+  try {
+    const userData = loadUserData(req.user.id);
+    const configs = userData.storeOrderMappingConfigs || {};
+    res.json(configs);
+  } catch (error) {
+    console.error('Store order mapping configs fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch store order mapping configurations' });
+  }
+});
+
+app.post('/api/config/store-order-mappings', authenticateToken, (req, res) => {
+  try {
+    const configs = req.body;
+    const userData = loadUserData(req.user.id);
+    
+    userData.storeOrderMappingConfigs = {
+      ...configs,
+      lastUpdated: new Date().toISOString()
+    };
+    
+    if (saveUserData(req.user.id, userData)) {
+      res.json({ message: 'Store order mapping configurations saved successfully' });
+    } else {
+      res.status(500).json({ error: 'Failed to save store order mapping configurations' });
+    }
+  } catch (error) {
+    console.error('Store order mapping configs save error:', error);
+    res.status(500).json({ error: 'Failed to save store order mapping configurations' });
+  }
+});
+
+// Individual Store Configuration Endpoints
+app.get('/api/config/store-order-mappings/:storeId', authenticateToken, (req, res) => {
+  try {
+    const { storeId } = req.params;
+    const userData = loadUserData(req.user.id);
+    const configs = userData.storeOrderMappingConfigs || {};
+    const storeConfig = configs[storeId];
+    
+    if (storeConfig) {
+      res.json(storeConfig);
+    } else {
+      res.status(404).json({ error: 'Store configuration not found' });
+    }
+  } catch (error) {
+    console.error('Store config fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch store configuration' });
+  }
+});
+
+app.post('/api/config/store-order-mappings/:storeId', authenticateToken, (req, res) => {
+  try {
+    const { storeId } = req.params;
+    const storeConfig = req.body;
+    const userData = loadUserData(req.user.id);
+    
+    if (!userData.storeOrderMappingConfigs) {
+      userData.storeOrderMappingConfigs = {};
+    }
+    
+    userData.storeOrderMappingConfigs[storeId] = {
+      ...storeConfig,
+      storeId,
+      lastUpdated: new Date().toISOString()
+    };
+    
+    if (saveUserData(req.user.id, userData)) {
+      res.json({ message: 'Store configuration saved successfully' });
+    } else {
+      res.status(500).json({ error: 'Failed to save store configuration' });
+    }
+  } catch (error) {
+    console.error('Store config save error:', error);
+    res.status(500).json({ error: 'Failed to save store configuration' });
+  }
+});
+
+// Store Management Endpoints
+app.get('/api/stores', authenticateToken, (req, res) => {
+  try {
+    const userData = loadUserData(req.user.id);
+    const stores = userData.stores || [];
+    res.json(stores);
+  } catch (error) {
+    console.error('Stores fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch stores' });
+  }
+});
+
+app.post('/api/stores', authenticateToken, (req, res) => {
+  try {
+    const store = req.body;
+    const userData = loadUserData(req.user.id);
+    
+    if (!userData.stores) {
+      userData.stores = [];
+    }
+    
+    // Add timestamps and ID if not provided
+    const newStore = {
+      ...store,
+      id: store.id || `store-${Date.now()}`,
+      createdAt: store.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    userData.stores.push(newStore);
+    
+    if (saveUserData(req.user.id, userData)) {
+      res.json({ message: 'Store created successfully', store: newStore });
+    } else {
+      res.status(500).json({ error: 'Failed to create store' });
+    }
+  } catch (error) {
+    console.error('Store creation error:', error);
+    res.status(500).json({ error: 'Failed to create store' });
+  }
+});
+
+app.put('/api/stores/:storeId', authenticateToken, (req, res) => {
+  try {
+    const { storeId } = req.params;
+    const storeUpdates = req.body;
+    const userData = loadUserData(req.user.id);
+    
+    if (!userData.stores) {
+      return res.status(404).json({ error: 'Store not found' });
+    }
+    
+    const storeIndex = userData.stores.findIndex(s => s.id === storeId);
+    if (storeIndex === -1) {
+      return res.status(404).json({ error: 'Store not found' });
+    }
+    
+    userData.stores[storeIndex] = {
+      ...userData.stores[storeIndex],
+      ...storeUpdates,
+      id: storeId, // Ensure ID doesn't change
+      updatedAt: new Date().toISOString()
+    };
+    
+    if (saveUserData(req.user.id, userData)) {
+      res.json({ message: 'Store updated successfully', store: userData.stores[storeIndex] });
+    } else {
+      res.status(500).json({ error: 'Failed to update store' });
+    }
+  } catch (error) {
+    console.error('Store update error:', error);
+    res.status(500).json({ error: 'Failed to update store' });
+  }
+});
+
+app.delete('/api/stores/:storeId', authenticateToken, (req, res) => {
+  try {
+    const { storeId } = req.params;
+    const userData = loadUserData(req.user.id);
+    
+    if (!userData.stores) {
+      return res.status(404).json({ error: 'Store not found' });
+    }
+    
+    const storeIndex = userData.stores.findIndex(s => s.id === storeId);
+    if (storeIndex === -1) {
+      return res.status(404).json({ error: 'Store not found' });
+    }
+    
+    userData.stores.splice(storeIndex, 1);
+    
+    // Also remove store-specific configurations
+    if (userData.storeOrderMappingConfigs && userData.storeOrderMappingConfigs[storeId]) {
+      delete userData.storeOrderMappingConfigs[storeId];
+    }
+    
+    if (saveUserData(req.user.id, userData)) {
+      res.json({ message: 'Store deleted successfully' });
+    } else {
+      res.status(500).json({ error: 'Failed to delete store' });
+    }
+  } catch (error) {
+    console.error('Store deletion error:', error);
+    res.status(500).json({ error: 'Failed to delete store' });
+  }
+});
+
+// Orders Management Endpoints
+app.get('/api/orders', authenticateToken, (req, res) => {
+  try {
+    const { storeId, date, status } = req.query;
+    const userData = loadUserData(req.user.id);
+    let orders = userData.orders || [];
+    
+    // Filter by store if specified
+    if (storeId) {
+      orders = orders.filter(order => order.storeId === storeId);
+    }
+    
+    // Filter by date if specified
+    if (date) {
+      orders = orders.filter(order => order.date === date);
+    }
+    
+    // Filter by status if specified
+    if (status) {
+      orders = orders.filter(order => order.status === status);
+    }
+    
+    res.json(orders);
+  } catch (error) {
+    console.error('Orders fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
+
+app.post('/api/orders', authenticateToken, (req, res) => {
+  try {
+    const orders = req.body;
+    const userData = loadUserData(req.user.id);
+    
+    if (!userData.orders) {
+      userData.orders = [];
+    }
+    
+    // Handle both single order and array of orders
+    const ordersToAdd = Array.isArray(orders) ? orders : [orders];
+    
+    ordersToAdd.forEach(order => {
+      // Add timestamps if not provided
+      const newOrder = {
+        ...order,
+        createdAt: order.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      // Check if order already exists (by shopifyId or id)
+      const existingIndex = userData.orders.findIndex(o => 
+        (o.shopifyId && o.shopifyId === newOrder.shopifyId) || 
+        (o.id && o.id === newOrder.id)
+      );
+      
+      if (existingIndex !== -1) {
+        // Update existing order
+        userData.orders[existingIndex] = newOrder;
+      } else {
+        // Add new order
+        userData.orders.push(newOrder);
+      }
+    });
+    
+    if (saveUserData(req.user.id, userData)) {
+      res.json({ 
+        message: `${ordersToAdd.length} order(s) saved successfully`,
+        count: ordersToAdd.length
+      });
+    } else {
+      res.status(500).json({ error: 'Failed to save orders' });
+    }
+  } catch (error) {
+    console.error('Orders save error:', error);
+    res.status(500).json({ error: 'Failed to save orders' });
+  }
+});
+
+// Products Management Endpoints
+app.get('/api/products', authenticateToken, (req, res) => {
+  try {
+    const { storeId } = req.query;
+    const userData = loadUserData(req.user.id);
+    let products = userData.products || [];
+    
+    // Filter by store if specified
+    if (storeId) {
+      products = products.filter(product => product.storeId === storeId);
+    }
+    
+    res.json(products);
+  } catch (error) {
+    console.error('Products fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch products' });
+  }
+});
+
+app.post('/api/products', authenticateToken, (req, res) => {
+  try {
+    const products = req.body;
+    const userData = loadUserData(req.user.id);
+    
+    if (!userData.products) {
+      userData.products = [];
+    }
+    
+    // Handle both single product and array of products
+    const productsToAdd = Array.isArray(products) ? products : [products];
+    
+    productsToAdd.forEach(product => {
+      // Add timestamps if not provided
+      const newProduct = {
+        ...product,
+        createdAt: product.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      // Check if product already exists (by shopifyId or id)
+      const existingIndex = userData.products.findIndex(p => 
+        (p.shopifyId && p.shopifyId === newProduct.shopifyId) || 
+        (p.id && p.id === newProduct.id)
+      );
+      
+      if (existingIndex !== -1) {
+        // Update existing product
+        userData.products[existingIndex] = newProduct;
+      } else {
+        // Add new product
+        userData.products.push(newProduct);
+      }
+    });
+    
+    if (saveUserData(req.user.id, userData)) {
+      res.json({ 
+        message: `${productsToAdd.length} product(s) saved successfully`,
+        count: productsToAdd.length
+      });
+    } else {
+      res.status(500).json({ error: 'Failed to save products' });
+    }
+  } catch (error) {
+    console.error('Products save error:', error);
+    res.status(500).json({ error: 'Failed to save products' });
+  }
+});
+
+// User Preferences Endpoints
+app.get('/api/preferences', authenticateToken, (req, res) => {
+  try {
+    const userData = loadUserData(req.user.id);
+    const preferences = userData.preferences || {
+      theme: 'light',
+      notifications: true,
+      autoSync: true,
+      defaultView: 'dashboard',
+      dateFormat: 'DD/MM/YYYY',
+      timeFormat: '24h'
+    };
+    
+    res.json(preferences);
+  } catch (error) {
+    console.error('Preferences fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch preferences' });
+  }
+});
+
+app.post('/api/preferences', authenticateToken, (req, res) => {
+  try {
+    const preferences = req.body;
+    const userData = loadUserData(req.user.id);
+    
+    userData.preferences = {
+      ...userData.preferences,
+      ...preferences,
+      lastUpdated: new Date().toISOString()
+    };
+    
+    if (saveUserData(req.user.id, userData)) {
+      res.json({ message: 'Preferences saved successfully' });
+    } else {
+      res.status(500).json({ error: 'Failed to save preferences' });
+    }
+  } catch (error) {
+    console.error('Preferences save error:', error);
+    res.status(500).json({ error: 'Failed to save preferences' });
+  }
+});
+
+// Session Management Endpoints
+app.post('/api/auth/refresh', authenticateToken, (req, res) => {
+  try {
+    // Generate new token with extended expiry
+    const newToken = jwt.sign(
+      { 
+        id: req.user.id, 
+        email: req.user.email, 
+        role: req.user.role 
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
+    res.json({ 
+      token: newToken,
+      message: 'Token refreshed successfully'
+    });
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    res.status(500).json({ error: 'Failed to refresh token' });
+  }
+});
+
+// Data Export/Import Endpoints
+app.get('/api/export/all', authenticateToken, (req, res) => {
+  try {
+    const userData = loadUserData(req.user.id);
+    
+    // Create comprehensive export
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      version: '2.0.0-alpha.39',
+      user: {
+        id: req.user.id,
+        email: req.user.email,
+        role: req.user.role
+      },
+      data: {
+        stores: userData.stores || [],
+        orders: userData.orders || [],
+        products: userData.products || [],
+        preferences: userData.preferences || {},
+        shopifyMappingConfig: userData.shopifyMappingConfig || {},
+        storeOrderMappingConfigs: userData.storeOrderMappingConfigs || {}
+      }
+    };
+    
+    res.json(exportData);
+  } catch (error) {
+    console.error('Data export error:', error);
+    res.status(500).json({ error: 'Failed to export data' });
+  }
+});
+
+app.post('/api/import/all', authenticateToken, (req, res) => {
+  try {
+    const importData = req.body;
+    
+    if (!importData.data) {
+      return res.status(400).json({ error: 'Invalid import data format' });
+    }
+    
+    const userData = loadUserData(req.user.id);
+    
+    // Merge imported data with existing data
+    userData.stores = importData.data.stores || userData.stores || [];
+    userData.orders = importData.data.orders || userData.orders || [];
+    userData.products = importData.data.products || userData.products || [];
+    userData.preferences = { ...userData.preferences, ...importData.data.preferences };
+    userData.shopifyMappingConfig = importData.data.shopifyMappingConfig || userData.shopifyMappingConfig;
+    userData.storeOrderMappingConfigs = importData.data.storeOrderMappingConfigs || userData.storeOrderMappingConfigs;
+    userData.lastUpdated = new Date().toISOString();
+    userData.importedAt = new Date().toISOString();
+    
+    if (saveUserData(req.user.id, userData)) {
+      res.json({ 
+        message: 'Data imported successfully',
+        imported: {
+          stores: userData.stores.length,
+          orders: userData.orders.length,
+          products: userData.products.length
+        }
+      });
+    } else {
+      res.status(500).json({ error: 'Failed to import data' });
+    }
+  } catch (error) {
+    console.error('Data import error:', error);
+    res.status(500).json({ error: 'Failed to import data' });
+  }
+});
+
+// ===== END CONFIGURATION STORAGE ENDPOINTS =====
+
 // Health check endpoint for Railway monitoring  
 app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: '2.0.0-alpha.37',
+    version: '2.0.0-alpha.40',
     environment: process.env.NODE_ENV || 'development',
     uptime: process.uptime()
   });
@@ -492,7 +1027,7 @@ app.get('/health', (req, res) => {
 app.get('/healthz', (req, res) => {
   res.json({ 
     status: 'ok', 
-          version: '2.0.0-alpha.37' 
+          version: '2.0.0-alpha.40' 
   });
 });
 
@@ -505,7 +1040,7 @@ app.get('/api/status', (req, res) => {
       endpoint: '/api/webhooks/shopify',
       secretConfigured: !!process.env.SHOPIFY_WEBHOOK_SECRET
     },
-    version: '2.0.0-alpha.37'
+    version: '2.0.0-alpha.40'
   });
 });
 

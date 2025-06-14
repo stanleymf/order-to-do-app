@@ -98,7 +98,7 @@ function migrateConfig(oldConfig: any): ShopifyMappingConfig {
   };
 }
 
-// Utility function to load mapping configuration
+// Utility function to load mapping configuration (keeping synchronous for compatibility)
 export function loadMappingConfig(): ShopifyMappingConfig {
   try {
     const savedConfig = localStorage.getItem('shopify-mapping-config');
@@ -161,6 +161,165 @@ export function loadMappingConfig(): ShopifyMappingConfig {
     includeCustomerPhone: true,
     includeCustomerEmail: true
   };
+}
+
+// Utility function to save mapping configuration (with server sync)
+export function saveMappingConfig(config: ShopifyMappingConfig): void {
+  try {
+    // Save to localStorage immediately for compatibility
+    localStorage.setItem('shopify-mapping-config', JSON.stringify(config));
+    
+    // Sync to server in background (don't block UI)
+    import('./serverStorage').then(({ saveMappingConfig: saveMappingConfigToServer }) => {
+      saveMappingConfigToServer(config).catch(error => {
+        console.warn('Failed to sync mapping config to server:', error);
+      });
+    }).catch(error => {
+      console.warn('Failed to import server storage:', error);
+    });
+  } catch (error) {
+    console.error('Error saving mapping config:', error);
+    throw error;
+  }
+}
+
+// Utility function to load hierarchical mapping configuration (keeping synchronous)
+// Combines global baseline with store-specific overrides
+export function loadHierarchicalMappingConfig(storeId?: string): ShopifyMappingConfig {
+  // Start with global baseline configuration
+  const globalConfig = loadMappingConfig();
+  
+  // If no store ID provided, return global config
+  if (!storeId) {
+    return globalConfig;
+  }
+  
+  try {
+    // Load store-specific configurations from localStorage
+    const storeConfigs = localStorage.getItem('store-order-mapping-configs');
+    if (!storeConfigs) {
+      return globalConfig;
+    }
+    
+    const parsedStoreConfigs = JSON.parse(storeConfigs);
+    const storeConfig = parsedStoreConfigs[storeId];
+    
+    if (!storeConfig || !storeConfig.fieldMappings) {
+      return globalConfig;
+    }
+    
+    // Create a copy of global config to modify
+    const hierarchicalConfig = { ...globalConfig };
+    
+    // Apply store-specific overrides for each configured Order Card component
+    storeConfig.fieldMappings.forEach((mapping: any) => {
+      if (!mapping.isActive || !mapping.orderCardComponent || !mapping.shopifyField) {
+        return;
+      }
+      
+      // Map Order Card components to global config properties
+      switch (mapping.orderCardComponent) {
+        case 'timeslot':
+          // Override timeslot configuration
+          hierarchicalConfig.timeslotSource = getSourceFromShopifyField(mapping.shopifyField);
+          if (mapping.formattingConfig?.regexPattern) {
+            hierarchicalConfig.timeslotTagPattern = mapping.formattingConfig.regexPattern;
+          }
+          if (mapping.formattingConfig?.dateFormat) {
+            hierarchicalConfig.timeslotFormat = mapping.formattingConfig.dateFormat;
+          }
+          break;
+          
+        case 'deliveryDate':
+          // Override date configuration
+          hierarchicalConfig.dateSource = getSourceFromShopifyField(mapping.shopifyField);
+          if (mapping.formattingConfig?.regexPattern) {
+            hierarchicalConfig.dateTagPattern = mapping.formattingConfig.regexPattern;
+          }
+          if (mapping.formattingConfig?.dateFormat) {
+            hierarchicalConfig.dateFormat = mapping.formattingConfig.dateFormat;
+          }
+          break;
+          
+        case 'deliveryType':
+          // Override delivery type configuration
+          hierarchicalConfig.deliveryTypeSource = getSourceFromShopifyField(mapping.shopifyField);
+          if (mapping.formattingConfig?.lookupTable) {
+            // Convert lookup table to keywords format
+            const lookupTable = mapping.formattingConfig.lookupTable;
+            hierarchicalConfig.deliveryTypeKeywords = {
+              delivery: Object.keys(lookupTable).filter(key => 
+                lookupTable[key].toLowerCase().includes('delivery')
+              ),
+              collection: Object.keys(lookupTable).filter(key => 
+                lookupTable[key].toLowerCase().includes('collection') || 
+                lookupTable[key].toLowerCase().includes('pickup')
+              ),
+              express: Object.keys(lookupTable).filter(key => 
+                lookupTable[key].toLowerCase().includes('express') || 
+                lookupTable[key].toLowerCase().includes('urgent')
+              )
+            };
+          }
+          break;
+          
+        case 'specialInstructions':
+          // Override instructions configuration
+          hierarchicalConfig.instructionsSource = getSourceFromShopifyField(mapping.shopifyField);
+          if (mapping.formattingConfig?.concatenateExpression) {
+            hierarchicalConfig.instructionsPropertyName = mapping.formattingConfig.concatenateExpression;
+          }
+          break;
+          
+        case 'productCustomizations':
+          // Override customizations configuration
+          hierarchicalConfig.customizationsSource = getSourceFromShopifyField(mapping.shopifyField);
+          if (mapping.formattingConfig?.filterCondition) {
+            hierarchicalConfig.excludeProperties = mapping.formattingConfig.filterCondition.split(',').map((s: string) => s.trim());
+          }
+          break;
+          
+        case 'customerName':
+          // Override customer name format
+          if (mapping.formattingConfig?.textTransform) {
+            switch (mapping.formattingConfig.textTransform) {
+              case 'uppercase':
+              case 'lowercase':
+              case 'capitalize':
+                hierarchicalConfig.customerNameFormat = 'first_last';
+                break;
+              case 'title':
+                hierarchicalConfig.customerNameFormat = 'last_first';
+                break;
+            }
+          }
+          break;
+          
+        case 'customerEmail':
+          hierarchicalConfig.includeCustomerEmail = true;
+          break;
+          
+        case 'customerPhone':
+          hierarchicalConfig.includeCustomerPhone = true;
+          break;
+      }
+    });
+    
+    return hierarchicalConfig;
+    
+  } catch (error) {
+    console.error('Error loading hierarchical mapping config:', error);
+    return globalConfig;
+  }
+}
+
+// Helper function to determine source type from Shopify field
+function getSourceFromShopifyField(shopifyField: string): any {
+  if (shopifyField.includes('tags')) return 'tags';
+  if (shopifyField.includes('line_items') && shopifyField.includes('properties')) return 'line_item_properties';
+  if (shopifyField.includes('note')) return 'order_note';
+  if (shopifyField.includes('created_at')) return 'created_at';
+  return 'tags'; // default fallback
 }
 
 // Shopify API configuration
@@ -284,8 +443,10 @@ interface ShopifyOrdersResponse {
 // Shopify API service class
 export class ShopifyApiService {
   private config: ShopifyConfig;
+  private store: Store;
 
   constructor(store: Store, accessToken: string, apiVersion: string = '2024-01') {
+    this.store = store;
     this.config = {
       storeDomain: store.domain,
       accessToken,
@@ -444,13 +605,11 @@ export class ShopifyApiService {
   }
 
   // Extract delivery information from order tags
-  private extractDeliveryInfoFromTags(orderTags: string[]): {
+  private extractDeliveryInfoFromTags(orderTags: string[], config: ShopifyMappingConfig): {
     date?: string;
     timeslot?: string;
     deliveryType?: 'delivery' | 'collection' | 'express';
   } {
-    const config = loadMappingConfig();
-    
     let date: string | undefined;
     let timeslot: string | undefined;
     let deliveryType: 'delivery' | 'collection' | 'express' | undefined;
@@ -546,7 +705,7 @@ export class ShopifyApiService {
     try {
       const url = `${this.getBaseUrl()}/orders.json?limit=${limit}&status=${status}`;
       const data: ShopifyOrdersResponse = await this.makeApiCall(url);
-      return data.orders.map(order => this.mapShopifyOrderToLocal(order));
+      return data.orders.map(order => this.mapShopifyOrderToLocal(order, this.store.id));
     } catch (error) {
       console.error('Error fetching orders from Shopify:', error);
       throw error;
@@ -558,7 +717,7 @@ export class ShopifyApiService {
     try {
       const url = `${this.getBaseUrl()}/orders/${shopifyId}.json`;
       const data: ShopifyOrderResponse = await this.makeApiCall(url);
-      return this.mapShopifyOrderToLocal(data.order);
+      return this.mapShopifyOrderToLocal(data.order, this.store.id);
     } catch (error) {
       console.error('Error fetching order from Shopify:', error);
       if (error instanceof Error && error.message.includes('404')) {
@@ -569,18 +728,18 @@ export class ShopifyApiService {
   }
 
   // Map Shopify order response to local Order interface
-  private mapShopifyOrderToLocal(shopifyOrder: ShopifyOrderResponse['order']): Order {
+  private mapShopifyOrderToLocal(shopifyOrder: ShopifyOrderResponse['order'], storeId?: string): Order {
     // Get the first line item (assuming single product orders for florist business)
     const lineItem = shopifyOrder.line_items[0];
     
-    // Load mapping configuration
-    const config = loadMappingConfig();
+    // Load hierarchical mapping configuration (global baseline + store-specific overrides)
+    const config = loadHierarchicalMappingConfig(storeId);
     
     // Extract order tags
     const orderTags = shopifyOrder.tags ? shopifyOrder.tags.split(',').map(tag => tag.trim()) : [];
     
     // Extract delivery information based on configuration
-    const deliveryInfo = this.extractDeliveryInfoFromTags(orderTags);
+    const deliveryInfo = this.extractDeliveryInfoFromTags(orderTags, config);
     
     // Extract special instructions based on configuration
     const remarks = this.extractInstructions(lineItem, shopifyOrder.note, config);

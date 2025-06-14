@@ -8,10 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from './ui/switch';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
-import { Database, Store, ArrowRight, Plus, Trash2, Copy, RotateCcw, Save, AlertCircle, Settings } from 'lucide-react';
+import { Database, Store, ArrowRight, Plus, Trash2, Copy, RotateCcw, Save, AlertCircle, Settings, Calendar, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { getStores } from '../utils/storage';
 import { type Store as StoreType } from '../types';
+import { loadMappingConfig, saveMappingConfig } from '../utils/shopifyApi';
 
 // Fixed Order Card Components that require Shopify order data
 const ORDER_CARD_COMPONENTS = [
@@ -297,6 +298,9 @@ export function OrderDataMapping() {
   const [configs, setConfigs] = useState<{ [storeId: string]: StoreOrderMappingConfig }>({});
   const [currentConfig, setCurrentConfig] = useState<StoreOrderMappingConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Date sync settings state
+  const [dateSyncConfig, setDateSyncConfig] = useState(() => loadMappingConfig());
 
   // Load stores and configurations on component mount
   useEffect(() => {
@@ -448,6 +452,277 @@ export function OrderDataMapping() {
     toast.success(`Configuration copied from ${sourceConfig.storeName}`);
   };
 
+  // Date sync configuration handlers
+  const updateDateSyncConfig = (updates: Partial<typeof dateSyncConfig>) => {
+    const updatedConfig = { ...dateSyncConfig, ...updates };
+    setDateSyncConfig(updatedConfig);
+  };
+
+  const saveDateSyncConfig = () => {
+    try {
+      saveMappingConfig(dateSyncConfig);
+      toast.success('Date sync settings saved successfully');
+    } catch (error) {
+      toast.error('Failed to save date sync settings');
+    }
+  };
+
+  const resetDateSyncConfig = () => {
+    const defaultConfig = loadMappingConfig();
+    setDateSyncConfig(defaultConfig);
+    toast.info('Date sync settings reset to defaults');
+  };
+
+  // Helper function to render formatting configuration fields
+  const renderFormattingConfig = (mapping: StoreFieldMapping) => {
+    const method = FORMATTING_METHODS.find(m => m.key === mapping.formattingMethod);
+    if (!method || method.configFields.length === 0) return null;
+
+    return (
+      <div className="space-y-4 p-4 bg-gray-50 rounded-lg border">
+        <h5 className="font-medium text-sm flex items-center gap-2">
+          <Settings className="h-4 w-4" />
+          {method.label} Configuration
+        </h5>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {method.configFields.map(field => {
+            switch (field) {
+              case 'regexPattern':
+                return (
+                  <div key={field} className="space-y-2">
+                    <Label className="text-sm">Regex Pattern</Label>
+                    <Input
+                      placeholder="e.g., /2024-\\d{2}-\\d{2}/"
+                      value={mapping.formattingConfig.regexPattern || ''}
+                      onChange={(e) => updateFieldMapping(mapping.id, {
+                        formattingConfig: { ...mapping.formattingConfig, regexPattern: e.target.value }
+                      })}
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-500">Regular expression to extract data</p>
+                  </div>
+                );
+
+              case 'splitDelimiter':
+                return (
+                  <div key={field} className="space-y-2">
+                    <Label className="text-sm">Split Delimiter</Label>
+                    <Input
+                      placeholder="e.g., , or | or ;"
+                      value={mapping.formattingConfig.splitDelimiter || ''}
+                      onChange={(e) => updateFieldMapping(mapping.id, {
+                        formattingConfig: { ...mapping.formattingConfig, splitDelimiter: e.target.value }
+                      })}
+                    />
+                    <p className="text-xs text-gray-500">Character to split the text by</p>
+                  </div>
+                );
+
+              case 'extractIndex':
+                return (
+                  <div key={field} className="space-y-2">
+                    <Label className="text-sm">Extract Index</Label>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={mapping.formattingConfig.extractIndex || 0}
+                      onChange={(e) => updateFieldMapping(mapping.id, {
+                        formattingConfig: { ...mapping.formattingConfig, extractIndex: parseInt(e.target.value) || 0 }
+                      })}
+                    />
+                    <p className="text-xs text-gray-500">Index of the part to extract (0-based)</p>
+                  </div>
+                );
+
+              case 'dateFormat':
+                return (
+                  <div key={field} className="space-y-2">
+                    <Label className="text-sm">Date Format</Label>
+                    <Select
+                      value={mapping.formattingConfig.dateFormat || 'MM/DD/YYYY'}
+                      onValueChange={(value) => updateFieldMapping(mapping.id, {
+                        formattingConfig: { ...mapping.formattingConfig, dateFormat: value }
+                      })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
+                        <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
+                        <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
+                        <SelectItem value="MMM DD, YYYY">MMM DD, YYYY</SelectItem>
+                        <SelectItem value="DD MMM YYYY">DD MMM YYYY</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500">Output date format</p>
+                  </div>
+                );
+
+              case 'currencySymbol':
+                return (
+                  <div key={field} className="space-y-2">
+                    <Label className="text-sm">Currency Symbol</Label>
+                    <Select
+                      value={mapping.formattingConfig.currencySymbol || '$'}
+                      onValueChange={(value) => updateFieldMapping(mapping.id, {
+                        formattingConfig: { ...mapping.formattingConfig, currencySymbol: value }
+                      })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="$">$ (USD)</SelectItem>
+                        <SelectItem value="€">€ (EUR)</SelectItem>
+                        <SelectItem value="£">£ (GBP)</SelectItem>
+                        <SelectItem value="¥">¥ (JPY)</SelectItem>
+                        <SelectItem value="₹">₹ (INR)</SelectItem>
+                        <SelectItem value="C$">C$ (CAD)</SelectItem>
+                        <SelectItem value="A$">A$ (AUD)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500">Currency symbol to display</p>
+                  </div>
+                );
+
+              case 'textTransform':
+                return (
+                  <div key={field} className="space-y-2">
+                    <Label className="text-sm">Text Transform</Label>
+                    <Select
+                      value={mapping.formattingConfig.textTransform || 'capitalize'}
+                      onValueChange={(value: 'uppercase' | 'lowercase' | 'capitalize' | 'title') => updateFieldMapping(mapping.id, {
+                        formattingConfig: { ...mapping.formattingConfig, textTransform: value }
+                      })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="uppercase">UPPERCASE</SelectItem>
+                        <SelectItem value="lowercase">lowercase</SelectItem>
+                        <SelectItem value="capitalize">Capitalize</SelectItem>
+                        <SelectItem value="title">Title Case</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500">How to transform the text case</p>
+                  </div>
+                );
+
+              case 'concatenateExpression':
+                return (
+                  <div key={field} className="space-y-2 md:col-span-2">
+                    <Label className="text-sm">Concatenate Expression</Label>
+                    <Input
+                      placeholder='e.g., first_name + " " + last_name'
+                      value={mapping.formattingConfig.concatenateExpression || ''}
+                      onChange={(e) => updateFieldMapping(mapping.id, {
+                        formattingConfig: { ...mapping.formattingConfig, concatenateExpression: e.target.value }
+                      })}
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-500">Expression to combine fields (use + to join)</p>
+                  </div>
+                );
+
+              case 'conditionalLogic':
+                return (
+                  <div key={field} className="space-y-2 md:col-span-2">
+                    <Label className="text-sm">Conditional Logic</Label>
+                    <Input
+                      placeholder='e.g., tags contains "express" ? "Express" : "Standard"'
+                      value={mapping.formattingConfig.conditionalLogic || ''}
+                      onChange={(e) => updateFieldMapping(mapping.id, {
+                        formattingConfig: { ...mapping.formattingConfig, conditionalLogic: e.target.value }
+                      })}
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-500">If/then logic using ? : syntax</p>
+                  </div>
+                );
+
+              case 'mathematicalExpression':
+                return (
+                  <div key={field} className="space-y-2">
+                    <Label className="text-sm">Mathematical Operation</Label>
+                    <Select
+                      value={mapping.formattingConfig.mathematicalExpression || '+'}
+                      onValueChange={(value) => updateFieldMapping(mapping.id, {
+                        formattingConfig: { ...mapping.formattingConfig, mathematicalExpression: value }
+                      })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="+">Addition (+)</SelectItem>
+                        <SelectItem value="-">Subtraction (-)</SelectItem>
+                        <SelectItem value="*">Multiplication (×)</SelectItem>
+                        <SelectItem value="/">Division (÷)</SelectItem>
+                        <SelectItem value="%">Modulo (%)</SelectItem>
+                        <SelectItem value="**">Power (^)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500">Mathematical operation to perform</p>
+                  </div>
+                );
+
+              case 'lookupTable':
+                return (
+                  <div key={field} className="space-y-2 md:col-span-2">
+                    <Label className="text-sm">Lookup Table (JSON)</Label>
+                    <Input
+                      placeholder='{"paid":"Completed", "pending":"Pending", "refunded":"Refunded"}'
+                      value={JSON.stringify(mapping.formattingConfig.lookupTable || {})}
+                      onChange={(e) => {
+                        try {
+                          const parsed = JSON.parse(e.target.value || '{}');
+                          updateFieldMapping(mapping.id, {
+                            formattingConfig: { ...mapping.formattingConfig, lookupTable: parsed }
+                          });
+                        } catch (error) {
+                          // Invalid JSON, don't update
+                        }
+                      }}
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-500">JSON object mapping input values to output values</p>
+                  </div>
+                );
+
+              case 'filterCondition':
+                return (
+                  <div key={field} className="space-y-2 md:col-span-2">
+                    <Label className="text-sm">Filter Condition</Label>
+                    <Input
+                      placeholder="e.g., quantity > 1 or title contains 'special'"
+                      value={mapping.formattingConfig.filterCondition || ''}
+                      onChange={(e) => updateFieldMapping(mapping.id, {
+                        formattingConfig: { ...mapping.formattingConfig, filterCondition: e.target.value }
+                      })}
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-500">Condition to filter array items</p>
+                  </div>
+                );
+
+              default:
+                return null;
+            }
+          })}
+        </div>
+
+        {/* Example for current method */}
+        <div className="bg-white border rounded p-3">
+          <p className="text-xs font-medium text-gray-700 mb-1">Example:</p>
+          <p className="text-xs text-gray-600 font-mono">{method.example}</p>
+        </div>
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -534,6 +809,270 @@ export function OrderDataMapping() {
               </div>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Hierarchical Configuration Info */}
+      <Card className="border-blue-200 bg-blue-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-blue-900">
+            <Database className="h-5 w-5" />
+            Hierarchical Configuration System
+          </CardTitle>
+          <p className="text-sm text-blue-700">
+            Understanding how global baseline and store-specific configurations work together
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <h4 className="font-medium text-blue-900 flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Global Baseline Configuration
+              </h4>
+              <div className="text-sm text-blue-800 space-y-2">
+                <p>• Serves as the default for <strong>all stores</strong></p>
+                <p>• Configured in the Date Sync Settings below</p>
+                <p>• Used when no store-specific override exists</p>
+                <p>• Always active as the fallback configuration</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <h4 className="font-medium text-blue-900 flex items-center gap-2">
+                <Store className="h-4 w-4" />
+                Store-Specific Overrides
+              </h4>
+              <div className="text-sm text-blue-800 space-y-2">
+                <p>• Override <strong>specific Order Card components</strong> only</p>
+                <p>• Configured in the Field Mappings section</p>
+                <p>• Takes precedence over global baseline</p>
+                <p>• Other components still use global configuration</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg p-4 border border-blue-200">
+            <h5 className="font-medium text-blue-900 mb-2">Example Configuration Flow:</h5>
+            <div className="text-sm text-blue-800 space-y-1">
+              <p><strong>Global:</strong> Date from Order Tags (DD/MM/YYYY), Timeslot from Order Tags</p>
+              <p><strong>Store A Override:</strong> Timeslot from Line Item Properties</p>
+              <p><strong>Result for Store A:</strong> Date from Order Tags (global) + Timeslot from Line Item Properties (override)</p>
+              <p><strong>Result for Store B:</strong> Date from Order Tags (global) + Timeslot from Order Tags (global)</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Date Sync Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Global Baseline Configuration
+          </CardTitle>
+          <p className="text-sm text-gray-600">
+            Configure the default settings used by all stores (unless overridden by store-specific mappings)
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          
+          {/* Current Settings Overview */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="h-4 w-4 text-blue-600" />
+              <h4 className="font-medium text-blue-900">Current Configuration</h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-blue-800">Date Source:</span>
+                <span className="ml-2 text-blue-700 capitalize">{dateSyncConfig.dateSource}</span>
+              </div>
+              <div>
+                <span className="font-medium text-blue-800">Date Format:</span>
+                <span className="ml-2 text-blue-700">{dateSyncConfig.dateFormat}</span>
+              </div>
+              <div>
+                <span className="font-medium text-blue-800">Pattern:</span>
+                <span className="ml-2 text-blue-700 font-mono text-xs">{dateSyncConfig.dateTagPattern}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Date Configuration */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Date Source */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Date Source</Label>
+              <Select
+                value={dateSyncConfig.dateSource}
+                onValueChange={(value: 'tags' | 'created_at' | 'custom_field') => 
+                  updateDateSyncConfig({ dateSource: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tags">Order Tags</SelectItem>
+                  <SelectItem value="created_at">Order Created Date</SelectItem>
+                  <SelectItem value="custom_field">Custom Field</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500">
+                Where to look for delivery date information in Shopify orders
+              </p>
+            </div>
+
+            {/* Date Format */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Date Format</Label>
+              <Select
+                value={dateSyncConfig.dateFormat}
+                onValueChange={(value: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD') => 
+                  updateDateSyncConfig({ dateFormat: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="DD/MM/YYYY">DD/MM/YYYY (Day/Month/Year)</SelectItem>
+                  <SelectItem value="MM/DD/YYYY">MM/DD/YYYY (Month/Day/Year)</SelectItem>
+                  <SelectItem value="YYYY-MM-DD">YYYY-MM-DD (Year-Month-Day)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500">
+                How dates are formatted in your Shopify order tags
+              </p>
+            </div>
+
+            {/* Date Pattern (only show if source is tags) */}
+            {dateSyncConfig.dateSource === 'tags' && (
+              <div className="space-y-3 md:col-span-2">
+                <Label className="text-sm font-medium">Date Extraction Pattern (Regex)</Label>
+                <Input
+                  value={dateSyncConfig.dateTagPattern}
+                  onChange={(e) => updateDateSyncConfig({ dateTagPattern: e.target.value })}
+                  placeholder="(\\d{1,2})[/\\-](\\d{1,2})[/\\-](\\d{2,4})"
+                  className="font-mono text-sm"
+                />
+                <div className="text-xs text-gray-500 space-y-1">
+                  <p>Regex pattern to extract dates from order tags</p>
+                  <p><strong>Current pattern matches:</strong> 13/06/2025, 13-06-2025, 13/06/25</p>
+                  <p><strong>Example tags:</strong> "delivery, 13/06/2025, 2pm-4pm" → extracts "13/06/2025"</p>
+                </div>
+              </div>
+            )}
+
+          </div>
+
+          {/* Timeslot Configuration */}
+          <Separator />
+          <div>
+            <h4 className="font-medium mb-4 flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Timeslot Settings
+            </h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Timeslot Source */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Timeslot Source</Label>
+                <Select
+                  value={dateSyncConfig.timeslotSource}
+                  onValueChange={(value: 'tags' | 'line_item_properties' | 'order_note') => 
+                    updateDateSyncConfig({ timeslotSource: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="tags">Order Tags</SelectItem>
+                    <SelectItem value="line_item_properties">Line Item Properties</SelectItem>
+                    <SelectItem value="order_note">Order Note</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Timeslot Format */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Timeslot Format</Label>
+                <Select
+                  value={dateSyncConfig.timeslotFormat}
+                  onValueChange={(value: 'HH:MM-HH:MM' | 'HH:MM AM/PM-HH:MM AM/PM' | 'HAM/PM-HAM/PM') => 
+                    updateDateSyncConfig({ timeslotFormat: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="HH:MM-HH:MM">24-hour (09:00-11:00)</SelectItem>
+                    <SelectItem value="HH:MM AM/PM-HH:MM AM/PM">12-hour (9:00 AM - 11:00 AM)</SelectItem>
+                    <SelectItem value="HAM/PM-HAM/PM">Short (9AM - 11AM)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Timeslot Pattern (only show if source is tags) */}
+              {dateSyncConfig.timeslotSource === 'tags' && (
+                <div className="space-y-3 md:col-span-2">
+                  <Label className="text-sm font-medium">Timeslot Extraction Pattern (Regex)</Label>
+                  <Input
+                    value={dateSyncConfig.timeslotTagPattern}
+                    onChange={(e) => updateDateSyncConfig({ timeslotTagPattern: e.target.value })}
+                    placeholder="(\\d{1,2}):(\\d{2})-(\\d{1,2}):(\\d{2})"
+                    className="font-mono text-sm"
+                  />
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <p>Regex pattern to extract timeslots from order tags</p>
+                    <p><strong>Current pattern matches:</strong> 09:00-11:00, 2:00-4:00</p>
+                    <p><strong>Example tags:</strong> "delivery, 13/06/2025, 09:00-11:00" → extracts "09:00-11:00"</p>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4 border-t">
+            <Button onClick={saveDateSyncConfig} className="flex-1">
+              <Save className="h-4 w-4 mr-2" />
+              Save Date Settings
+            </Button>
+            <Button variant="outline" onClick={resetDateSyncConfig}>
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset to Defaults
+            </Button>
+          </div>
+
+          {/* Example Section */}
+          <div className="bg-gray-50 border rounded-lg p-4">
+            <h5 className="font-medium mb-3">Example Usage</h5>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">Shopify Tag</Badge>
+                <ArrowRight className="h-3 w-3" />
+                <code className="bg-white px-2 py-1 rounded text-xs">delivery, 13/06/2025, 09:00-11:00</code>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">Extracted Date</Badge>
+                <ArrowRight className="h-3 w-3" />
+                <span className="text-green-600 font-medium">June 13, 2025</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">Extracted Timeslot</Badge>
+                <ArrowRight className="h-3 w-3" />
+                <span className="text-blue-600 font-medium">9:00 AM - 11:00 AM</span>
+              </div>
+            </div>
+          </div>
+
         </CardContent>
       </Card>
 
@@ -706,6 +1245,9 @@ export function OrderDataMapping() {
                           </Select>
                         </div>
                       </div>
+
+                      {/* Dynamic Formatting Configuration */}
+                      {renderFormattingConfig(mapping)}
 
                       {/* Fallback Value */}
                       <div className="space-y-2">

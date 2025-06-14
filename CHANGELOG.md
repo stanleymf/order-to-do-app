@@ -2,6 +2,247 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0-alpha.40] - 2025-01-14
+
+### 🚀 **MAJOR FEATURE: Comprehensive Server-Side Data Storage System**
+
+This release introduces a complete server-side storage infrastructure that transforms the app from client-side localStorage to a robust, cross-device accessible data management system.
+
+#### **🏗️ New Server-Side Storage Infrastructure**
+
+**Core Architecture:**
+- **User-based data isolation** - Each user has dedicated data space (`/data/user-{userId}.json`)
+- **JWT authentication system** with 7-day token expiry and automatic refresh
+- **File-based persistent storage** with automatic directory creation
+- **Comprehensive API endpoints** for all data operations
+- **Cross-device synchronization** - access your data from any device/browser
+
+**Authentication & Session Management:**
+- `POST /api/auth/login` - User login with JWT token generation
+- `GET /api/auth/profile` - Get user profile information  
+- `PUT /api/auth/profile` - Update user profile
+- `POST /api/auth/refresh` - Refresh JWT token for extended sessions
+- **Default accounts created** on first server start:
+  - Admin: `admin@floralshop.com` / `admin123`
+  - Florist: `maya@floralshop.com` / `password`
+
+#### **📊 Comprehensive Configuration Storage**
+
+**Global Shopify Mapping Configuration:**
+- `GET /api/config/shopify-mapping` - Load global baseline configuration
+- `POST /api/config/shopify-mapping` - Save global baseline configuration
+- **Hierarchical system** - global settings serve as baseline for all stores
+
+**Store-Specific Order Mappings:**
+- `GET /api/config/store-order-mappings` - Load all store configurations
+- `POST /api/config/store-order-mappings` - Save all store configurations  
+- `GET /api/config/store-order-mappings/:storeId` - Load specific store config
+- `POST /api/config/store-order-mappings/:storeId` - Save specific store config
+- **Override system** - store configs only override specific Order Card components
+- **Automatic fallback** - unconfigured components use global baseline
+
+#### **🏪 Enhanced Store Management**
+
+**Complete Store CRUD Operations:**
+- `GET /api/stores` - Load all user stores
+- `POST /api/stores` - Create new store with automatic ID generation
+- `PUT /api/stores/:storeId` - Update existing store with timestamp tracking
+- `DELETE /api/stores/:storeId` - Delete store and associated configurations
+- **Automatic cleanup** - removing store also removes its specific configurations
+
+#### **📦 Orders & Products Management**
+
+**Advanced Order Operations:**
+- `GET /api/orders` - Load orders with filtering (storeId, date, status)
+- `POST /api/orders` - Save orders (single or batch operations)
+- **Duplicate prevention** - automatic detection and update of existing orders
+- **Timestamp management** - automatic createdAt/updatedAt tracking
+
+**Product Management:**
+- `GET /api/products` - Load products with store filtering
+- `POST /api/products` - Save products (single or batch operations)
+- **Store association** - products linked to specific stores
+- **Batch operations** - efficient handling of multiple products
+
+#### **⚙️ User Preferences & Settings**
+
+**Personalized Configuration:**
+- `GET /api/preferences` - Load user preferences
+- `POST /api/preferences` - Save user preferences
+- **Default preferences** - theme, notifications, autoSync, dateFormat, timeFormat
+- **Cross-device sync** - preferences follow user across devices
+
+#### **📤📥 Data Export/Import System**
+
+**Complete Data Portability:**
+- `GET /api/export/all` - Export all user data in structured format
+- `POST /api/import/all` - Import data from backup with merge capability
+- **Comprehensive export** - includes all stores, orders, products, preferences, configurations
+- **Version tracking** - export includes version and timestamp information
+- **Merge strategy** - import merges with existing data rather than replacing
+
+#### **🔄 Migration & Compatibility System**
+
+**Seamless Transition from localStorage:**
+- **Hybrid approach** - localStorage functions still work for compatibility
+- **Background server sync** - data automatically syncs to server without blocking UI
+- **Migration utilities** - `migrateFromLocalStorage()` and `checkAndMigrate()`
+- **User-prompted migration** - offers to migrate existing data on first login
+- **Fallback support** - works offline with localStorage if server unavailable
+
+**New `serverStorage.ts` Module:**
+```typescript
+// Authentication
+setAuthToken(token), getAuthToken(), clearAuthToken()
+login(email, password), getUserProfile(), refreshAuthToken()
+
+// Configuration Storage  
+loadMappingConfig(), saveMappingConfig()
+loadStoreOrderMappingConfigs(), saveStoreOrderMappingConfigs()
+
+// Data Management
+getStores(), saveStore(), deleteStore()
+getOrders(), saveOrders(), getProducts(), saveProducts()
+getUserPreferences(), saveUserPreferences()
+
+// Migration & Backup
+migrateFromLocalStorage(), exportAllData(), importAllData()
+```
+
+#### **🔧 Enhanced Hierarchical Configuration**
+
+**Improved Order Mapping System:**
+- **Global baseline** (`shopify-mapping-config`) - default settings for all stores
+- **Store-specific overrides** (`store-order-mapping-configs`) - only override specific components
+- **Automatic application** - order sync uses hierarchical config automatically
+- **Real-time updates** - configuration changes apply immediately to new orders
+
+**Example Hierarchical Flow:**
+```
+Global Config: Date from tags with DD/MM/YYYY format
+Store A Override: Timeslot from line item properties  
+Store B Override: Delivery type from custom tags
+
+Result:
+- Store A: Global date + custom timeslot + global delivery
+- Store B: Global date + global timeslot + custom delivery
+```
+
+#### **🛡️ Security & Data Protection**
+
+**Robust Authentication:**
+- **JWT-based security** with configurable secret keys
+- **Role-based access control** (admin/florist permissions)
+- **Automatic token refresh** to maintain sessions
+- **Secure password hashing** using bcrypt
+
+**Data Integrity:**
+- **Error handling** with graceful fallbacks
+- **Data validation** on all endpoints
+- **Automatic backups** through export functionality
+- **Transaction safety** with atomic operations
+
+#### **📱 Cross-Device Benefits**
+
+**What Users Can Now Do:**
+1. **Login from any device** - configurations and data follow you
+2. **Start work on desktop, finish on tablet** - seamless continuity
+3. **Team collaboration** - multiple users with isolated data spaces
+4. **No data loss** - server-side persistence prevents browser data loss
+5. **Backup & restore** - export/import entire configuration sets
+6. **Offline capability** - localStorage fallback when server unavailable
+
+#### **🔄 Background Compatibility**
+
+**Non-Breaking Changes:**
+- **Existing localStorage functions preserved** - no code changes required
+- **Automatic server sync** - data syncs in background without user intervention
+- **Progressive enhancement** - server features available when authenticated
+- **Graceful degradation** - falls back to localStorage if server unavailable
+
+### **🐛 Bug Fixes**
+
+- **FIXED: TypeScript compilation errors** in hierarchical configuration system
+- **FIXED: Async/sync compatibility** issues in order mapping functions
+- **FIXED: Import path resolution** for server storage utilities
+- **FIXED: Authentication token management** with proper error handling
+- **FIXED: Server endpoint routing** with comprehensive error responses
+
+### **⚡ Performance Improvements**
+
+- **Background sync operations** - UI never blocks for server operations
+- **Efficient batch operations** - handle multiple orders/products in single requests
+- **Optimized data loading** - only fetch required data with filtering
+- **Reduced localStorage usage** - server storage reduces client-side data burden
+- **Automatic cleanup** - remove orphaned configurations when stores deleted
+
+### **🔧 Technical Implementation**
+
+**Server Infrastructure:**
+- **Express.js backend** with comprehensive middleware
+- **JWT authentication** with configurable secrets
+- **File-based storage** with automatic directory management
+- **CORS support** for development environments
+- **Health check endpoints** for monitoring
+
+**Client Integration:**
+- **Hybrid storage approach** - localStorage + server sync
+- **Automatic migration detection** and user prompting
+- **Error handling** with fallback mechanisms
+- **Type-safe API calls** with comprehensive error types
+
+**Data Structure:**
+```json
+{
+  "stores": [...],
+  "orders": [...], 
+  "products": [...],
+  "preferences": {...},
+  "shopifyMappingConfig": {...},
+  "storeOrderMappingConfigs": {...}
+}
+```
+
+### **📋 Migration Notes**
+
+**For Existing Users:**
+1. **No immediate action required** - existing localStorage data continues working
+2. **Login to enable server features** - use default credentials or create account
+3. **Migration prompt** - system offers to migrate existing data automatically
+4. **Gradual transition** - can use both localStorage and server storage simultaneously
+5. **Data export** - backup existing data before migration if desired
+
+**For Developers:**
+1. **API endpoints documented** - comprehensive REST API available
+2. **Authentication required** - all endpoints require valid JWT token
+3. **Error handling** - proper HTTP status codes and error messages
+4. **Rate limiting** - basic rate limiting implemented for API protection
+
+### **🎯 Business Impact**
+
+**Enhanced User Experience:**
+- **Cross-device accessibility** - work from anywhere with internet
+- **Data persistence** - never lose configurations due to browser issues
+- **Team collaboration** - multiple users can have separate configurations
+- **Professional reliability** - server-side storage provides enterprise-level data management
+
+**Operational Benefits:**
+- **Centralized data management** - all user data stored securely on server
+- **Backup capabilities** - complete data export/import functionality
+- **Scalability** - user-based isolation allows unlimited users
+- **Monitoring** - health check endpoints for system monitoring
+
+### **🔮 Future Enhancements**
+
+**Planned Features:**
+- **Real-time collaboration** - multiple users editing same store configurations
+- **Advanced user management** - admin panel for user creation/management
+- **Database integration** - migration from file-based to database storage
+- **API rate limiting** - enhanced rate limiting and quota management
+- **Audit logging** - track all configuration changes with timestamps
+
+---
+
 ## [2.0.0-alpha.39] - 2024-12-19
 
 ### 🎯 **MAJOR RESTRUCTURE: Store-Specific Order Data Mapping System**
