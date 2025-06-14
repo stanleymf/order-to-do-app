@@ -5,6 +5,26 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.15] - 2024-12-19
+
+### 🚨 Critical Application Serving Fix
+- **Root Route Issue**: Fixed critical issue where root URL was serving health status JSON instead of React application
+  - Removed problematic root route handler that was intercepting app requests
+  - Root URL now properly serves the React application via static file serving
+  - Health endpoints moved to dedicated routes (`/health`, `/healthz`)
+
+### 🔧 Railway Configuration Update  
+- **Healthcheck Path**: Updated Railway configuration to use `/healthz` endpoint
+  - Railway now uses simple text response for healthchecks
+  - Root URL freed up for serving the actual application
+  - Improved separation of concerns between health monitoring and app serving
+
+### 🎯 Route Restructuring
+- **Proper SPA Serving**: Enhanced catch-all middleware to properly serve React app
+  - Static files served before catch-all middleware
+  - API routes properly segregated with 404 handling
+  - Improved error messages and logging
+
 ## [2.0.0-alpha.14] - 2024-12-19
 
 ### 🚨 Critical Server Startup Fix

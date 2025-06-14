@@ -16,27 +16,18 @@ console.log(`🔐 Webhook secret configured: ${process.env.SHOPIFY_WEBHOOK_SECRE
 // Basic middleware
 app.use(express.json());
 
-// Root route for Railway healthcheck
-app.get('/', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
-    service: 'order-to-do-app',
-    timestamp: new Date().toISOString(),
-    version: '2.0.0-alpha.14'
-  });
-});
-
 // Health check endpoint for Railway monitoring  
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    webhookEndpoint: '/api/webhooks/shopify'
+    webhookEndpoint: '/api/webhooks/shopify',
+    version: '2.0.0-alpha.15'
   });
 });
 
-// Railway specific healthcheck
+// Railway specific healthcheck (simple text response)
 app.get('/healthz', (req, res) => {
   res.status(200).send('OK');
 });
@@ -49,7 +40,8 @@ app.get('/api/status', (req, res) => {
     webhook: {
       endpoint: '/api/webhooks/shopify',
       secretConfigured: !!process.env.SHOPIFY_WEBHOOK_SECRET
-    }
+    },
+    version: '2.0.0-alpha.15'
   });
 });
 
@@ -223,14 +215,14 @@ try {
   console.warn('⚠️  Could not serve static files from dist directory:', error.message);
 }
 
-// Simple catch-all for SPA - avoid complex patterns
+// SPA catch-all - serve React app for all non-API routes
 app.use((req, res) => {
   // Handle API routes not found
-  if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ error: 'API endpoint not found' });
+  if (req.path.startsWith('/api/') || req.path.startsWith('/health')) {
+    return res.status(404).json({ error: 'Endpoint not found' });
   }
   
-  // Serve index.html for all other routes
+  // Serve React app for all other routes
   try {
     res.sendFile(join(__dirname, 'dist', 'index.html'));
   } catch (error) {
@@ -255,9 +247,9 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on port: ${PORT}`);
   console.log(`🔗 Webhook endpoint: ${process.env.NODE_ENV === 'production' ? 'https://[your-domain]' : 'http://localhost:' + PORT}/api/webhooks/shopify`);
   console.log(`💚 Health check endpoints:`);
-  console.log(`   - / (root)`);
-  console.log(`   - /health`);
-  console.log(`   - /healthz`);
+  console.log(`   - /health (detailed)`);
+  console.log(`   - /healthz (simple)`);
+  console.log(`🌐 App available at: ${process.env.NODE_ENV === 'production' ? 'https://[your-domain]' : 'http://localhost:' + PORT}/`);
 }).on('error', (error) => {
   console.error('❌ Server failed to start:', error);
   process.exit(1);
