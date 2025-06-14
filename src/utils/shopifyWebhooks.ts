@@ -31,6 +31,12 @@ interface WebhookListResponse {
   webhooks: WebhookRegistration[];
 }
 
+// Shopify error response
+interface ShopifyErrorResponse {
+  errors?: string | Record<string, any>;
+  error?: string;
+}
+
 export class ShopifyWebhookManager {
   private accessToken: string;
   private shopDomain: string;
@@ -76,12 +82,30 @@ export class ShopifyWebhookManager {
         })
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        // Enhanced error handling for Shopify API errors
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        
+        if (responseData.error) {
+          errorMessage = responseData.error;
+        } else if (responseData.errors) {
+          if (typeof responseData.errors === 'string') {
+            errorMessage = responseData.errors;
+          } else if (typeof responseData.errors === 'object') {
+            // Handle Shopify's error object format
+            const errorDetails = Object.entries(responseData.errors)
+              .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+              .join('; ');
+            errorMessage = errorDetails || errorMessage;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      return await response.json();
+      return responseData;
     } catch (error) {
       console.error('Error making Shopify API call:', error);
       throw error;
@@ -100,10 +124,36 @@ export class ShopifyWebhookManager {
     }
   }
 
+  // Check if webhook already exists for a specific topic and address
+  async webhookExists(topic: WebhookTopic, address: string): Promise<boolean> {
+    try {
+      const existingWebhooks = await this.getExistingWebhooks();
+      return existingWebhooks.some(webhook => 
+        webhook.topic === topic && webhook.address === address
+      );
+    } catch (error) {
+      console.error('Error checking webhook existence:', error);
+      return false;
+    }
+  }
+
   // Register a new webhook
   async registerWebhook(topic: WebhookTopic): Promise<WebhookRegistration> {
     try {
       const webhookUrl = this.getWebhookEndpointUrl();
+      
+      // Check if webhook already exists
+      const exists = await this.webhookExists(topic, webhookUrl);
+      if (exists) {
+        console.log(`ℹ️ Webhook for ${topic} already exists`);
+        // Return existing webhook info
+        const existingWebhooks = await this.getExistingWebhooks();
+        const existingWebhook = existingWebhooks.find(w => w.topic === topic && w.address === webhookUrl);
+        if (existingWebhook) {
+          return existingWebhook;
+        }
+      }
+
       const url = `${this.webhookBaseUrl}/webhooks.json`;
       
       const webhookData = {
@@ -114,12 +164,25 @@ export class ShopifyWebhookManager {
         }
       };
 
+      console.log(`🔄 Registering webhook for ${topic} to ${webhookUrl}`);
       const response: WebhookRegistrationResponse = await this.makeApiCall(url, 'POST', webhookData);
       console.log(`✅ Webhook registered for ${topic}:`, response.webhook.id);
       return response.webhook;
     } catch (error) {
       console.error(`❌ Error registering webhook for ${topic}:`, error);
-      throw error;
+      
+      // Enhanced error message for common issues
+      let enhancedError = error instanceof Error ? error.message : 'Unknown error';
+      
+      if (enhancedError.includes('422')) {
+        enhancedError = `Webhook registration failed (422): This usually means the webhook already exists or there's a permission issue. Topic: ${topic}`;
+      } else if (enhancedError.includes('403')) {
+        enhancedError = `Permission denied (403): Make sure your app has the required permissions for ${topic}`;
+      } else if (enhancedError.includes('429')) {
+        enhancedError = `Rate limit exceeded (429): Please wait before trying again`;
+      }
+      
+      throw new Error(enhancedError);
     }
   }
 
@@ -135,12 +198,19 @@ export class ShopifyWebhookManager {
     }
   }
 
-  // Get required webhook topics for the app
+  // Get required webhook topics for the app (prioritized)
   getRequiredWebhookTopics(): WebhookTopic[] {
     return [
       'orders/create',
       'orders/updated',
-      'orders/cancelled',
+      'orders/cancelled'
+      // Note: Product webhooks are optional and may require additional permissions
+    ];
+  }
+
+  // Get optional webhook topics
+  getOptionalWebhookTopics(): WebhookTopic[] {
+    return [
       'products/create',
       'products/updated'
     ];
@@ -165,30 +235,51 @@ export class ShopifyWebhookManager {
       const existingWebhooks = await this.getExistingWebhooks();
       const webhookUrl = this.getWebhookEndpointUrl();
       
-      // Check which webhooks already exist for our endpoint
-      const existingTopics = existingWebhooks
-        .filter(webhook => webhook.address === webhookUrl)
-        .map(webhook => webhook.topic);
+      console.log('📋 Existing webhooks:', existingWebhooks.map(w => `${w.topic} -> ${w.address}`));
 
-      console.log('📋 Existing webhooks for this endpoint:', existingTopics);
-
-      // Get required topics
+      // Get required topics (prioritized)
       const requiredTopics = this.getRequiredWebhookTopics();
+      const optionalTopics = this.getOptionalWebhookTopics();
       
-      // Register missing webhooks
+      // Register required webhooks first
       for (const topic of requiredTopics) {
-        if (!existingTopics.includes(topic)) {
-          try {
+        try {
+          const exists = await this.webhookExists(topic, webhookUrl);
+          if (exists) {
+            const existingWebhook = existingWebhooks.find(w => w.topic === topic && w.address === webhookUrl);
+            if (existingWebhook) {
+              result.existing.push(existingWebhook);
+              console.log(`✅ Webhook already exists for ${topic}`);
+            }
+          } else {
             const webhook = await this.registerWebhook(topic);
             result.registered.push(webhook);
-          } catch (error) {
-            result.errors.push(`Failed to register ${topic}: ${error instanceof Error ? error.message : 'Unknown error'}`);
           }
-        } else {
-          const existingWebhook = existingWebhooks.find(w => w.topic === topic && w.address === webhookUrl);
-          if (existingWebhook) {
-            result.existing.push(existingWebhook);
+        } catch (error) {
+          const errorMsg = `Failed to register ${topic}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+          result.errors.push(errorMsg);
+          console.error(errorMsg);
+        }
+      }
+
+      // Try to register optional webhooks (don't fail if they don't work)
+      for (const topic of optionalTopics) {
+        try {
+          const exists = await this.webhookExists(topic, webhookUrl);
+          if (exists) {
+            const existingWebhook = existingWebhooks.find(w => w.topic === topic && w.address === webhookUrl);
+            if (existingWebhook) {
+              result.existing.push(existingWebhook);
+              console.log(`✅ Optional webhook already exists for ${topic}`);
+            }
+          } else {
+            const webhook = await this.registerWebhook(topic);
+            result.registered.push(webhook);
+            console.log(`✅ Optional webhook registered for ${topic}`);
           }
+        } catch (error) {
+          console.warn(`⚠️ Optional webhook ${topic} failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          // Don't add optional webhook errors to the main error list
         }
       }
 

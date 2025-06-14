@@ -258,9 +258,14 @@ export function Settings({ currentUser }: SettingsProps) {
       setWebhookStatus(result);
       
       if (result.errors.length > 0) {
-        toast.error(`Webhook registration completed with ${result.errors.length} errors`);
+        // Show detailed error information
+        const errorMessage = result.errors.length === 1 
+          ? result.errors[0]
+          : `Webhook registration completed with ${result.errors.length} errors. Check details below.`;
+        toast.error(errorMessage);
       } else {
-        toast.success(`Successfully registered ${result.registered.length} webhooks`);
+        const totalWebhooks = result.registered.length + result.existing.length;
+        toast.success(`Successfully managed ${totalWebhooks} webhooks (${result.registered.length} new, ${result.existing.length} existing)`);
       }
     } catch (error) {
       console.error('Error registering webhooks:', error);
