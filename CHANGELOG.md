@@ -5,7 +5,27 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0-alpha.27] - 2025-01-27
+## [2.0.0-alpha.28] - 14/06/2025
+
+### 🐛 Critical Bug Fix
+- **Order Sync Context Binding**: Fixed critical JavaScript context binding issue in Shopify API service
+  - **Root Cause**: `this.extractDeliveryInfoFromTags` was undefined due to lost context in array map operations
+  - **Solution**: Changed `data.orders.map(this.mapShopifyOrderToLocal)` to `data.orders.map(order => this.mapShopifyOrderToLocal(order))`
+  - **Impact**: Order syncing now works correctly for all stores including Windflower Florist 2
+  - **Prevention**: Applied same fix to `fetchProducts` method to prevent similar issues
+
+### 🔧 Technical Details
+- **Error**: `TypeError: Cannot read properties of undefined (reading 'extractDeliveryInfoFromTags')`
+- **Location**: `mapShopifyOrderToLocal` method in `ShopifyApiService` class
+- **Fix**: Proper arrow function binding to preserve `this` context
+- **Testing**: Verified build completion and deployment readiness
+
+### 📋 User Impact
+- **Before**: Order sync would fail with JavaScript error
+- **After**: Order sync works correctly and fetches orders from Shopify
+- **Affected Features**: All order syncing functionality, particularly "Sync Windflower Florist 2 Orders" button
+
+## [2.0.0-alpha.27] - 14/06/2025
 
 ### 🔄 Enhanced Order Sync System
 - **Multi-Store Order Sync**: Implemented comprehensive order syncing for individual stores
@@ -44,7 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Progressive Enhancement**: Gracefully upgrades to multi-store functionality
 - **Configuration Preservation**: Maintains existing store and API configurations
 
-## [2.0.0-alpha.26] - 2025-01-27
+## [2.0.0-alpha.26] - 14/06/2025
 
 ### 🚀 Major Feature: URL Routing Implementation
 - **Complete URL Routing System**: Implemented proper React Router-based navigation

@@ -330,7 +330,7 @@ export class ShopifyApiService {
     try {
       const url = `${this.getBaseUrl()}/products.json?limit=${limit}`;
       const data: ShopifyProductsResponse = await this.makeApiCall(url);
-      return data.products.map(this.mapShopifyProductToLocal);
+      return data.products.map(product => this.mapShopifyProductToLocal(product));
     } catch (error) {
       console.error('Error fetching products from Shopify:', error);
       throw error;
@@ -521,7 +521,7 @@ export class ShopifyApiService {
     try {
       const url = `${this.getBaseUrl()}/orders.json?limit=${limit}&status=${status}`;
       const data: ShopifyOrdersResponse = await this.makeApiCall(url);
-      return data.orders.map(this.mapShopifyOrderToLocal);
+      return data.orders.map(order => this.mapShopifyOrderToLocal(order));
     } catch (error) {
       console.error('Error fetching orders from Shopify:', error);
       throw error;
