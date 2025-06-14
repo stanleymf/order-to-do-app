@@ -31,12 +31,6 @@ interface WebhookListResponse {
   webhooks: WebhookRegistration[];
 }
 
-// Shopify error response
-interface ShopifyErrorResponse {
-  errors?: string | Record<string, any>;
-  error?: string;
-}
-
 export class ShopifyWebhookManager {
   private accessToken: string;
   private shopDomain: string;
