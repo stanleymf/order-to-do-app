@@ -5,6 +5,31 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.30] - 14/06/2025
+
+### 🛡️ Comprehensive Safety Checks
+- **Configuration Validation**: Added comprehensive safety checks for all configuration-dependent methods
+  - **Root Cause**: Configuration objects could be incomplete or corrupted, causing `includes()` and other method errors
+  - **Solution**: Added null/undefined checks and array validation before using array methods
+  - **Methods Protected**: `extractCustomizations`, `extractDeliveryInfoFromTags`, `extractInstructions`
+
+### 🔧 Robust Error Handling
+- **Array Safety**: Ensured all array operations check for valid arrays before calling methods like `includes()`, `some()`
+- **Regex Safety**: Added try-catch blocks around regex operations to prevent pattern matching errors
+- **Configuration Fallbacks**: Graceful handling when configuration properties are missing or invalid
+- **Property Validation**: Added checks for property existence before accessing nested configuration values
+
+### 🛠️ Technical Improvements
+- **extractCustomizations**: Added `Array.isArray()` check for `excludeProperties` before using `includes()`
+- **extractDeliveryInfoFromTags**: Added validation for pattern strings and keyword arrays
+- **extractInstructions**: Added property name validation before string operations
+- **Error Logging**: Added warning logs for configuration-related errors to aid debugging
+
+### 📋 User Impact
+- **Before**: Order sync could fail with "Cannot read properties of undefined" errors
+- **After**: Order sync handles incomplete configurations gracefully with fallback behavior
+- **Affected Features**: All order data mapping functionality, particularly custom field extraction
+
 ## [2.0.0-alpha.29] - 14/06/2025
 
 ### 🔧 Enhanced Context Binding Fix

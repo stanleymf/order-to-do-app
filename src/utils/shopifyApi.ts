@@ -459,28 +459,37 @@ export class ShopifyApiService {
       const trimmedTag = tag.trim().toLowerCase();
       
       // Extract date
-      if (config.dateSource === 'tags') {
-        const dateMatch = tag.match(new RegExp(config.dateTagPattern));
-        if (dateMatch) {
-          date = this.formatDate(dateMatch[0]);
+      if (config.dateSource === 'tags' && config.dateTagPattern) {
+        try {
+          const dateMatch = tag.match(new RegExp(config.dateTagPattern));
+          if (dateMatch) {
+            date = this.formatDate(dateMatch[0]);
+          }
+        } catch (error) {
+          console.warn('Error matching date pattern:', error);
         }
       }
       
       // Extract timeslot
-      if (config.timeslotSource === 'tags') {
-        const timeMatch = tag.match(new RegExp(config.timeslotTagPattern));
-        if (timeMatch) {
-          timeslot = this.formatTimeslot(timeMatch[0], config.timeslotFormat);
+      if (config.timeslotSource === 'tags' && config.timeslotTagPattern) {
+        try {
+          const timeMatch = tag.match(new RegExp(config.timeslotTagPattern));
+          if (timeMatch) {
+            timeslot = this.formatTimeslot(timeMatch[0], config.timeslotFormat);
+          }
+        } catch (error) {
+          console.warn('Error matching timeslot pattern:', error);
         }
       }
       
       // Extract delivery type
-      if (config.deliveryTypeSource === 'tags') {
-        if (config.deliveryTypeKeywords.delivery.some(keyword => trimmedTag.includes(keyword))) {
+      if (config.deliveryTypeSource === 'tags' && config.deliveryTypeKeywords) {
+        const keywords = config.deliveryTypeKeywords;
+        if (Array.isArray(keywords.delivery) && keywords.delivery.some(keyword => trimmedTag.includes(keyword))) {
           deliveryType = 'delivery';
-        } else if (config.deliveryTypeKeywords.collection.some(keyword => trimmedTag.includes(keyword))) {
+        } else if (Array.isArray(keywords.collection) && keywords.collection.some(keyword => trimmedTag.includes(keyword))) {
           deliveryType = 'collection';
-        } else if (config.deliveryTypeKeywords.express.some(keyword => trimmedTag.includes(keyword))) {
+        } else if (Array.isArray(keywords.express) && keywords.express.some(keyword => trimmedTag.includes(keyword))) {
           deliveryType = 'express';
         }
       }
@@ -613,7 +622,7 @@ export class ShopifyApiService {
     
     // Load instructions from line item properties
     const lineItemInstructions = lineItem.properties?.find(prop => 
-      config.instructionsPropertyName.toLowerCase() === prop.name.toLowerCase()
+      config.instructionsPropertyName && config.instructionsPropertyName.toLowerCase() === prop.name.toLowerCase()
     );
     
     // Load instructions from order note
@@ -638,7 +647,7 @@ export class ShopifyApiService {
     
     for (const line of lines) {
       const lowerLine = line.toLowerCase();
-      if (instructionKeywords.some(keyword => lowerLine.includes(keyword))) {
+      if (Array.isArray(instructionKeywords) && instructionKeywords.some(keyword => lowerLine.includes(keyword))) {
         return line.trim();
       }
     }
@@ -650,8 +659,11 @@ export class ShopifyApiService {
   private extractCustomizations(lineItem: ShopifyLineItemResponse, config: ShopifyMappingConfig): string {
     if (!lineItem.properties) return '';
     
+    // Ensure excludeProperties is an array to prevent includes() error
+    const excludeProperties = Array.isArray(config.excludeProperties) ? config.excludeProperties : [];
+    
     const customizationProperties = lineItem.properties.filter(prop => 
-      !config.excludeProperties.includes(prop.name.toLowerCase())
+      !excludeProperties.includes(prop.name.toLowerCase())
     );
     
     return customizationProperties

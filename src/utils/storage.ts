@@ -726,4 +726,4 @@ export const checkDataIntegrity = (): { isValid: boolean; issues: string[] } => 
   };
 };
 
-export const APP_VERSION = '2.0.0-alpha.29';
+export const APP_VERSION = '2.0.0-alpha.30';
