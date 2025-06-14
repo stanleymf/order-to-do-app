@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0-alpha.33-restored] - 2024-12-19
+
+### 🔄 REVERT: Rollback to Stable Version
+
+**REVERTED**: Rolled back from alpha.34 and alpha.35 to stable alpha.33 version
+
+#### 🚨 Issues Resolved
+- **White Screen Errors**: Fixed production white screen issues on settings page
+- **SelectItem Validation**: Removed problematic SelectItem validation that caused crashes
+- **Add-On Categorization**: Temporarily removed Advanced Add-On Categorization System
+- **Production Stability**: Restored stable production environment
+
+#### 🔄 Changes Reverted
+- **alpha.35**: SelectItem validation filters (caused additional issues)
+- **alpha.34**: Advanced Add-On Categorization System (introduced white screen problems)
+- **Restored**: Stable alpha.33 with working user account management system
+
+#### 📋 Current Status
+- **Version**: 2.0.0-alpha.33 (stable)
+- **Production**: https://order-to-do-production.up.railway.app/
+- **Features**: All alpha.33 features working correctly
+- **Authentication**: Server-side user accounts functional
+- **Settings Page**: Working without white screen errors
+
+#### 🎯 Next Steps
+- Investigate root cause of alpha.34 issues
+- Implement SelectItem fixes more carefully
+- Re-implement Add-On Categorization with proper testing
+- Ensure production stability before feature additions
+
+---
+
 ## [2.0.0-alpha.33] - 2024-12-28
 
 ### 🔐 MAJOR: Server-Side User Account Management System

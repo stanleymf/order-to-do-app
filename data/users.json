@@ -1,0 +1,20 @@
+[
+  {
+    "id": "admin-1",
+    "name": "Admin User",
+    "email": "admin@floralshop.com",
+    "role": "admin",
+    "passwordHash": "$2b$10$ukFQiCeevZPFJWqqEH/t9udmqC7wCF4IAEOQ76aROd.pYoqid3NuS",
+    "createdAt": "2025-06-14T12:51:14.983Z",
+    "isActive": true
+  },
+  {
+    "id": "florist-1",
+    "name": "Maya Florist",
+    "email": "maya@floralshop.com",
+    "role": "florist",
+    "passwordHash": "$2b$10$8OzB3SDbIhtZ.XLJeOZjcuVoQUASf.kdtYvEYQuq5GQOD77KDAtVW",
+    "createdAt": "2025-06-14T12:51:15.132Z",
+    "isActive": true
+  }
+]
