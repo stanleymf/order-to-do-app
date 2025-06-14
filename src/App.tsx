@@ -4,17 +4,15 @@ import { Dashboard } from './components/Dashboard';
 import { Toaster } from './components/ui/sonner';
 import { StoreProvider } from './contexts/StoreContext';
 import type { User } from './types';
-import { getAuthState, initializeStorage, refreshMockData } from './utils/storage';
+import { getAuthState, initializeStorage } from './utils/storage';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // Initialize localStorage with mock data
+    // Initialize localStorage with mock data ONLY if no data exists
+    // This preserves user data on refresh
     initializeStorage();
-    
-    // Force refresh with latest mock data (including 50 Windflower orders)
-    refreshMockData();
     
     // Check if user is already logged in
     const authState = getAuthState();

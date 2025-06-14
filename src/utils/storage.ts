@@ -7,8 +7,16 @@ const STORAGE_KEYS = {
   PRODUCTS: 'florist-dashboard-products',
   PRODUCT_LABELS: 'florist-dashboard-product-labels',
   STATS: 'florist-dashboard-stats',
-  STORES: 'florist-dashboard-stores'
+  STORES: 'florist-dashboard-stores',
+  // Additional persistence keys
+  SHOPIFY_MAPPING_CONFIG: 'shopify-mapping-config',
+  MULTI_STORE_WEBHOOK_CONFIGS: 'multi-store-webhook-configs',
+  USER_PREFERENCES: 'florist-dashboard-user-preferences',
+  DATA_VERSION: 'florist-dashboard-data-version'
 };
+
+// Current data version for migration purposes
+const CURRENT_DATA_VERSION = '2.0.0-alpha.16';
 
 // Default product labels
 const defaultProductLabels: ProductLabel[] = [
@@ -25,45 +33,162 @@ const defaultProductLabels: ProductLabel[] = [
   { id: '9', name: 'Bundle', color: '#ec4899', category: 'productType', priority: 5, createdAt: new Date() }
 ];
 
-// Initialize localStorage with mock data if not present
-export const initializeStorage = () => {
-  if (!localStorage.getItem(STORAGE_KEYS.ORDERS)) {
-    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(mockOrders));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.PRODUCTS)) {
-    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(mockProducts));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.PRODUCT_LABELS)) {
-    localStorage.setItem(STORAGE_KEYS.PRODUCT_LABELS, JSON.stringify(defaultProductLabels));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.STATS)) {
-    localStorage.setItem(STORAGE_KEYS.STATS, JSON.stringify(mockFloristStats));
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.STORES)) {
-    localStorage.setItem(STORAGE_KEYS.STORES, JSON.stringify(mockStores));
+// Check if localStorage is available
+const isLocalStorageAvailable = (): boolean => {
+  try {
+    const test = '__localStorage_test__';
+    localStorage.setItem(test, test);
+    localStorage.removeItem(test);
+    return true;
+  } catch {
+    return false;
   }
 };
 
-// Force refresh localStorage with latest mock data
+// Safe localStorage operations with error handling
+const safeGetItem = (key: string): string | null => {
+  if (!isLocalStorageAvailable()) return null;
+  try {
+    return localStorage.getItem(key);
+  } catch (error) {
+    console.error(`Error reading from localStorage (${key}):`, error);
+    return null;
+  }
+};
+
+const safeSetItem = (key: string, value: string): boolean => {
+  if (!isLocalStorageAvailable()) return false;
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (error) {
+    console.error(`Error writing to localStorage (${key}):`, error);
+    return false;
+  }
+};
+
+// Initialize localStorage with mock data ONLY if no data exists
+// This preserves user data on refresh
+export const initializeStorage = () => {
+  console.log('🔄 Initializing storage - preserving existing user data');
+  
+  // Set data version
+  if (!safeGetItem(STORAGE_KEYS.DATA_VERSION)) {
+    safeSetItem(STORAGE_KEYS.DATA_VERSION, CURRENT_DATA_VERSION);
+  }
+  
+  // Only initialize with mock data if no existing data
+  if (!safeGetItem(STORAGE_KEYS.ORDERS)) {
+    console.log('📦 No existing orders found, initializing with mock data');
+    safeSetItem(STORAGE_KEYS.ORDERS, JSON.stringify(mockOrders));
+  } else {
+    console.log('✅ Existing orders found, preserving user data');
+  }
+  
+  if (!safeGetItem(STORAGE_KEYS.PRODUCTS)) {
+    console.log('📦 No existing products found, initializing with mock data');
+    safeSetItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(mockProducts));
+  } else {
+    console.log('✅ Existing products found, preserving user data');
+  }
+  
+  if (!safeGetItem(STORAGE_KEYS.PRODUCT_LABELS)) {
+    console.log('📦 No existing product labels found, initializing with defaults');
+    safeSetItem(STORAGE_KEYS.PRODUCT_LABELS, JSON.stringify(defaultProductLabels));
+  } else {
+    console.log('✅ Existing product labels found, preserving user data');
+  }
+  
+  if (!safeGetItem(STORAGE_KEYS.STATS)) {
+    console.log('📦 No existing stats found, initializing with mock data');
+    safeSetItem(STORAGE_KEYS.STATS, JSON.stringify(mockFloristStats));
+  } else {
+    console.log('✅ Existing stats found, preserving user data');
+  }
+  
+  if (!safeGetItem(STORAGE_KEYS.STORES)) {
+    console.log('📦 No existing stores found, initializing with mock data');
+    safeSetItem(STORAGE_KEYS.STORES, JSON.stringify(mockStores));
+  } else {
+    console.log('✅ Existing stores found, preserving user data');
+  }
+  
+  console.log('✅ Storage initialization complete - all user data preserved');
+};
+
+// Force refresh localStorage with latest mock data (use sparingly)
 export const refreshMockData = () => {
-  localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(mockOrders));
-  localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(mockProducts));
-  localStorage.setItem(STORAGE_KEYS.PRODUCT_LABELS, JSON.stringify(defaultProductLabels));
-  localStorage.setItem(STORAGE_KEYS.STATS, JSON.stringify(mockFloristStats));
-  localStorage.setItem(STORAGE_KEYS.STORES, JSON.stringify(mockStores));
+  console.warn('⚠️  Force refreshing with mock data - this will overwrite user data!');
+  safeSetItem(STORAGE_KEYS.ORDERS, JSON.stringify(mockOrders));
+  safeSetItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(mockProducts));
+  safeSetItem(STORAGE_KEYS.PRODUCT_LABELS, JSON.stringify(defaultProductLabels));
+  safeSetItem(STORAGE_KEYS.STATS, JSON.stringify(mockFloristStats));
+  safeSetItem(STORAGE_KEYS.STORES, JSON.stringify(mockStores));
+};
+
+// Data backup and restore functions
+export const createDataBackup = (): string => {
+  const backup = {
+    version: CURRENT_DATA_VERSION,
+    timestamp: new Date().toISOString(),
+    data: {
+      auth: safeGetItem(STORAGE_KEYS.AUTH),
+      orders: safeGetItem(STORAGE_KEYS.ORDERS),
+      products: safeGetItem(STORAGE_KEYS.PRODUCTS),
+      productLabels: safeGetItem(STORAGE_KEYS.PRODUCT_LABELS),
+      stats: safeGetItem(STORAGE_KEYS.STATS),
+      stores: safeGetItem(STORAGE_KEYS.STORES),
+      shopifyMappingConfig: safeGetItem(STORAGE_KEYS.SHOPIFY_MAPPING_CONFIG),
+      multiStoreWebhookConfigs: safeGetItem(STORAGE_KEYS.MULTI_STORE_WEBHOOK_CONFIGS),
+      userPreferences: safeGetItem(STORAGE_KEYS.USER_PREFERENCES)
+    }
+  };
+  return JSON.stringify(backup, null, 2);
+};
+
+export const restoreDataFromBackup = (backupJson: string): boolean => {
+  try {
+    const backup = JSON.parse(backupJson);
+    
+    if (!backup.data) {
+      throw new Error('Invalid backup format');
+    }
+    
+    // Restore all data
+    Object.entries(backup.data).forEach(([key, value]) => {
+      if (value && typeof value === 'string') {
+        const storageKey = Object.values(STORAGE_KEYS).find(k => 
+          k.includes(key.replace(/([A-Z])/g, '-$1').toLowerCase())
+        );
+        if (storageKey) {
+          safeSetItem(storageKey, value);
+        }
+      }
+    });
+    
+    console.log('✅ Data restored from backup successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ Error restoring data from backup:', error);
+    return false;
+  }
 };
 
 // Auth functions
 export const getAuthState = (): AuthState => {
-  const stored = localStorage.getItem(STORAGE_KEYS.AUTH);
+  const stored = safeGetItem(STORAGE_KEYS.AUTH);
   if (stored) {
-    return JSON.parse(stored);
+    try {
+      return JSON.parse(stored);
+    } catch (error) {
+      console.error('Error parsing auth state:', error);
+    }
   }
   return { user: null, isAuthenticated: false };
 };
 
 export const setAuthState = (authState: AuthState) => {
-  localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify(authState));
+  safeSetItem(STORAGE_KEYS.AUTH, JSON.stringify(authState));
 };
 
 export const login = (email: string, password: string): User | null => {
@@ -78,35 +203,62 @@ export const login = (email: string, password: string): User | null => {
 };
 
 export const logout = () => {
-  localStorage.removeItem(STORAGE_KEYS.AUTH);
+  if (isLocalStorageAvailable()) {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.AUTH);
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  }
 };
 
 // Stores functions
 export const getStores = (): Store[] => {
-  const stored = localStorage.getItem(STORAGE_KEYS.STORES);
-  return stored ? JSON.parse(stored) : [];
+  const stored = safeGetItem(STORAGE_KEYS.STORES);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (error) {
+      console.error('Error parsing stores:', error);
+    }
+  }
+  return [];
 };
 
 export const saveStores = (stores: Store[]) => {
-  localStorage.setItem(STORAGE_KEYS.STORES, JSON.stringify(stores));
+  const success = safeSetItem(STORAGE_KEYS.STORES, JSON.stringify(stores));
+  if (success) {
+    console.log('✅ Stores saved successfully');
+  } else {
+    console.error('❌ Failed to save stores');
+  }
 };
 
 // Product Labels functions
 export const getProductLabels = (): ProductLabel[] => {
-  const stored = localStorage.getItem(STORAGE_KEYS.PRODUCT_LABELS);
+  const stored = safeGetItem(STORAGE_KEYS.PRODUCT_LABELS);
   if (stored) {
-    const labels = JSON.parse(stored);
-    return labels.map((label: any, index: number) => ({
-      ...label,
-      priority: label.priority ?? (index + 1), // Assign default priority if missing
-      createdAt: new Date(label.createdAt)
-    }));
+    try {
+      const labels = JSON.parse(stored);
+      return labels.map((label: any, index: number) => ({
+        ...label,
+        priority: label.priority ?? (index + 1), // Assign default priority if missing
+        createdAt: new Date(label.createdAt)
+      }));
+    } catch (error) {
+      console.error('Error parsing product labels:', error);
+    }
   }
   return defaultProductLabels;
 };
 
 export const saveProductLabels = (labels: ProductLabel[]) => {
-  localStorage.setItem(STORAGE_KEYS.PRODUCT_LABELS, JSON.stringify(labels));
+  const success = safeSetItem(STORAGE_KEYS.PRODUCT_LABELS, JSON.stringify(labels));
+  if (success) {
+    console.log('✅ Product labels saved successfully');
+  } else {
+    console.error('❌ Failed to save product labels');
+  }
 };
 
 export const addProductLabel = (name: string, color: string, category: 'difficulty' | 'productType', priority: number): ProductLabel => {
@@ -126,60 +278,52 @@ export const addProductLabel = (name: string, color: string, category: 'difficul
 
 export const deleteProductLabel = (labelId: string) => {
   const labels = getProductLabels();
-  const labelToDelete = labels.find(l => l.id === labelId);
-  if (!labelToDelete) return;
+  const updatedLabels = labels.filter(label => label.id !== labelId);
+  saveProductLabels(updatedLabels);
   
-  const filteredLabels = labels.filter(label => label.id !== labelId);
-  saveProductLabels(filteredLabels);
-  
-  // Update any products/orders using this label to use a default label
+  // Update products that use this label to use default
   const products = getProducts();
-  const orders = getOrders();
-  
-  // Find default label for the same category
-  const defaultLabel = filteredLabels.find(l => l.category === labelToDelete.category)?.name || 
-    (labelToDelete.category === 'difficulty' ? 'Easy' : 'Bouquet');
-  
-  // Update products
   const updatedProducts = products.map(product => {
-    if (labelToDelete.category === 'difficulty' && product.difficultyLabel === labelToDelete.name) {
-      return { ...product, difficultyLabel: defaultLabel };
-    } else if (labelToDelete.category === 'productType' && product.productTypeLabel === labelToDelete.name) {
-      return { ...product, productTypeLabel: defaultLabel };
+    const deletedLabel = labels.find(l => l.id === labelId);
+    if (deletedLabel) {
+      if (product.difficultyLabel === deletedLabel.name) {
+        product.difficultyLabel = 'Easy'; // Default difficulty
+      }
+      if (product.productTypeLabel === deletedLabel.name) {
+        product.productTypeLabel = 'Bouquet'; // Default product type
+      }
     }
     return product;
   });
   saveProducts(updatedProducts);
-  
-  // Update orders
-  const updatedOrders = orders.map(order => {
-    if (labelToDelete.category === 'difficulty' && order.difficultyLabel === labelToDelete.name) {
-      return { ...order, difficultyLabel: defaultLabel };
-    } else if (labelToDelete.category === 'productType' && order.productTypeLabel === labelToDelete.name) {
-      return { ...order, productTypeLabel: defaultLabel };
-    }
-    return order;
-  });
-  saveOrders(updatedOrders);
 };
 
 // Orders functions
 export const getOrders = (): Order[] => {
-  const stored = localStorage.getItem(STORAGE_KEYS.ORDERS);
+  const stored = safeGetItem(STORAGE_KEYS.ORDERS);
   if (stored) {
-    const orders = JSON.parse(stored);
-    // Convert date strings back to Date objects
-    return orders.map((order: any) => ({
-      ...order,
-      assignedAt: order.assignedAt ? new Date(order.assignedAt) : undefined,
-      completedAt: order.completedAt ? new Date(order.completedAt) : undefined
-    }));
+    try {
+      const orders = JSON.parse(stored);
+      // Convert date strings back to Date objects
+      return orders.map((order: any) => ({
+        ...order,
+        assignedAt: order.assignedAt ? new Date(order.assignedAt) : undefined,
+        completedAt: order.completedAt ? new Date(order.completedAt) : undefined
+      }));
+    } catch (error) {
+      console.error('Error parsing orders:', error);
+    }
   }
   return [];
 };
 
 export const saveOrders = (orders: Order[]) => {
-  localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+  const success = safeSetItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+  if (success) {
+    console.log('✅ Orders saved successfully');
+  } else {
+    console.error('❌ Failed to save orders');
+  }
 };
 
 export const addOrders = (newOrders: Order[]) => {
@@ -345,8 +489,15 @@ export const updateProductCustomizations = (orderId: string, customizations: str
 
 // Products functions
 export const getProducts = (): Product[] => {
-  const stored = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
-  return stored ? JSON.parse(stored) : [];
+  const stored = safeGetItem(STORAGE_KEYS.PRODUCTS);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (error) {
+      console.error('Error parsing products:', error);
+    }
+  }
+  return [];
 };
 
 export const getProductsByStore = (storeId: string): Product[] => {
@@ -355,7 +506,12 @@ export const getProductsByStore = (storeId: string): Product[] => {
 };
 
 export const saveProducts = (products: Product[]) => {
-  localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
+  const success = safeSetItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
+  if (success) {
+    console.log('✅ Products saved successfully');
+  } else {
+    console.error('❌ Failed to save products');
+  }
 };
 
 export const updateProductDifficultyLabel = (productId: string, difficultyLabel: string) => {
@@ -452,8 +608,15 @@ const calculateCompletionRate = (floristOrders: Order[]) => {
 
 // Stats functions
 export const getFloristStats = (): FloristStats[] => {
-  const stored = localStorage.getItem(STORAGE_KEYS.STATS);
-  return stored ? JSON.parse(stored) : [];
+  const stored = safeGetItem(STORAGE_KEYS.STATS);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (error) {
+      console.error('Error parsing florist stats:', error);
+    }
+  }
+  return [];
 };
 
 export const updateFloristStats = () => {
@@ -494,6 +657,71 @@ export const updateFloristStats = () => {
     };
   });
   
-  localStorage.setItem(STORAGE_KEYS.STATS, JSON.stringify(stats));
+  const success = safeSetItem(STORAGE_KEYS.STATS, JSON.stringify(stats));
+  if (success) {
+    console.log('✅ Florist stats updated successfully');
+  } else {
+    console.error('❌ Failed to update florist stats');
+  }
   return stats;
+};
+
+// User preferences functions
+export const getUserPreferences = (): any => {
+  const stored = safeGetItem(STORAGE_KEYS.USER_PREFERENCES);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (error) {
+      console.error('Error parsing user preferences:', error);
+    }
+  }
+  return {};
+};
+
+export const saveUserPreferences = (preferences: any) => {
+  const success = safeSetItem(STORAGE_KEYS.USER_PREFERENCES, JSON.stringify(preferences));
+  if (success) {
+    console.log('✅ User preferences saved successfully');
+  } else {
+    console.error('❌ Failed to save user preferences');
+  }
+};
+
+// Data integrity check
+export const checkDataIntegrity = (): { isValid: boolean; issues: string[] } => {
+  const issues: string[] = [];
+  
+  try {
+    // Check if all required data exists
+    const orders = getOrders();
+    const products = getProducts();
+    const stores = getStores();
+    const labels = getProductLabels();
+    
+    if (orders.length === 0) issues.push('No orders found');
+    if (products.length === 0) issues.push('No products found');
+    if (stores.length === 0) issues.push('No stores found');
+    if (labels.length === 0) issues.push('No product labels found');
+    
+    // Check data relationships
+    const storeIds = stores.map(s => s.id);
+    const orphanedOrders = orders.filter(o => !storeIds.includes(o.storeId));
+    if (orphanedOrders.length > 0) {
+      issues.push(`${orphanedOrders.length} orders reference non-existent stores`);
+    }
+    
+    const orphanedProducts = products.filter(p => !storeIds.includes(p.storeId));
+    if (orphanedProducts.length > 0) {
+      issues.push(`${orphanedProducts.length} products reference non-existent stores`);
+    }
+    
+  } catch (error) {
+    issues.push(`Data integrity check failed: ${error}`);
+  }
+  
+  return {
+    isValid: issues.length === 0,
+    issues
+  };
 };

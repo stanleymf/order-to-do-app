@@ -5,6 +5,41 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.16] - 2024-12-19
+
+### 🔒 Enhanced Data Persistence System
+- **Critical Fix**: Removed `refreshMockData()` call that was overwriting user data on every app load
+  - User settings, store configurations, and webhook settings now persist across page refreshes
+  - Data is only initialized with mock data if no existing user data is found
+  - Comprehensive logging added to track data preservation
+
+### 🛡️ Advanced Data Management Features
+- **Data Backup & Restore**: Complete backup/restore functionality for all user data
+  - Create JSON backups of all settings, configurations, and data
+  - Download backups as files for safe storage
+  - Upload and restore from backup files
+  - Manual backup data entry via textarea
+
+### 📊 Data Integrity & Monitoring
+- **Storage Information**: Real-time storage usage and availability monitoring
+- **Data Integrity Checks**: Automated validation of data relationships and consistency
+- **Safe Storage Operations**: Error handling and fallback mechanisms for localStorage
+- **Storage Key Management**: Track and display all persisted data keys
+
+### 🔧 Robust Error Handling
+- **localStorage Availability**: Check and handle localStorage availability issues
+- **Safe Read/Write Operations**: Comprehensive error handling for all storage operations
+- **Data Migration Support**: Version tracking for future data migrations
+- **User Preferences**: Dedicated storage for user-specific preferences
+
+### 📋 What's Now Persisted
+- Store configurations and webhook settings
+- Orders, products, and florist assignments  
+- Product labels and customizations
+- Shopify API configurations and mapping settings
+- Multi-store webhook configurations
+- User preferences and authentication state
+
 ## [2.0.0-alpha.15] - 2024-12-19
 
 ### 🚨 Critical Application Serving Fix

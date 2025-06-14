@@ -6,13 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { Settings as SettingsIcon, MapPin, Clock, Package, User, FileText, Tag, Save, RefreshCw, Calendar, Webhook, CheckCircle, Loader2, Store } from 'lucide-react';
+import { Settings as SettingsIcon, MapPin, Clock, Package, User, FileText, Tag, Save, RefreshCw, Calendar, Webhook, CheckCircle, Loader2, Store, Database } from 'lucide-react';
 import { toast } from 'sonner';
 import { type User as UserType } from '../types';
 import { useMobileView } from './Dashboard';
 import { webhookManager } from '../utils/shopifyWebhooks';
 import { MultiStoreWebhookManager } from './MultiStoreWebhookManager';
 import { StoreManagement } from './StoreManagement';
+import { DataPersistenceManager } from './DataPersistenceManager';
 
 interface ShopifyAPIConfig {
   accessToken: string;
@@ -358,6 +359,24 @@ export function Settings({ currentUser }: SettingsProps) {
         </div>
       </div>
 
+      {/* Data Persistence Management Section */}
+      {isAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="h-5 w-5 text-gray-500" />
+              Data Persistence & Backup
+            </CardTitle>
+            <p className="text-sm text-gray-600 mt-1">
+              Manage data persistence, create backups, and ensure your settings never disappear
+            </p>
+          </CardHeader>
+          <CardContent>
+            <DataPersistenceManager />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Store Management Section */}
       {isAdmin && (
         <Card>
@@ -367,7 +386,7 @@ export function Settings({ currentUser }: SettingsProps) {
               Store Management
             </CardTitle>
             <p className="text-sm text-gray-600 mt-1">
-              Create and manage your stores before configuring API integration
+              Add, edit, and manage your stores
             </p>
           </CardHeader>
           <CardContent>
