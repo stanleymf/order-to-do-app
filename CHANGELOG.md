@@ -5,7 +5,45 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.31] - 2025-06-13
+## [1.0.36] - 2025-06-13
+
+### Added
+- **Auto Webhook Registration**: Complete webhook management system with Shopify API
+  - **Webhook Manager Class**: `ShopifyWebhookManager` for automated webhook operations
+  - **Auto-Registration**: Automatically registers required webhooks via Shopify API
+  - **Smart URL Detection**: Automatically detects Railway vs local development URLs
+  - **Webhook Cleanup**: Remove old webhooks pointing to different endpoints
+  - **Connectivity Testing**: Test webhook endpoint accessibility
+  - **Status Monitoring**: Real-time webhook registration status and error reporting
+
+### Enhanced
+- **Settings Interface**: New webhook management section in Settings
+  - **Auto-Register Button**: One-click webhook registration for all required topics
+  - **Cleanup Button**: Remove outdated webhooks automatically
+  - **Test Button**: Verify webhook endpoint connectivity
+  - **Status Display**: Show registered, existing, and error counts
+  - **Error Details**: Expandable error details for troubleshooting
+
+### Technical Improvements
+- **Server Webhook Endpoint**: Added `/api/webhooks/shopify` endpoint to server.js
+  - **Signature Verification**: HMAC-SHA256 webhook signature verification
+  - **Topic Handling**: Support for orders/create, orders/updated, orders/cancelled, products/create, products/updated
+  - **Security**: Webhook secret verification for production deployments
+  - **Logging**: Comprehensive webhook activity logging
+
+### Webhook Topics Supported
+- **Orders**: `orders/create`, `orders/updated`, `orders/cancelled`
+- **Products**: `products/create`, `products/updated`
+- **Format**: JSON with HMAC-SHA256 verification
+- **Auto-Detection**: Railway deployment URL vs localhost for development
+
+### Security Features
+- **Webhook Secret**: Environment variable `SHOPIFY_WEBHOOK_SECRET` for verification
+- **Signature Validation**: Cryptographic verification of webhook authenticity
+- **Error Handling**: Graceful handling of invalid webhook signatures
+- **Rate Limiting**: Existing rate limiting applied to webhook operations
+
+## [1.0.35] - 2025-06-13
 
 ### Changed
 - **Header Title**: Updated top-left header title from "Dashboard"/"Florist Dashboard" to "Order To-Do"
