@@ -76,14 +76,15 @@ app.post('/api/webhooks/shopify', (req, res) => {
     // Get webhook secret from environment or use default
     const webhookSecret = process.env.SHOPIFY_WEBHOOK_SECRET || 'default-webhook-secret';
     
-    // Verify webhook signature
-    if (!verifyWebhook(req.body, signature, webhookSecret)) {
+    // Fix: Use Buffer for HMAC calculation, and parse body only after verification
+    const rawBody = req.body;
+    if (!verifyWebhook(rawBody, signature, webhookSecret)) {
       console.error('❌ Webhook verification failed');
       return res.status(401).json({ error: 'Webhook verification failed' });
     }
     
-    // Parse the webhook data
-    const webhookData = JSON.parse(req.body);
+    // Parse the webhook data (rawBody is a Buffer)
+    const webhookData = JSON.parse(rawBody.toString('utf8'));
     
     // Handle different webhook topics
     switch (topic) {

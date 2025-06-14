@@ -5,6 +5,14 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.37] - 2025-06-13
+
+### Fixed
+- **Webhook Verification**: Fixed bug in webhook signature verification logic
+  - Now uses the raw request body (Buffer) for HMAC calculation
+  - Prevents server error: The "data" argument must be of type string or Buffer
+  - Ensures Shopify webhook signature verification is secure and reliable
+
 ## [1.0.36] - 2025-06-13
 
 ### Added
