@@ -65,6 +65,8 @@ export function MultiStoreWebhookManager() {
     }
   };
 
+  const availableStores = allStores.filter(store => !storeConfigs.find(config => config.storeId === store.id));
+
   const handleAddStoreConfig = () => {
     if (!selectedStore || !newConfig.accessToken || !newConfig.shopDomain) {
       toast.error('Please fill in all required fields');
@@ -278,12 +280,22 @@ export function MultiStoreWebhookManager() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="store">Store</Label>
-              <Select value={selectedStore} onValueChange={setSelectedStore}>
+              <Select 
+                value={selectedStore} 
+                onValueChange={setSelectedStore}
+                disabled={availableStores.length === 0}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a store" />
+                  <SelectValue 
+                    placeholder={
+                      availableStores.length === 0 
+                        ? "No stores available to configure" 
+                        : "Select a store"
+                    } 
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {allStores.map(store => (
+                  {availableStores.map(store => (
                     <SelectItem key={store.id} value={store.id}>
                       <div className="flex items-center gap-2">
                         <div 
@@ -294,8 +306,18 @@ export function MultiStoreWebhookManager() {
                       </div>
                     </SelectItem>
                   ))}
+                  {availableStores.length === 0 && (
+                    <SelectItem value="" disabled>
+                      All stores already configured
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
+              {availableStores.length === 0 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Add stores in Store Management first, or all available stores are already configured.
+                </p>
+              )}
             </div>
             
             <div>
@@ -393,10 +415,19 @@ export function MultiStoreWebhookManager() {
             )}
           </div>
           
-          <Button onClick={handleAddStoreConfig} className="w-full">
+          <Button 
+            onClick={handleAddStoreConfig} 
+            className="w-full"
+            disabled={availableStores.length === 0}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Store Configuration
           </Button>
+          {availableStores.length === 0 && (
+            <p className="text-xs text-center text-gray-500 mt-2">
+              All available stores have been configured for webhooks. Add new stores in Store Management to configure additional webhook endpoints.
+            </p>
+          )}
         </CardContent>
       </Card>
 

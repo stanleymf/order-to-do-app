@@ -5,29 +5,6 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0-alpha.9] - 2025-06-13
-
-### 🔧 **Enhanced Multi-Store Webhook Management**
-
-#### **Fixed**
-- **Dynamic Store Dropdown**: Fixed Multi-Store webhook management Store dropdown to only show available stores
-  - **Smart Filtering**: Dropdown now only displays stores that haven't been configured yet
-  - **Prevents Duplicates**: Eliminates ability to create duplicate webhook configurations for the same store
-  - **Better UX**: Disabled state when no stores are available to configure
-
-#### **Enhanced User Experience**
-- **Dynamic Placeholder**: Changes message based on store availability
-- **Helper Text**: Provides guidance when no stores are available
-- **Disabled Form Elements**: Form automatically disables when no unconfigured stores exist
-- **Clear Guidance**: Directs users to Store Management when all stores are configured
-
-#### **Technical Improvements**
-- **Filtered Store List**: `availableStores` computed property filters out already configured stores
-- **State Management**: Better handling of form state when no stores are available
-- **User Feedback**: Comprehensive messaging for different states (empty, configured, unavailable)
-
----
-
 ## [2.0.0-alpha.8] - 2025-06-13
 
 ### 🚀 **Product Management Integration - Smart Multi-Store Sync**
