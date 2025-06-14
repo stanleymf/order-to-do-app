@@ -329,11 +329,13 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="unassigned">Unassigned</SelectItem>
-                          {florists.map(florist => (
-                            <SelectItem key={florist.id} value={florist.id}>
-                              {florist.name}
-                            </SelectItem>
-                          ))}
+                          {florists
+                            .filter(florist => florist.id && florist.id.trim() !== '')
+                            .map(florist => (
+                              <SelectItem key={florist.id} value={florist.id}>
+                                {florist.name}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                     ) : (
@@ -616,11 +618,13 @@ export function OrderCard({ order, currentUser, florists, onOrderUpdate, isBatch
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="unassigned">Unassigned</SelectItem>
-                          {florists.map(florist => (
-                            <SelectItem key={florist.id} value={florist.id}>
-                              {florist.name}
-                            </SelectItem>
-                          ))}
+                          {florists
+                            .filter(florist => florist.id && florist.id.trim() !== '')
+                            .map(florist => (
+                              <SelectItem key={florist.id} value={florist.id}>
+                                {florist.name}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                     ) : (

@@ -414,19 +414,21 @@ export function MultiStoreWebhookManager() {
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableStores.map(store => (
-                    <SelectItem key={store.id} value={store.id}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: store.color }}
-                        />
-                        {store.name}
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {availableStores
+                    .filter(store => store.id && store.id.trim() !== '')
+                    .map(store => (
+                      <SelectItem key={store.id} value={store.id}>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: store.color }}
+                          />
+                          {store.name}
+                        </div>
+                      </SelectItem>
+                    ))}
                   {availableStores.length === 0 && (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="no-stores-available" disabled>
                       All stores already configured
                     </SelectItem>
                   )}

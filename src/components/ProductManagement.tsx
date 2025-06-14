@@ -369,17 +369,19 @@ export function ProductManagement() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Stores</SelectItem>
-                  {stores.map(store => (
-                    <SelectItem key={store.id} value={store.id}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: store.color }}
-                        />
-                        {store.name}
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {stores
+                    .filter(store => store.id && store.id.trim() !== '')
+                    .map(store => (
+                      <SelectItem key={store.id} value={store.id}>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: store.color }}
+                          />
+                          {store.name}
+                        </div>
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>

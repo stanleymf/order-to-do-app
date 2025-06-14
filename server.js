@@ -479,18 +479,21 @@ app.post('/api/user/data/:section', authenticateToken, (req, res) => {
 
 // Health check endpoint for Railway monitoring  
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
+  res.json({
+    status: 'healthy',
     timestamp: new Date().toISOString(),
+    version: '2.0.0-alpha.34',
     environment: process.env.NODE_ENV || 'development',
-    webhookEndpoint: '/api/webhooks/shopify',
-    version: '2.0.0-alpha.33'
+    uptime: process.uptime()
   });
 });
 
 // Railway specific healthcheck (simple text response)
 app.get('/healthz', (req, res) => {
-  res.status(200).send('OK');
+  res.json({ 
+    status: 'ok', 
+    version: '2.0.0-alpha.34' 
+  });
 });
 
 // API status endpoint
