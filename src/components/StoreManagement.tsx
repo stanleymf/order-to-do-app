@@ -74,10 +74,17 @@ export function StoreManagement() {
       return false;
     }
     
-    // Validate domain format (basic validation)
-    const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
-    if (!domainRegex.test(formData.domain.trim())) {
-      toast.error('Please enter a valid domain (e.g., your-store.myshopify.com)');
+    // Validate Shopify domain format - more flexible validation
+    const trimmedDomain = formData.domain.trim().toLowerCase();
+    
+    // Check for typical Shopify domain pattern: storename.myshopify.com
+    const shopifyDomainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\.myshopify\.com$|^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/;
+    
+    // Check for custom domain pattern: example.com
+    const customDomainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\.[a-zA-Z]{2,}$|^[a-zA-Z0-9]+\.[a-zA-Z]{2,}$/;
+    
+    if (!shopifyDomainRegex.test(trimmedDomain) && !customDomainRegex.test(trimmedDomain)) {
+      toast.error('Please enter a valid Shopify domain (e.g., your-store.myshopify.com) or custom domain (e.g., yourstore.com)');
       return false;
     }
 

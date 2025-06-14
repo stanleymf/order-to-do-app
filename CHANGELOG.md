@@ -1057,4 +1057,28 @@ node scripts/version.js set 1.5.0
 - **Robust Error Handling**: Improved error handling and user feedback for missing or invalid API configuration.
 
 ### Deployment
-- Ready for deployment to Railway with all fixes and improvements. 
+- Ready for deployment to Railway with all fixes and improvements.
+
+## [2.0.0-alpha.7] - 2025-06-13
+
+### 🐛 **Fixed Domain Validation Issue**
+
+#### **Bug Fixes**
+- **Shopify Domain Validation**: Fixed overly restrictive domain validation that was rejecting valid Shopify domains
+  - **Issue**: Previous regex pattern `{1,61}` was too restrictive for typical Shopify domains
+  - **Solution**: Implemented proper Shopify domain validation patterns
+  - **Supports**: Both `store-name.myshopify.com` and custom domains like `example.com`
+  - **Improved**: More flexible validation while maintaining security
+
+#### **Enhanced Validation**
+- **Shopify-Specific Patterns**: Proper validation for `.myshopify.com` domains
+- **Custom Domain Support**: Validation for custom domains  
+- **Case Insensitive**: Domain validation now handles mixed case input
+- **Better Error Messages**: More descriptive validation error messages
+
+#### **Technical Improvements**
+- **Regex Optimization**: More efficient and accurate domain pattern matching
+- **Edge Case Handling**: Better support for short store names and hyphens
+- **User Experience**: Reduced false negatives in domain validation
+
+--- 
