@@ -5,6 +5,21 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.25] - 2024-12-19
+
+### 🔧 TypeScript Build Fix
+- **Removed Unused Code**: Cleaned up legacy interfaces and configurations from Settings component
+  - Removed unused `ShopifyAPIConfig` and `ShopifyMappingConfig` interfaces
+  - Removed unused `defaultMappingConfig` constant
+  - Fixed TypeScript compilation error: "defaultMappingConfig is declared but its value is never read"
+  - Maintained `SettingsProps` interface for component typing
+
+### 🧹 Code Cleanup
+- **Streamlined Settings Component**: Removed legacy mapping-related code
+  - Eliminated redundant type definitions now handled by StoreOrderMapping component
+  - Reduced bundle size by removing unused constants and interfaces
+  - Improved code maintainability with cleaner component structure
+
 ## [2.0.0-alpha.24] - 2024-12-19
 
 ### 🏪 Store-Specific Order Data Mapping - Revolutionary Multi-Store Support
