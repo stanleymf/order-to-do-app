@@ -669,29 +669,58 @@ node scripts/version.js set 1.5.0
 - **Minor** (1.0.0 → 1.1.0): New features, backward compatible
 - **Major** (1.0.0 → 2.0.0): Breaking changes, major features 
 
-## [1.0.24] - 2025-06-13
-
-### Added
-- **Comprehensive Data Mapping Structure in Settings**
-  - Admins can now configure mapping for all key order fields:
-    - Order ID, Product Name, Product Variant, Date, Timeslot, Delivery Type, Add-Ons, Remarks
-  - Each field allows selection of the source from relevant Shopify order properties (dropdowns):
-    - e.g., Order Name, Order ID, Line Item Title, Product Title, Tags, Line Item Properties, Order Note, Custom Field, etc.
-  - Regex and format options for tag extraction (date/timeslot)
-  - Customizable keywords for delivery type and remarks
-  - Exclude properties for Add-Ons
-  - Custom field name support for all custom field sources
-  - All mappings are saved and used in real time for incoming Shopify orders
-- **UI/UX**
-  - Responsive, organized mapping interface in Settings
-  - Dropdowns for both Shopify source and Order Card destination fields
-  - All changes persist in localStorage and apply immediately
+## [1.0.35] - 2024-06-14
 
 ### Enhanced
-- **Order Card Mapping**
-  - All mapped fields are now configurable and can be routed to any Order Card property
-  - Supports advanced mapping scenarios for different Shopify setups
+- **Faster Auto-Sync**: Added support for sync intervals as low as 10 seconds for near real-time order updates
+- **Rate Limiting Protection**: Added backend rate limiting to prevent hitting Shopify's API limits (2 requests/second)
+- **Smart Sync Options**: Updated Settings with detailed sync interval options and rate limit guidance
+
+### Added
+- **Sync Interval Options**: 
+  - 10 seconds (Very Fast) - ~2 API calls/minute
+  - 30 seconds (Fast) - ~4 API calls/minute  
+  - 1 minute (Recommended) - ~2 API calls/minute
+  - 5+ minutes (Conservative) - Minimal API usage
+- **Rate Limit Handling**: Backend proxy now handles Shopify's 429 rate limit responses with proper retry guidance
+- **Shop Domain Rate Limiting**: Per-shop rate limiting to prevent overwhelming individual stores
 
 ### Technical
-- **Version:** 1.0.24
-- **Changelog:** Updated to reflect new mapping structure in Settings 
+- **Default Sync**: Changed default from 5 minutes to 1 minute for better responsiveness
+- **Error Handling**: Improved error messages for rate limit scenarios
+- **Performance**: Conservative rate limiting (100 requests/minute) to stay well under Shopify's 120/minute limit
+
+## [1.0.34] - 2024-06-14
+
+### Fixed
+- **Configuration Migration**: Fixed "Cannot read properties of undefined (reading 'accessToken')" error by adding migration logic for existing configurations that don't have the `api` property.
+- **Settings Component**: Added safety checks to ensure the `api` property is properly initialized when loading existing configurations.
+
+### Technical
+- **Migration Function**: Added `migrateConfig` function to handle old configuration formats
+- **Backward Compatibility**: Existing configurations are automatically migrated to the new format with API settings
+- **Error Prevention**: Added safety checks in both Settings component and Shopify API service
+
+## [1.0.33] - 2024-06-14
+
+### Fixed
+- **Deployment Issue**: Fixed Railway deployment failure by removing `node-fetch` dependency and using Node 18's built-in `fetch` instead, resolving ES module compatibility issues.
+
+### Technical
+- **Dependencies**: Removed `node-fetch` v3.x from package.json (ES module compatibility issue)
+- **Server**: Updated server.js to use Node 18's native fetch API
+- **Deployment**: Railway deployment should now succeed
+
+## [1.0.32] - 2024-06-14
+
+### Fixed
+- **CORS Issue**: Fixed CORS errors when syncing orders/products from Shopify by routing all Shopify API requests through a backend proxy endpoint (`/api/shopify/proxy`).
+- **API Configuration**: Frontend now uses the API settings (access token, domain, version) from the Settings page for all Shopify API calls. No more hardcoded tokens.
+- **TypeScript/Linter**: Fixed all TypeScript and linter errors related to product mapping and API service.
+
+### Added
+- **Backend Proxy**: Added a backend Express proxy endpoint to securely relay Shopify API requests and avoid CORS issues.
+- **Robust Error Handling**: Improved error handling and user feedback for missing or invalid API configuration.
+
+### Deployment
+- Ready for deployment to Railway with all fixes and improvements. 

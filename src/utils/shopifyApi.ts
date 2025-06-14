@@ -2,6 +2,16 @@ import type { Product, ProductVariant, ProductImage, ProductMetafield, Store, Or
 
 // Shopify mapping configuration interface
 interface ShopifyMappingConfig {
+  // API Configuration
+  api: {
+    accessToken: string;
+    shopDomain: string;
+    apiVersion: string;
+    webhookSecret?: string;
+    autoSync: boolean;
+    syncInterval: number;
+  };
+  
   // Date mapping
   dateSource: 'tags' | 'created_at' | 'custom_field';
   dateTagPattern: string;
@@ -35,12 +45,73 @@ interface ShopifyMappingConfig {
   includeCustomerEmail: boolean;
 }
 
+// Utility function to migrate old configuration format to new format
+function migrateConfig(oldConfig: any): ShopifyMappingConfig {
+  // If the config already has the api property, return it as is
+  if (oldConfig.api) {
+    return oldConfig;
+  }
+
+  // Migrate old config to new format
+  return {
+    // API Configuration (new)
+    api: {
+      accessToken: '',
+      shopDomain: '',
+      apiVersion: '2024-01',
+      webhookSecret: '',
+      autoSync: true,
+      syncInterval: 60
+    },
+    
+    // Date mapping
+    dateSource: oldConfig.dateSource || 'tags',
+    dateTagPattern: oldConfig.dateTagPattern || '(\\d{1,2})[/\\-](\\d{1,2})[/\\-](\\d{2,4})',
+    dateFormat: oldConfig.dateFormat || 'DD/MM/YYYY',
+    
+    // Timeslot mapping
+    timeslotSource: oldConfig.timeslotSource || 'tags',
+    timeslotTagPattern: oldConfig.timeslotTagPattern || '(\\d{1,2}):(\\d{2})-(\\d{1,2}):(\\d{2})',
+    timeslotFormat: oldConfig.timeslotFormat || 'HH:MM-HH:MM',
+    
+    // Delivery type mapping
+    deliveryTypeSource: oldConfig.deliveryTypeSource || 'tags',
+    deliveryTypeKeywords: oldConfig.deliveryTypeKeywords || {
+      delivery: ['delivery', 'deliver'],
+      collection: ['collection', 'pickup', 'collect'],
+      express: ['express', 'urgent', 'rush']
+    },
+    
+    // Instructions mapping
+    instructionsSource: oldConfig.instructionsSource || 'line_item_properties',
+    instructionsPropertyName: oldConfig.instructionsPropertyName || 'Special Instructions',
+    instructionsKeywords: oldConfig.instructionsKeywords || ['instruction', 'note', 'special', 'request', 'preference'],
+    
+    // Customizations mapping
+    customizationsSource: oldConfig.customizationsSource || 'line_item_properties',
+    excludeProperties: oldConfig.excludeProperties || ['Delivery Time', 'Special Instructions', 'delivery', 'time', 'instruction', 'note', 'special'],
+    
+    // Customer info mapping
+    customerNameFormat: oldConfig.customerNameFormat || 'first_last',
+    includeCustomerPhone: oldConfig.includeCustomerPhone !== undefined ? oldConfig.includeCustomerPhone : true,
+    includeCustomerEmail: oldConfig.includeCustomerEmail !== undefined ? oldConfig.includeCustomerEmail : true
+  };
+}
+
 // Utility function to load mapping configuration
 export function loadMappingConfig(): ShopifyMappingConfig {
   try {
     const savedConfig = localStorage.getItem('shopify-mapping-config');
     if (savedConfig) {
-      return JSON.parse(savedConfig);
+      const parsedConfig = JSON.parse(savedConfig);
+      const migratedConfig = migrateConfig(parsedConfig);
+      
+      // Save the migrated config back to localStorage
+      if (migratedConfig !== parsedConfig) {
+        localStorage.setItem('shopify-mapping-config', JSON.stringify(migratedConfig));
+      }
+      
+      return migratedConfig;
     }
   } catch (error) {
     console.error('Error loading mapping config:', error);
@@ -48,6 +119,16 @@ export function loadMappingConfig(): ShopifyMappingConfig {
   
   // Return default configuration
   return {
+    // API Configuration
+    api: {
+      accessToken: '',
+      shopDomain: '',
+      apiVersion: '2024-01',
+      webhookSecret: '',
+      autoSync: true,
+      syncInterval: 60
+    },
+    
     // Date mapping
     dateSource: 'tags',
     dateTagPattern: '(\\d{1,2})[/\\-](\\d{1,2})[/\\-](\\d{2,4})',
@@ -109,6 +190,10 @@ interface ShopifyProductResponse {
   };
 }
 
+interface ShopifyProductsResponse {
+  products: ShopifyProductResponse['product'][];
+}
+
 interface ShopifyVariantResponse {
   id: number;
   title: string;
@@ -121,9 +206,6 @@ interface ShopifyVariantResponse {
   requires_shipping: boolean;
   taxable: boolean;
   barcode: string;
-  position: number;
-  created_at: string;
-  updated_at: string;
 }
 
 interface ShopifyImageResponse {
@@ -132,9 +214,6 @@ interface ShopifyImageResponse {
   alt: string;
   width: number;
   height: number;
-  position: number;
-  created_at: string;
-  updated_at: string;
 }
 
 interface ShopifyMetafieldResponse {
@@ -143,13 +222,6 @@ interface ShopifyMetafieldResponse {
   key: string;
   value: string;
   type: string;
-  description: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface ShopifyProductsResponse {
-  products: ShopifyProductResponse['product'][];
 }
 
 // Shopify order response types
@@ -213,11 +285,11 @@ interface ShopifyOrdersResponse {
 export class ShopifyApiService {
   private config: ShopifyConfig;
 
-  constructor(store: Store, accessToken: string) {
+  constructor(store: Store, accessToken: string, apiVersion: string = '2024-01') {
     this.config = {
       storeDomain: store.domain,
       accessToken,
-      apiVersion: '2024-01' // Latest stable version
+      apiVersion
     };
   }
 
@@ -225,27 +297,39 @@ export class ShopifyApiService {
     return `https://${this.config.storeDomain}/admin/api/${this.config.apiVersion}`;
   }
 
-  private getHeaders(): HeadersInit {
-    return {
-      'Content-Type': 'application/json',
-      'X-Shopify-Access-Token': this.config.accessToken,
-    };
+  // Make API call through backend proxy
+  private async makeApiCall(url: string, method: string = 'GET', body?: any): Promise<any> {
+    try {
+      const response = await fetch('/api/shopify/proxy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url,
+          accessToken: this.config.accessToken,
+          method,
+          body
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error making Shopify API call:', error);
+      throw error;
+    }
   }
 
   // Fetch all products from Shopify
   async fetchProducts(limit: number = 250): Promise<Product[]> {
     try {
       const url = `${this.getBaseUrl()}/products.json?limit=${limit}`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Shopify API error: ${response.status} ${response.statusText}`);
-      }
-
-      const data: ShopifyProductsResponse = await response.json();
+      const data: ShopifyProductsResponse = await this.makeApiCall(url);
       return data.products.map(this.mapShopifyProductToLocal);
     } catch (error) {
       console.error('Error fetching products from Shopify:', error);
@@ -257,22 +341,13 @@ export class ShopifyApiService {
   async fetchProduct(shopifyId: string): Promise<Product | null> {
     try {
       const url = `${this.getBaseUrl()}/products/${shopifyId}.json`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getHeaders(),
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null;
-        }
-        throw new Error(`Shopify API error: ${response.status} ${response.statusText}`);
-      }
-
-      const data: ShopifyProductResponse = await response.json();
+      const data: ShopifyProductResponse = await this.makeApiCall(url);
       return this.mapShopifyProductToLocal(data.product);
     } catch (error) {
       console.error('Error fetching product from Shopify:', error);
+      if (error instanceof Error && error.message.includes('404')) {
+        return null;
+      }
       throw error;
     }
   }
@@ -286,15 +361,7 @@ export class ShopifyApiService {
       const url = `${this.getBaseUrl()}/products/${shopifyId}/metafields.json`;
       
       for (const metafield of metafields) {
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: this.getHeaders(),
-          body: JSON.stringify({ metafield }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Shopify API error: ${response.status} ${response.statusText}`);
-        }
+        await this.makeApiCall(url, 'POST', { metafield });
       }
     } catch (error) {
       console.error('Error updating product metafields:', error);
@@ -302,69 +369,37 @@ export class ShopifyApiService {
     }
   }
 
-  // Update product tags
-  async updateProductTags(shopifyId: string, tags: string[]): Promise<void> {
-    try {
-      const url = `${this.getBaseUrl()}/products/${shopifyId}.json`;
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: this.getHeaders(),
-        body: JSON.stringify({
-          product: {
-            id: shopifyId,
-            tags: tags.join(', ')
-          }
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Shopify API error: ${response.status} ${response.statusText}`);
-      }
-    } catch (error) {
-      console.error('Error updating product tags:', error);
-      throw error;
-    }
-  }
-
   // Map Shopify product response to local Product interface
   private mapShopifyProductToLocal(shopifyProduct: ShopifyProductResponse['product']): Product {
-    // Extract florist-specific metadata from metafields
-    const floristMetadata = this.extractFloristMetadata(shopifyProduct.metafields);
-    
-    // Extract difficulty and product type from tags or metafields
-    const tags = shopifyProduct.tags ? shopifyProduct.tags.split(',').map(tag => tag.trim()) : [];
-    const difficultyLabel = this.extractDifficultyFromTags(tags) || 'Medium';
-    const productTypeLabel = this.extractProductTypeFromTags(tags) || 'Bouquet';
+    const firstVariant = shopifyProduct.variants[0];
 
     return {
       id: `shopify-${shopifyProduct.id}`,
-      shopifyId: shopifyProduct.id.toString(),
       name: shopifyProduct.title,
-      variant: shopifyProduct.variants?.[0]?.title || '',
-      difficultyLabel,
-      productTypeLabel,
+      variant: firstVariant?.title || '',
+      difficultyLabel: 'Medium', // Default difficulty
+      productTypeLabel: 'Bouquet', // Default product type
       storeId: '', // Will be set by the calling function
+      shopifyId: shopifyProduct.id.toString(),
       handle: shopifyProduct.handle,
       description: shopifyProduct.body_html,
       productType: shopifyProduct.product_type,
       vendor: shopifyProduct.vendor,
-      tags,
       status: shopifyProduct.status as 'active' | 'archived' | 'draft',
+      tags: shopifyProduct.tags ? shopifyProduct.tags.split(',').map(tag => tag.trim()) : [],
       publishedAt: shopifyProduct.published_at,
       createdAt: shopifyProduct.created_at,
       updatedAt: shopifyProduct.updated_at,
-      variants: shopifyProduct.variants?.map(this.mapShopifyVariantToLocal),
-      images: shopifyProduct.images?.map(this.mapShopifyImageToLocal),
-      metafields: shopifyProduct.metafields?.map(this.mapShopifyMetafieldToLocal),
-      floristMetadata,
+      variants: shopifyProduct.variants.map(this.mapShopifyVariantToLocal),
+      images: shopifyProduct.images.map(this.mapShopifyImageToLocal),
+      metafields: shopifyProduct.metafields.map(this.mapShopifyMetafieldToLocal),
     };
   }
 
   // Map Shopify variant response to local ProductVariant interface
   private mapShopifyVariantToLocal(shopifyVariant: ShopifyVariantResponse): ProductVariant {
     return {
-      id: `shopify-variant-${shopifyVariant.id}`,
-      shopifyId: shopifyVariant.id.toString(),
+      id: shopifyVariant.id.toString(),
       title: shopifyVariant.title,
       sku: shopifyVariant.sku,
       price: shopifyVariant.price,
@@ -375,101 +410,117 @@ export class ShopifyApiService {
       requiresShipping: shopifyVariant.requires_shipping,
       taxable: shopifyVariant.taxable,
       barcode: shopifyVariant.barcode,
-      position: shopifyVariant.position,
-      createdAt: shopifyVariant.created_at,
-      updatedAt: shopifyVariant.updated_at,
     };
   }
 
   // Map Shopify image response to local ProductImage interface
   private mapShopifyImageToLocal(shopifyImage: ShopifyImageResponse): ProductImage {
     return {
-      id: `shopify-image-${shopifyImage.id}`,
-      shopifyId: shopifyImage.id.toString(),
+      id: shopifyImage.id.toString(),
       src: shopifyImage.src,
       alt: shopifyImage.alt,
       width: shopifyImage.width,
       height: shopifyImage.height,
-      position: shopifyImage.position,
-      createdAt: shopifyImage.created_at,
-      updatedAt: shopifyImage.updated_at,
     };
   }
 
   // Map Shopify metafield response to local ProductMetafield interface
   private mapShopifyMetafieldToLocal(shopifyMetafield: ShopifyMetafieldResponse): ProductMetafield {
     return {
-      id: `shopify-metafield-${shopifyMetafield.id}`,
-      shopifyId: shopifyMetafield.id.toString(),
+      id: shopifyMetafield.id.toString(),
       namespace: shopifyMetafield.namespace,
       key: shopifyMetafield.key,
       value: shopifyMetafield.value,
       type: shopifyMetafield.type,
-      description: shopifyMetafield.description,
-      createdAt: shopifyMetafield.created_at,
-      updatedAt: shopifyMetafield.updated_at,
     };
   }
 
-  // Extract florist-specific metadata from metafields
-  private extractFloristMetadata(metafields: ShopifyMetafieldResponse[]): Product['floristMetadata'] {
-    const metadata: Product['floristMetadata'] = {};
+  // Extract delivery information from order tags
+  private extractDeliveryInfoFromTags(orderTags: string[]): {
+    date?: string;
+    timeslot?: string;
+    deliveryType?: 'delivery' | 'collection' | 'express';
+  } {
+    const config = loadMappingConfig();
+    
+    let date: string | undefined;
+    let timeslot: string | undefined;
+    let deliveryType: 'delivery' | 'collection' | 'express' | undefined;
 
-    for (const metafield of metafields) {
-      if (metafield.namespace === 'florist') {
-        switch (metafield.key) {
-          case 'difficulty_level':
-            metadata.difficultyLevel = metafield.value;
-            break;
-          case 'estimated_time':
-            metadata.estimatedTime = parseInt(metafield.value) || 0;
-            break;
-          case 'special_instructions':
-            metadata.specialInstructions = metafield.value;
-            break;
-          case 'seasonal_availability':
-            metadata.seasonalAvailability = metafield.value.split(',').map(s => s.trim());
-            break;
-          case 'materials':
-            metadata.materials = metafield.value.split(',').map(s => s.trim());
-            break;
+    for (const tag of orderTags) {
+      const trimmedTag = tag.trim().toLowerCase();
+      
+      // Extract date
+      if (config.dateSource === 'tags') {
+        const dateMatch = tag.match(new RegExp(config.dateTagPattern));
+        if (dateMatch) {
+          date = this.formatDate(dateMatch[0]);
+        }
+      }
+      
+      // Extract timeslot
+      if (config.timeslotSource === 'tags') {
+        const timeMatch = tag.match(new RegExp(config.timeslotTagPattern));
+        if (timeMatch) {
+          timeslot = this.formatTimeslot(timeMatch[0], config.timeslotFormat);
+        }
+      }
+      
+      // Extract delivery type
+      if (config.deliveryTypeSource === 'tags') {
+        if (config.deliveryTypeKeywords.delivery.some(keyword => trimmedTag.includes(keyword))) {
+          deliveryType = 'delivery';
+        } else if (config.deliveryTypeKeywords.collection.some(keyword => trimmedTag.includes(keyword))) {
+          deliveryType = 'collection';
+        } else if (config.deliveryTypeKeywords.express.some(keyword => trimmedTag.includes(keyword))) {
+          deliveryType = 'express';
         }
       }
     }
 
-    return metadata;
+    return { date, timeslot, deliveryType };
   }
 
-  // Extract difficulty from tags
-  private extractDifficultyFromTags(tags: string[]): string | null {
-    const difficultyTags = tags.filter(tag => 
-      ['easy', 'medium', 'hard', 'very hard'].includes(tag.toLowerCase())
-    );
-    return difficultyTags.length > 0 ? difficultyTags[0] : null;
+  // Format date based on configuration
+  private formatDate(dateString: string): string {
+    // Simple date formatting - in production, use a proper date library
+    const parts = dateString.split(/[/\-]/);
+    if (parts.length === 3) {
+      const [day, month, year] = parts;
+      const fullYear = year.length === 2 ? `20${year}` : year;
+      return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    return dateString;
   }
 
-  // Extract product type from tags
-  private extractProductTypeFromTags(tags: string[]): string | null {
-    const productTypeTags = tags.filter(tag => 
-      ['bouquet', 'vase', 'arrangement', 'wreath', 'bundle'].includes(tag.toLowerCase())
-    );
-    return productTypeTags.length > 0 ? productTypeTags[0] : null;
+  // Format timeslot based on configuration
+  private formatTimeslot(timeString: string, format: string): string {
+    if (format === 'HH:MM-HH:MM') {
+      // Convert 24-hour format to 12-hour format
+      return this.convertTo12HourFormat(timeString);
+    }
+    return timeString;
+  }
+
+  // Convert 24-hour format to 12-hour format
+  private convertTo12HourFormat(timeString: string): string {
+    const [startTime, endTime] = timeString.split('-');
+    
+    const formatTime = (time: string) => {
+      const [hours, minutes] = time.split(':').map(Number);
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+      return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    };
+    
+    return `${formatTime(startTime)} - ${formatTime(endTime)}`;
   }
 
   // Fetch orders from Shopify
   async fetchOrders(limit: number = 250, status: string = 'open'): Promise<Order[]> {
     try {
       const url = `${this.getBaseUrl()}/orders.json?limit=${limit}&status=${status}`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Shopify API error: ${response.status} ${response.statusText}`);
-      }
-
-      const data: ShopifyOrdersResponse = await response.json();
+      const data: ShopifyOrdersResponse = await this.makeApiCall(url);
       return data.orders.map(this.mapShopifyOrderToLocal);
     } catch (error) {
       console.error('Error fetching orders from Shopify:', error);
@@ -481,22 +532,13 @@ export class ShopifyApiService {
   async fetchOrder(shopifyId: string): Promise<Order | null> {
     try {
       const url = `${this.getBaseUrl()}/orders/${shopifyId}.json`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getHeaders(),
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null;
-        }
-        throw new Error(`Shopify API error: ${response.status} ${response.statusText}`);
-      }
-
-      const data: ShopifyOrderResponse = await response.json();
+      const data: ShopifyOrderResponse = await this.makeApiCall(url);
       return this.mapShopifyOrderToLocal(data.order);
     } catch (error) {
       console.error('Error fetching order from Shopify:', error);
+      if (error instanceof Error && error.message.includes('404')) {
+        return null;
+      }
       throw error;
     }
   }
@@ -555,67 +597,6 @@ export class ShopifyApiService {
       updatedAt: shopifyOrder.updated_at,
       deliveryType: deliveryInfo.deliveryType || 'delivery', // New field for delivery type
     };
-  }
-
-  // Extract delivery information from order tags
-  private extractDeliveryInfoFromTags(tags: string[]): {
-    date?: string;
-    timeslot?: string;
-    deliveryType?: 'delivery' | 'collection' | 'express';
-  } {
-    const result: {
-      date?: string;
-      timeslot?: string;
-      deliveryType?: 'delivery' | 'collection' | 'express';
-    } = {};
-
-    for (const tag of tags) {
-      const lowerTag = tag.toLowerCase();
-      
-      // Extract delivery type
-      if (lowerTag.includes('delivery') || lowerTag.includes('deliver')) {
-        result.deliveryType = 'delivery';
-      } else if (lowerTag.includes('collection') || lowerTag.includes('pickup') || lowerTag.includes('collect')) {
-        result.deliveryType = 'collection';
-      } else if (lowerTag.includes('express') || lowerTag.includes('urgent') || lowerTag.includes('rush')) {
-        result.deliveryType = 'express';
-      }
-      
-      // Extract date (always read as DD/MM/YYYY format)
-      const dateMatch = tag.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-      if (dateMatch) {
-        const [, day, month, year] = dateMatch;
-        const fullYear = year.length === 2 ? `20${year}` : year;
-        // Always treat as DD/MM/YYYY format
-        result.date = `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-      }
-      
-      // Extract timeslot (HH:MM-HH:MM format from order tags)
-      const timeMatch = tag.match(/(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})/);
-      if (timeMatch) {
-        const [, startHour, startMin, endHour, endMin] = timeMatch;
-        // Convert to 12-hour format with AM/PM
-        const startTime = this.convertTo12HourFormat(parseInt(startHour), parseInt(startMin));
-        const endTime = this.convertTo12HourFormat(parseInt(endHour), parseInt(endMin));
-        result.timeslot = `${startTime} - ${endTime}`;
-      }
-      
-      // Fallback: Extract timeslot (various formats)
-      const timeMatchWithAMPM = tag.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-      if (timeMatchWithAMPM) {
-        const [, startHour, startMin, startPeriod, endHour, endMin, endPeriod] = timeMatchWithAMPM;
-        result.timeslot = `${startHour}:${startMin} ${startPeriod.toUpperCase()} - ${endHour}:${endMin} ${endPeriod.toUpperCase()}`;
-      }
-      
-      // Alternative time formats
-      const timeRangeMatch = tag.match(/(\d{1,2})(AM|PM)\s*-\s*(\d{1,2})(AM|PM)/i);
-      if (timeRangeMatch) {
-        const [, startTime, startPeriod, endTime, endPeriod] = timeRangeMatch;
-        result.timeslot = `${startTime} ${startPeriod.toUpperCase()} - ${endTime} ${endPeriod.toUpperCase()}`;
-      }
-    }
-
-    return result;
   }
 
   // Extract special instructions from order note
@@ -683,26 +664,20 @@ export class ShopifyApiService {
         return `${customer.first_name} ${customer.last_name}`;
     }
   }
-
-  // Convert 24-hour format to 12-hour format with AM/PM
-  private convertTo12HourFormat(hour: number, minute: number): string {
-    const period = hour >= 12 ? 'PM' : 'AM';
-    const twelveHour = hour % 12 || 12;
-    return `${twelveHour}:${minute.toString().padStart(2, '0')} ${period}`;
-  }
 }
 
 // Utility function to create Shopify API service for a store
-export function createShopifyApiService(store: Store, accessToken: string): ShopifyApiService {
-  return new ShopifyApiService(store, accessToken);
+export function createShopifyApiService(store: Store, accessToken: string, apiVersion?: string): ShopifyApiService {
+  return new ShopifyApiService(store, accessToken, apiVersion);
 }
 
 // Utility function to sync products from Shopify to local storage
 export async function syncProductsFromShopify(
   store: Store, 
-  accessToken: string
+  accessToken: string,
+  apiVersion?: string
 ): Promise<Product[]> {
-  const apiService = createShopifyApiService(store, accessToken);
+  const apiService = createShopifyApiService(store, accessToken, apiVersion);
   const products = await apiService.fetchProducts();
   
   // Add store ID to each product
@@ -718,9 +693,10 @@ export async function syncProductsFromShopify(
 export async function syncOrdersFromShopify(
   store: Store, 
   accessToken: string,
-  date?: string
+  date?: string,
+  apiVersion?: string
 ): Promise<Order[]> {
-  const apiService = createShopifyApiService(store, accessToken);
+  const apiService = createShopifyApiService(store, accessToken, apiVersion);
   const orders = await apiService.fetchOrders();
   
   // Filter by date if specified

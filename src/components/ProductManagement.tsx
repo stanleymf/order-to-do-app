@@ -88,10 +88,20 @@ export function ProductManagement() {
     setIsSyncing(prev => ({ ...prev, [store.id]: true }));
     
     try {
-      // In a real implementation, you would get the access token from secure storage
-      const accessToken = 'your-shopify-access-token'; // This should come from secure storage
+      // Load API configuration from settings
+      const savedConfig = localStorage.getItem('shopify-mapping-config');
+      if (!savedConfig) {
+        alert('Shopify API not configured. Please configure your API settings in the Settings page.');
+        return;
+      }
+
+      const config = JSON.parse(savedConfig);
+      if (!config.api?.accessToken || !config.api?.shopDomain) {
+        alert('Shopify API not configured. Please configure your access token and shop domain in Settings.');
+        return;
+      }
       
-      const syncedProducts = await syncProductsFromShopify(store, accessToken);
+      const syncedProducts = await syncProductsFromShopify(store, config.api.accessToken, config.api.apiVersion);
       
       // Update local storage with synced products
       const existingProducts = getProducts();

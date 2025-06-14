@@ -69,15 +69,37 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
       const allStores = getStores();
       let allSyncedOrders: Order[] = [];
 
+      // Load API configuration from settings
+      const savedConfig = localStorage.getItem('shopify-mapping-config');
+      if (!savedConfig) {
+        toast.error('Shopify API not configured', {
+          description: 'Please configure your Shopify API settings in the Settings page'
+        });
+        return;
+      }
+
+      const config = JSON.parse(savedConfig);
+      if (!config.api?.accessToken || !config.api?.shopDomain) {
+        toast.error('Shopify API not configured', {
+          description: 'Please configure your access token and shop domain in Settings'
+        });
+        return;
+      }
+
       for (const store of allStores) {
         try {
-          // In a real implementation, you would get the access token from secure storage
-          const accessToken = 'your-shopify-access-token'; // This should come from secure storage
-          
-          const syncedOrders = await syncOrdersFromShopifyToStorage(store, accessToken, selectedDate);
+          const syncedOrders = await syncOrdersFromShopifyToStorage(
+            store, 
+            config.api.accessToken, 
+            selectedDate,
+            config.api.apiVersion
+          );
           allSyncedOrders = [...allSyncedOrders, ...syncedOrders];
         } catch (error) {
           console.error(`Error syncing orders from ${store.name}:`, error);
+          toast.error(`Failed to sync ${store.name}`, {
+            description: error instanceof Error ? error.message : 'Unknown error'
+          });
           // Continue with other stores even if one fails
         }
       }

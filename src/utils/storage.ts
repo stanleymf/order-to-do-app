@@ -214,11 +214,12 @@ export const updateOrderFromShopify = (shopifyOrder: Order) => {
 export const syncOrdersFromShopifyToStorage = async (
   store: Store, 
   accessToken: string, 
-  date?: string
+  date?: string,
+  apiVersion?: string
 ) => {
   try {
     const { syncOrdersFromShopify } = await import('./shopifyApi');
-    const shopifyOrders = await syncOrdersFromShopify(store, accessToken, date);
+    const shopifyOrders = await syncOrdersFromShopify(store, accessToken, date, apiVersion);
     
     // Update existing orders or add new ones
     for (const shopifyOrder of shopifyOrders) {

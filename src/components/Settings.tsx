@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { Settings as SettingsIcon, MapPin, Clock, Package, User, FileText, Tag, Save, RefreshCw, Calendar, Key } from 'lucide-react';
+import { Settings as SettingsIcon, MapPin, Clock, Package, User, FileText, Tag, Save, RefreshCw, Calendar, Key, Webhook, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { type User as UserType } from '../types';
 import { useMobileView } from './Dashboard';
+import { webhookManager } from '../utils/shopifyWebhooks';
 
 interface ShopifyAPIConfig {
   accessToken: string;
@@ -92,7 +93,7 @@ const defaultMappingConfig: ShopifyMappingConfig = {
     apiVersion: '2024-10',
     webhookSecret: '',
     autoSync: true,
-    syncInterval: 5
+    syncInterval: 60 // 1 minute default
   },
   
   // Order ID mapping
@@ -147,6 +148,12 @@ export function Settings({ currentUser }: SettingsProps) {
   const [mappingConfig, setMappingConfig] = useState<ShopifyMappingConfig>(defaultMappingConfig);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isWebhookLoading, setIsWebhookLoading] = useState(false);
+  const [webhookStatus, setWebhookStatus] = useState<{
+    registered: any[];
+    existing: any[];
+    errors: string[];
+  } | null>(null);
   
   // Get mobile view context
   const { isMobileView } = useMobileView();
@@ -163,7 +170,23 @@ export function Settings({ currentUser }: SettingsProps) {
     try {
       const savedConfig = localStorage.getItem('shopify-mapping-config');
       if (savedConfig) {
-        setMappingConfig(JSON.parse(savedConfig));
+        const parsedConfig = JSON.parse(savedConfig);
+        
+        // Ensure the api property exists
+        if (!parsedConfig.api) {
+          parsedConfig.api = {
+            accessToken: '',
+            shopDomain: '',
+            apiVersion: '2024-01',
+            webhookSecret: '',
+            autoSync: true,
+            syncInterval: 60
+          };
+          // Save the updated config
+          localStorage.setItem('shopify-mapping-config', JSON.stringify(parsedConfig));
+        }
+        
+        setMappingConfig(parsedConfig);
       }
     } catch (error) {
       console.error('Error loading mapping config:', error);
@@ -220,6 +243,67 @@ export function Settings({ currentUser }: SettingsProps) {
       ...prev,
       remarksKeywords: keywords.split(',').map(k => k.trim()).filter(k => k)
     }));
+  };
+
+  // Webhook management functions
+  const handleAutoRegisterWebhooks = async () => {
+    if (!mappingConfig.api.accessToken || !mappingConfig.api.shopDomain) {
+      toast.error('Please configure your Shopify API settings first');
+      return;
+    }
+
+    setIsWebhookLoading(true);
+    try {
+      const result = await webhookManager.autoRegisterWebhooks();
+      setWebhookStatus(result);
+      
+      if (result.errors.length > 0) {
+        toast.error(`Webhook registration completed with ${result.errors.length} errors`);
+      } else {
+        toast.success(`Successfully registered ${result.registered.length} webhooks`);
+      }
+    } catch (error) {
+      console.error('Error registering webhooks:', error);
+      toast.error('Failed to register webhooks');
+    } finally {
+      setIsWebhookLoading(false);
+    }
+  };
+
+  const handleCleanupWebhooks = async () => {
+    setIsWebhookLoading(true);
+    try {
+      const result = await webhookManager.cleanupOldWebhooks();
+      
+      if (result.errors.length > 0) {
+        toast.error(`Webhook cleanup completed with ${result.errors.length} errors`);
+      } else {
+        toast.success(`Successfully cleaned up ${result.deleted.length} old webhooks`);
+      }
+    } catch (error) {
+      console.error('Error cleaning up webhooks:', error);
+      toast.error('Failed to cleanup webhooks');
+    } finally {
+      setIsWebhookLoading(false);
+    }
+  };
+
+  const handleTestWebhookConnectivity = async () => {
+    setIsWebhookLoading(true);
+    try {
+      const isAccessible = await webhookManager.testWebhookConnectivity();
+      
+      if (isAccessible) {
+        toast.success('Webhook endpoint is accessible');
+      } else {
+        toast.error('Webhook endpoint is not accessible');
+      }
+    } catch (error) {
+      console.error('Error testing webhook connectivity:', error);
+      toast.error('Failed to test webhook connectivity');
+    } finally {
+      setIsWebhookLoading(false);
+    }
   };
 
   if (!isAdmin) {
@@ -369,7 +453,7 @@ export function Settings({ currentUser }: SettingsProps) {
 
             {mappingConfig.api.autoSync && (
               <div className="space-y-2">
-                <Label htmlFor="syncInterval">Sync Interval (minutes)</Label>
+                <Label htmlFor="syncInterval">Sync Interval</Label>
                 <Select
                   value={mappingConfig.api.syncInterval.toString()}
                   onValueChange={(value) => updateMappingConfig('api', { ...mappingConfig.api, syncInterval: parseInt(value) })}
@@ -378,19 +462,118 @@ export function Settings({ currentUser }: SettingsProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">1 minute</SelectItem>
-                    <SelectItem value="5">5 minutes</SelectItem>
-                    <SelectItem value="10">10 minutes</SelectItem>
-                    <SelectItem value="15">15 minutes</SelectItem>
-                    <SelectItem value="30">30 minutes</SelectItem>
-                    <SelectItem value="60">1 hour</SelectItem>
+                    <SelectItem value="10">10 seconds (Very Fast)</SelectItem>
+                    <SelectItem value="30">30 seconds (Fast)</SelectItem>
+                    <SelectItem value="60">1 minute (Recommended)</SelectItem>
+                    <SelectItem value="300">5 minutes (Default)</SelectItem>
+                    <SelectItem value="600">10 minutes</SelectItem>
+                    <SelectItem value="1800">30 minutes</SelectItem>
+                    <SelectItem value="3600">1 hour</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-500">
-                  How often to automatically sync orders from Shopify
-                </p>
+                <div className="text-xs text-gray-500 space-y-1">
+                  <p>• <strong>10-30 seconds:</strong> Near real-time updates (uses ~2-6 API calls per minute)</p>
+                  <p>• <strong>1-5 minutes:</strong> Balanced performance (recommended for most businesses)</p>
+                  <p>• <strong>10+ minutes:</strong> Conservative approach (minimal API usage)</p>
+                  <p className="text-amber-600 font-medium">Note: Shopify allows 2 requests/second (120/minute) - choose based on your order volume</p>
+                </div>
               </div>
             )}
+          </div>
+
+          {/* Webhook Management Section */}
+          <Separator />
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Webhook className="h-4 w-4 text-gray-500" />
+              <h3 className="font-medium text-gray-900">Webhook Management</h3>
+            </div>
+            
+            <div className="space-y-3">
+              <Button
+                onClick={handleAutoRegisterWebhooks}
+                disabled={isWebhookLoading || !mappingConfig.api.accessToken}
+                variant="outline"
+                className="w-full"
+              >
+                {isWebhookLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Webhook className="mr-2 h-4 w-4" />
+                )}
+                Auto-Register Webhooks
+              </Button>
+
+              <Button
+                onClick={handleCleanupWebhooks}
+                disabled={isWebhookLoading || !mappingConfig.api.accessToken}
+                variant="outline"
+                className="w-full"
+              >
+                {isWebhookLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                )}
+                Cleanup Old Webhooks
+              </Button>
+
+              <Button
+                onClick={handleTestWebhookConnectivity}
+                disabled={isWebhookLoading}
+                variant="outline"
+                className="w-full"
+              >
+                {isWebhookLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                )}
+                Test Webhook Connectivity
+              </Button>
+            </div>
+
+            {/* Webhook Status Display */}
+            {webhookStatus && (
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <h4 className="font-medium text-sm mb-2">Webhook Status:</h4>
+                <div className="space-y-1 text-xs">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-3 w-3 text-green-600" />
+                    <span>Registered: {webhookStatus.registered.length}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-3 w-3 text-blue-600" />
+                    <span>Existing: {webhookStatus.existing.length}</span>
+                  </div>
+                  {webhookStatus.errors.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-3 w-3 text-red-600" />
+                      <span>Errors: {webhookStatus.errors.length}</span>
+                    </div>
+                  )}
+                </div>
+                
+                {webhookStatus.errors.length > 0 && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-xs text-red-600">View Errors</summary>
+                    <ul className="mt-1 text-xs text-red-600 space-y-1">
+                      {webhookStatus.errors.map((error, index) => (
+                        <li key={index}>• {error}</li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            )}
+
+            <div className="text-xs text-gray-500 space-y-1">
+              <p>• <strong>Auto-Register:</strong> Creates webhooks for orders and products</p>
+              <p>• <strong>Cleanup:</strong> Removes old webhooks pointing to different URLs</p>
+              <p>• <strong>Test:</strong> Verifies webhook endpoint is accessible</p>
+              <p className="text-amber-600 font-medium">Note: Webhooks will be registered for your current deployment URL</p>
+            </div>
           </div>
 
         </CardContent>
