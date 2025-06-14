@@ -5,6 +5,38 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.23] - 2024-12-19
+
+### 🎨 Enhanced Settings UI - Collapsible Data Persistence Section
+- **Improved Settings Layout**: Moved Data Persistence & Backup section to the bottom of Settings page
+  - Repositioned from first section to last section for better workflow organization
+  - Users now configure stores and webhooks before accessing backup features
+  - More logical progression: Store Setup → API Configuration → Data Management
+
+### 🔄 Interactive Data Persistence Management
+- **Collapsible Interface**: Made Data Persistence & Backup section collapsible to reduce visual clutter
+  - Click to expand/collapse the entire Data Persistence section
+  - Animated chevron icon indicates expansion state
+  - Hover effects on clickable header for better UX
+  - Collapsed by default to keep Settings page clean and focused
+
+### 🎯 User Experience Improvements
+- **Better Visual Hierarchy**: Settings page now flows more logically from setup to management
+  - Store Management (setup stores)
+  - API & Webhook Configuration (connect to Shopify)
+  - Order Data Mapping (configure data processing)
+  - Data Persistence & Backup (manage and backup data) - collapsible
+- **Reduced Cognitive Load**: Advanced backup features hidden until needed
+- **Responsive Design**: Collapsible behavior works seamlessly on mobile and desktop
+
+### 🔧 Technical Enhancements
+- **Collapsible Component Integration**: Leveraged Radix UI Collapsible primitive
+  - Smooth expand/collapse animations
+  - Accessible keyboard navigation
+  - State management for expansion tracking
+- **Enhanced Icon Usage**: Added ChevronDown icon with rotation animation
+- **Improved Component Structure**: Better separation of concerns in Settings layout
+
 ## [2.0.0-alpha.22] - 2024-12-19
 
 ### 🔧 Critical Webhook Topic Fix

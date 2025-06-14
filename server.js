@@ -23,7 +23,7 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     webhookEndpoint: '/api/webhooks/shopify',
-    version: '2.0.0-alpha.22'
+    version: '2.0.0-alpha.23'
   });
 });
 
@@ -41,7 +41,7 @@ app.get('/api/status', (req, res) => {
       endpoint: '/api/webhooks/shopify',
       secretConfigured: !!process.env.SHOPIFY_WEBHOOK_SECRET
     },
-    version: '2.0.0-alpha.22'
+    version: '2.0.0-alpha.23'
   });
 });
 

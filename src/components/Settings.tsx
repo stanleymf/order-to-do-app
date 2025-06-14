@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { Settings as SettingsIcon, MapPin, Clock, Package, User, FileText, Tag, Save, RefreshCw, Calendar, Webhook, CheckCircle, Loader2, Store, Database } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Settings as SettingsIcon, MapPin, Clock, Package, User, FileText, Tag, Save, RefreshCw, Calendar, Webhook, CheckCircle, Loader2, Store, Database, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { type User as UserType } from '../types';
 import { useMobileView } from './Dashboard';
@@ -157,6 +158,7 @@ export function Settings({ currentUser }: SettingsProps) {
     existing: any[];
     errors: string[];
   } | null>(null);
+  const [isDataPersistenceExpanded, setIsDataPersistenceExpanded] = useState(false);
   
   // Get mobile view context
   const { isMobileView } = useMobileView();
@@ -359,23 +361,7 @@ export function Settings({ currentUser }: SettingsProps) {
         </div>
       </div>
 
-      {/* Data Persistence Management Section */}
-      {isAdmin && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5 text-gray-500" />
-              Data Persistence & Backup
-            </CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
-              Manage data persistence, create backups, and ensure your settings never disappear
-            </p>
-          </CardHeader>
-          <CardContent>
-            <DataPersistenceManager />
-          </CardContent>
-        </Card>
-      )}
+
 
       {/* Store Management Section */}
       {isAdmin && (
@@ -1073,6 +1059,37 @@ export function Settings({ currentUser }: SettingsProps) {
 
         </CardContent>
       </Card>
+
+      {/* Data Persistence Management Section - Collapsible */}
+      {isAdmin && (
+        <Collapsible open={isDataPersistenceExpanded} onOpenChange={setIsDataPersistenceExpanded}>
+          <Card>
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-5 w-5 text-gray-500" />
+                    Data Persistence & Backup
+                  </div>
+                  <ChevronDown 
+                    className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
+                      isDataPersistenceExpanded ? 'rotate-180' : ''
+                    }`} 
+                  />
+                </CardTitle>
+                <p className="text-sm text-gray-600 mt-1">
+                  Manage data persistence, create backups, and ensure your settings never disappear
+                </p>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent>
+                <DataPersistenceManager />
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+      )}
     </div>
   );
 } 
