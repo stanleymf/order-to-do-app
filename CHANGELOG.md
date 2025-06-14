@@ -2,6 +2,62 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0-alpha.36] - 2024-12-19
+
+### 🎯 **Major Feature: Order Data Mapping System**
+
+**REVERTED** from problematic alpha.35 smart detection features and implemented a comprehensive Order Data Mapping system as requested.
+
+#### ✨ **New Features**
+- **Order Data Mapping Interface**: Complete system for mapping Shopify order properties to Order Card display properties
+- **Visual Mapping Configuration**: Drag-and-drop priority management with active/inactive toggles
+- **Comprehensive Shopify Field Reference**: 25+ available Shopify order fields organized by category:
+  - Order fields (ID, name, email, phone, dates, status, pricing, currency, notes, tags)
+  - Customer fields (ID, first name, last name, email)
+  - Line Items fields (title, variant, quantity, price, SKU)
+  - Shipping Address fields (address lines, city, province, country, postal code)
+  - Parsed Tags fields (date, timeslot, delivery type)
+  - Line Item Properties (special instructions, delivery time)
+- **Transformation Types**: Support for date formatting, currency formatting, text transforms, and custom logic
+- **Fallback Values**: Configurable fallback values when mapping fails
+- **Default Mappings**: Pre-configured essential mappings for immediate use
+- **Admin-Only Access**: Restricted to admin users for security
+
+#### 🔧 **Technical Implementation**
+- **New TypeScript Interfaces**: `OrderDataMapping`, `OrderCardProperty`, `ShopifyOrderSource`, `ShopifyOrderField`
+- **Navigation Integration**: Added "Order Data Mapping" to admin navigation with Database icon
+- **Route Protection**: Admin-only route at `/order-data-mapping`
+- **Local Storage Persistence**: Mappings saved to `order-data-mappings` localStorage key
+- **Priority Management**: Drag-and-drop reordering with automatic priority updates
+
+#### 🎨 **UI/UX Enhancements**
+- **Modern Card-Based Interface**: Clean, organized mapping display
+- **Color-Coded Status**: Green borders for active mappings, gray for inactive
+- **Badge System**: Visual indicators for mapping status, priority, and transformation types
+- **Responsive Design**: Mobile-friendly layout with proper spacing
+- **Interactive Controls**: Toggle active/inactive, move up/down, delete mappings
+- **Comprehensive Reference**: Built-in documentation of all available Shopify fields
+
+#### 📋 **Order Card Properties Supported**
+- Product Name, Product Variant, Customer Name, Customer Email, Customer Phone
+- Delivery Date, Time Slot, Delivery Type, Total Price, Currency
+- Order Status, Difficulty Level, Product Type, Special Instructions
+- Product Customizations, Fulfillment Status, Financial Status
+- Assigned Florist, Store, Shopify Order ID
+
+#### 🔄 **Version Updates**
+- Updated to version 2.0.0-alpha.36 across all files
+- Reverted from problematic alpha.35 smart detection features
+- Maintained stable alpha.34 base with new mapping system
+
+#### 🚀 **Deployment Ready**
+- Server running successfully on port 4321
+- All TypeScript compilation issues resolved
+- Navigation and routing properly configured
+- Ready for Railway deployment
+
+---
+
 ## [2.0.0-alpha.34] - 2024-12-19
 
 ### 🐛 Critical Bug Fix: SelectItem Validation

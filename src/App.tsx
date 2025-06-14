@@ -6,6 +6,7 @@ import { OrdersView } from './components/OrdersView';
 import { Analytics } from './components/Analytics';
 import { ProductManagement } from './components/ProductManagement';
 import { Settings } from './components/Settings';
+import { OrderDataMapping } from './components/OrderDataMapping';
 import { Toaster } from './components/ui/sonner';
 import { StoreProvider } from './contexts/StoreContext';
 import type { User } from './types';
@@ -123,6 +124,14 @@ function App() {
                     element={
                       <ProtectedRoute user={user} requiredRole="admin">
                         <ProductManagement />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/order-data-mapping" 
+                    element={
+                      <ProtectedRoute user={user} requiredRole="admin">
+                        <OrderDataMapping />
                       </ProtectedRoute>
                     } 
                   />

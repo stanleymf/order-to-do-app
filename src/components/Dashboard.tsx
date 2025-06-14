@@ -1,6 +1,6 @@
 import { useState, createContext, useContext } from 'react';
 import { Button } from '@/components/ui/button';
-import { LogOut, Calendar, BarChart3, Package, Smartphone, Monitor, Settings } from 'lucide-react';
+import { LogOut, Calendar, BarChart3, Package, Smartphone, Monitor, Settings, Database } from 'lucide-react';
 import StoreIndicator from './StoreIndicator';
 import type { User } from '../types';
 import { AuthService } from '../utils/authService';
@@ -49,6 +49,8 @@ export function Dashboard({ user, onLogout, children }: DashboardProps) {
         return 'Products';
       case '/settings':
         return 'Settings';
+      case '/order-data-mapping':
+        return 'Order Data Mapping';
       default:
         return 'Order To-Do';
     }
@@ -175,24 +177,41 @@ export function Dashboard({ user, onLogout, children }: DashboardProps) {
               )}
               
               {user.role === 'admin' && (
-                <NavLink 
-                  to="/settings" 
-                  className={({ isActive }) => `
+            <NavLink 
+                  to="/order-data-mapping" 
+              className={({ isActive }) => `
                     flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors
                     ${isActive 
                       ? 'bg-blue-100 text-blue-700 border border-blue-200' 
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }
                     ${isMobileView ? 'text-xs flex-1 justify-center' : 'text-sm'}
-                  `}
-                >
+              `}
+            >
+                  <Database className={`${isMobileView ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                  {isMobileView ? 'Mapping' : 'Order Data Mapping'}
+              </NavLink>
+            )}
+              
+            {user.role === 'admin' && (
+              <NavLink 
+                to="/settings" 
+                className={({ isActive }) => `
+                    flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors
+                    ${isActive 
+                      ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }
+                    ${isMobileView ? 'text-xs flex-1 justify-center' : 'text-sm'}
+                `}
+              >
                   <Settings className={`${isMobileView ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                  Settings
-                </NavLink>
-              )}
+                Settings
+              </NavLink>
+            )}
             </div>
           </div>
-        </nav>
+          </nav>
 
         {/* Main Content */}
         <main className={`mx-auto ${isMobileView ? 'px-3 py-4' : 'max-w-7xl px-4 sm:px-6 lg:px-8 py-8'}`}>

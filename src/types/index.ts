@@ -150,3 +150,50 @@ export interface AuthState {
 }
 
 export type TimeFrame = 'daily' | 'weekly' | 'monthly';
+
+export interface OrderDataMapping {
+  id: string;
+  name: string;
+  description: string;
+  orderCardProperty: OrderCardProperty;
+  shopifySource: ShopifyOrderSource;
+  transformationType?: 'none' | 'date_format' | 'currency_format' | 'text_transform' | 'custom_logic';
+  transformationConfig?: {
+    dateFormat?: string;
+    currencySymbol?: string;
+    textTransform?: 'uppercase' | 'lowercase' | 'capitalize';
+    customLogic?: string;
+  };
+  fallbackValue?: string;
+  isActive: boolean;
+  priority: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface OrderCardProperty {
+  key: string;
+  label: string;
+  type: 'text' | 'date' | 'currency' | 'status' | 'badge' | 'custom';
+  required: boolean;
+  displayOrder: number;
+}
+
+export interface ShopifyOrderSource {
+  category: 'order' | 'customer' | 'line_items' | 'shipping_address' | 'billing_address' | 'tags' | 'properties';
+  field: string;
+  subField?: string;
+  arrayIndex?: number;
+  propertyName?: string;
+}
+
+export interface ShopifyOrderField {
+  id: string;
+  category: string;
+  field: string;
+  label: string;
+  type: 'string' | 'number' | 'boolean' | 'date' | 'array' | 'object';
+  description: string;
+  example?: string;
+  subFields?: ShopifyOrderField[];
+}

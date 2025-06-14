@@ -117,12 +117,12 @@ export function Settings({ currentUser }: SettingsProps) {
 
       {/* User Management Section */}
       {isAdmin && (
-        <Card>
-          <CardHeader>
+      <Card>
+        <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-gray-500" />
               User Account Management
-            </CardTitle>
+          </CardTitle>
             <p className="text-sm text-gray-600 mt-1">
               Manage user accounts, registration, and permissions
             </p>
@@ -147,8 +147,8 @@ export function Settings({ currentUser }: SettingsProps) {
           </CardHeader>
           <CardContent>
             <StoreManagement />
-          </CardContent>
-        </Card>
+        </CardContent>
+      </Card>
       )}
 
       {/* Multi-Store API Configuration Section */}
@@ -174,72 +174,72 @@ export function Settings({ currentUser }: SettingsProps) {
 
       {/* Legacy Single-Store Webhook Management Section */}
       {!isAdmin && (
-        <Card>
-          <CardHeader>
+      <Card>
+        <CardHeader>
             <CardTitle className={`flex items-center gap-2 ${isMobileView ? 'text-lg' : ''}`}>
               <Webhook className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
               Single-Store Webhook Management
-            </CardTitle>
-          </CardHeader>
+          </CardTitle>
+        </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+          <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
                   <strong>Note:</strong> This is the legacy single-store webhook management. 
                   Admin users have access to advanced multi-store webhook management.
                 </p>
-              </div>
-
+            </div>
+            
               <div className="flex gap-2">
-                <Button
-                  onClick={handleAutoRegisterWebhooks}
+              <Button
+                onClick={handleAutoRegisterWebhooks}
                   disabled={isWebhookLoading}
                   className="flex-1"
-                >
-                  {isWebhookLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Webhook className="mr-2 h-4 w-4" />
-                  )}
-                  Auto-Register Webhooks
-                </Button>
+              >
+                {isWebhookLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Webhook className="mr-2 h-4 w-4" />
+                )}
+                Auto-Register Webhooks
+              </Button>
 
-                <Button
-                  onClick={handleCleanupWebhooks}
+              <Button
+                onClick={handleCleanupWebhooks}
                   disabled={isWebhookLoading}
-                  variant="outline"
+                variant="outline"
                   className="flex-1"
-                >
-                  {isWebhookLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                  )}
-                  Cleanup Old Webhooks
-                </Button>
+              >
+                {isWebhookLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                )}
+                Cleanup Old Webhooks
+              </Button>
 
-                <Button
-                  onClick={handleTestWebhookConnectivity}
-                  disabled={isWebhookLoading}
-                  variant="outline"
-                >
-                  {isWebhookLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                  )}
+              <Button
+                onClick={handleTestWebhookConnectivity}
+                disabled={isWebhookLoading}
+                variant="outline"
+              >
+                {isWebhookLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                )}
                   Test Connectivity
-                </Button>
-              </div>
+              </Button>
+            </div>
 
-              {webhookStatus && (
+            {webhookStatus && (
                 <div className="mt-4 space-y-2">
                   {webhookStatus.registered.length > 0 && (
                     <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                       <p className="text-sm text-green-800 font-medium">
                         ✅ Registered {webhookStatus.registered.length} webhooks
                       </p>
-                    </div>
+                  </div>
                   )}
                   
                   {webhookStatus.existing.length > 0 && (
@@ -249,19 +249,19 @@ export function Settings({ currentUser }: SettingsProps) {
                       </p>
                     </div>
                   )}
-                  
-                  {webhookStatus.errors.length > 0 && (
+                
+                {webhookStatus.errors.length > 0 && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                       <p className="text-sm text-red-800 font-medium">
                         ❌ {webhookStatus.errors.length} errors occurred
                       </p>
                       <ul className="mt-2 text-xs text-red-700">
-                        {webhookStatus.errors.map((error, index) => (
-                          <li key={index}>• {error}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                      {webhookStatus.errors.map((error, index) => (
+                        <li key={index}>• {error}</li>
+                      ))}
+                    </ul>
+              </div>
+            )}
                 </div>
               )}
             </div>
@@ -278,7 +278,7 @@ export function Settings({ currentUser }: SettingsProps) {
           <CollapsibleTrigger asChild>
             <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
               <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
                   <Database className="h-5 w-5 text-gray-500" />
                   Data Persistence Management
                 </div>
@@ -292,9 +292,9 @@ export function Settings({ currentUser }: SettingsProps) {
           <CollapsibleContent>
             <CardContent>
               <DataPersistenceManager />
-            </CardContent>
+        </CardContent>
           </CollapsibleContent>
-        </Card>
+      </Card>
       </Collapsible>
     </div>
   );

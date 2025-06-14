@@ -482,7 +482,7 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: '2.0.0-alpha.34',
+    version: '2.0.0-alpha.36',
     environment: process.env.NODE_ENV || 'development',
     uptime: process.uptime()
   });
@@ -492,7 +492,7 @@ app.get('/health', (req, res) => {
 app.get('/healthz', (req, res) => {
   res.json({ 
     status: 'ok', 
-    version: '2.0.0-alpha.34' 
+          version: '2.0.0-alpha.36' 
   });
 });
 
@@ -796,7 +796,7 @@ app.use((req, res) => {
   
   // Serve React app for all other routes
   try {
-    res.sendFile(join(__dirname, 'dist', 'index.html'));
+  res.sendFile(join(__dirname, 'dist', 'index.html'));
   } catch (error) {
     console.error('❌ Error serving index.html:', error);
     res.status(500).json({ 
@@ -825,4 +825,4 @@ app.listen(PORT, '0.0.0.0', () => {
 }).on('error', (error) => {
   console.error('❌ Server failed to start:', error);
   process.exit(1);
-});
+}); 
