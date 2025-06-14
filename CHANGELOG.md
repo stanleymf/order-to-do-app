@@ -5,6 +5,45 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.27] - 2025-01-27
+
+### 🔄 Enhanced Order Sync System
+- **Multi-Store Order Sync**: Implemented comprehensive order syncing for individual stores
+  - **Windflower Florist 2 Support**: Added dedicated sync button for "Windflower Florist 2" store
+  - **Automatic Store Detection**: Smart detection of stores by name and domain (`windflowerflorist.myshopify.com`)
+  - **Auto Store Creation**: Automatically adds stores to the system if they have valid API configurations
+  - **Enhanced Error Handling**: Detailed error messages with specific guidance for common issues
+
+### 🛠️ Technical Improvements
+- **Multi-Store Webhook Integration**: Full integration with multi-store webhook configuration system
+  - **Store Configuration Validation**: Checks for enabled status, access tokens, and shop domains
+  - **Fallback Mechanisms**: Graceful handling when stores are missing from either store list or configuration
+  - **Real-time Feedback**: Toast notifications with detailed sync results and error guidance
+
+### 🎯 User Experience Enhancements
+- **Manual Sync Controls**: Added prominent sync buttons in Orders Dashboard
+  - **Store-Specific Sync**: "Sync Windflower Florist 2 Orders" button for targeted syncing
+  - **All-Store Sync**: "Sync All Configured Stores" button for comprehensive updates
+  - **Loading States**: Visual feedback during sync operations with spinning icons
+  - **Sync Status Display**: Shows last sync date and helpful instructions
+
+### 🔧 API Integration Features
+- **Shopify API Error Handling**: Enhanced error detection and user-friendly messages
+  - **Authentication Errors (401)**: Clear guidance to check access tokens
+  - **Permission Errors (403)**: Instructions about required Shopify app permissions
+  - **Rate Limiting (429)**: Helpful retry guidance for API limits
+  - **Store Not Found (404)**: Domain verification suggestions
+
+### 📱 Mobile Optimization
+- **Responsive Sync Controls**: Mobile-friendly sync button layout
+- **Touch-Friendly Interface**: Optimized button sizes and spacing for mobile devices
+- **Consistent Mobile Experience**: Sync functionality works seamlessly across all device sizes
+
+### 🔄 Migration & Compatibility
+- **Backward Compatibility**: Works with existing single-store configurations
+- **Progressive Enhancement**: Gracefully upgrades to multi-store functionality
+- **Configuration Preservation**: Maintains existing store and API configurations
+
 ## [2.0.0-alpha.26] - 2025-01-27
 
 ### 🚀 Major Feature: URL Routing Implementation

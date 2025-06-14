@@ -20,6 +20,7 @@ import {
   assignOrder,
   syncOrdersFromShopifyToStorage
 } from '../utils/storage';
+import { MultiStoreWebhookManager } from '../utils/multiStoreWebhooks';
 import { toast } from 'sonner';
 
 interface OrdersViewProps {
@@ -43,6 +44,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const [isBatchMode, setIsBatchMode] = useState<boolean>(false);
   const [isLoadingOrders, setIsLoadingOrders] = useState<boolean>(false);
+  const [multiStoreWebhookManager] = useState(() => new MultiStoreWebhookManager());
   
   // Get mobile view context
   const { isMobileView } = useMobileView();
@@ -61,41 +63,126 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
     return () => clearInterval(interval);
   }, [selectedDate]);
 
+  // New multi-store order sync function
+  const fetchOrdersForSpecificStore = async (storeId: string, storeName: string) => {
+    setIsLoadingOrders(true);
+    try {
+      // Get store configuration from multi-store webhook manager
+      const storeConfig = multiStoreWebhookManager.getStoreConfig(storeId);
+      
+      if (!storeConfig) {
+        toast.error(`Store configuration not found`, {
+          description: `No API configuration found for ${storeName}. Please configure it in Settings → Store API & Webhook Configuration.`
+        });
+        return;
+      }
+
+      if (!storeConfig.enabled) {
+        toast.error(`Store API disabled`, {
+          description: `API configuration is disabled for ${storeName}. Please enable it in Settings.`
+        });
+        return;
+      }
+
+      if (!storeConfig.accessToken || !storeConfig.shopDomain) {
+        toast.error(`Incomplete store configuration`, {
+          description: `Missing access token or shop domain for ${storeName}. Please check Settings → Store API & Webhook Configuration.`
+        });
+        return;
+      }
+
+      // Find the store object
+      const stores = getStores();
+      const store = stores.find(s => s.id === storeId || s.name === storeName);
+      
+      if (!store) {
+        toast.error(`Store not found`, {
+          description: `Could not find store "${storeName}" in the system. Please add it in Settings → Store Management.`
+        });
+        return;
+      }
+
+      console.log(`🔄 Syncing orders for ${storeName} (${storeConfig.shopDomain})`);
+      
+      // Sync orders using the store configuration
+      const syncedOrders = await syncOrdersFromShopifyToStorage(
+        store, 
+        storeConfig.accessToken, 
+        selectedDate,
+        storeConfig.apiVersion
+      );
+
+      if (syncedOrders.length > 0) {
+        toast.success(`Successfully synced ${syncedOrders.length} orders from ${storeName}`, {
+          description: `Orders for ${selectedDate} have been updated`
+        });
+        console.log(`✅ Synced ${syncedOrders.length} orders from ${storeName}:`, syncedOrders);
+      } else {
+        toast.info(`No new orders found for ${storeName}`, {
+          description: `No orders found for ${selectedDate}. Try a different date or check if there are orders in your Shopify store.`
+        });
+      }
+      
+      handleOrderUpdate();
+    } catch (error) {
+      console.error(`Error syncing orders from ${storeName}:`, error);
+      let errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Provide more specific error guidance
+      if (errorMessage.includes('401')) {
+        errorMessage = `Authentication failed for ${storeName}. Please check your access token in Store API & Webhook Configuration.`;
+      } else if (errorMessage.includes('403')) {
+        errorMessage = `Permission denied for ${storeName}. Make sure your app has the required permissions (read_orders).`;
+      } else if (errorMessage.includes('404')) {
+        errorMessage = `Store not found: ${storeName}. Please verify the shop domain is correct.`;
+      } else if (errorMessage.includes('429')) {
+        errorMessage = `Rate limit exceeded for ${storeName}. Please wait a moment and try again.`;
+      }
+      
+      toast.error(`Failed to sync orders from ${storeName}`, {
+        description: errorMessage
+      });
+    } finally {
+      setIsLoadingOrders(false);
+    }
+  };
+
+  // Enhanced multi-store sync function
   const fetchOrdersForAllStores = async () => {
     setIsLoadingOrders(true);
     try {
+      const enabledStoreConfigs = multiStoreWebhookManager.getEnabledStoreConfigs();
       const allStores = getStores();
       let allSyncedOrders: Order[] = [];
 
-      // Load API configuration from settings
-      const savedConfig = localStorage.getItem('shopify-mapping-config');
-      if (!savedConfig) {
-        toast.error('Shopify API not configured', {
-          description: 'Please configure your Shopify API settings in the Settings page'
+      if (enabledStoreConfigs.length === 0) {
+        toast.error('No stores configured', {
+          description: 'Please configure at least one store in Settings → Store API & Webhook Configuration'
         });
         return;
       }
 
-      const config = JSON.parse(savedConfig);
-      if (!config.api?.accessToken || !config.api?.shopDomain) {
-        toast.error('Shopify API not configured', {
-          description: 'Please configure your access token and shop domain in Settings'
-        });
-        return;
-      }
-
-      for (const store of allStores) {
+      for (const storeConfig of enabledStoreConfigs) {
         try {
+          // Find the corresponding store object
+          const store = allStores.find(s => s.id === storeConfig.storeId);
+          if (!store) {
+            console.warn(`Store not found for config: ${storeConfig.storeName}`);
+            continue;
+          }
+
           const syncedOrders = await syncOrdersFromShopifyToStorage(
             store, 
-            config.api.accessToken, 
+            storeConfig.accessToken, 
             selectedDate,
-            config.api.apiVersion
+            storeConfig.apiVersion
           );
           allSyncedOrders = [...allSyncedOrders, ...syncedOrders];
+          
+          console.log(`✅ Synced ${syncedOrders.length} orders from ${storeConfig.storeName}`);
         } catch (error) {
-          console.error(`Error syncing orders from ${store.name}:`, error);
-          toast.error(`Failed to sync ${store.name}`, {
+          console.error(`Error syncing orders from ${storeConfig.storeName}:`, error);
+          toast.error(`Failed to sync ${storeConfig.storeName}`, {
             description: error instanceof Error ? error.message : 'Unknown error'
           });
           // Continue with other stores even if one fails
@@ -103,19 +190,68 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
       }
 
       if (allSyncedOrders.length > 0) {
-        toast.success(`Auto-synced ${allSyncedOrders.length} orders from all stores`, {
-          description: `Orders updated automatically`
+        toast.success(`Successfully synced ${allSyncedOrders.length} orders from ${enabledStoreConfigs.length} stores`, {
+          description: `Orders for ${selectedDate} have been updated`
+        });
+      } else {
+        toast.info(`No new orders found`, {
+          description: `No orders found for ${selectedDate} across all configured stores`
         });
       }
       
       handleOrderUpdate();
     } catch (error) {
-      console.error('Error auto-syncing orders:', error);
-      toast.error('Error auto-syncing orders', {
+      console.error('Error syncing orders from all stores:', error);
+      toast.error('Error syncing orders', {
         description: error instanceof Error ? error.message : 'Unknown error'
       });
     } finally {
       setIsLoadingOrders(false);
+    }
+  };
+
+  // Function to manually sync Windflower Florist 2
+  const syncWindflowerFlorist2 = () => {
+    // Try to find the store by name first
+    const stores = getStores();
+    let windflowerStore = stores.find(store => 
+      store.name.toLowerCase().includes('windflower florist 2') ||
+      store.domain === 'windflowerflorist.myshopify.com'
+    );
+    
+    // If store doesn't exist, check if we have a configuration for it
+    if (!windflowerStore) {
+      const storeConfigs = multiStoreWebhookManager.getAllStoreConfigs();
+      const windflowerConfig = storeConfigs.find(config => 
+        config.storeName.toLowerCase().includes('windflower florist 2') ||
+        config.shopDomain === 'windflowerflorist.myshopify.com'
+      );
+      
+      if (windflowerConfig) {
+        // Create the store object if we have a configuration
+        windflowerStore = {
+          id: windflowerConfig.storeId,
+          name: windflowerConfig.storeName,
+          domain: windflowerConfig.shopDomain,
+          color: '#10B981' // Default green color for Windflower Florist
+        };
+        
+        // Add the store to the stores list
+        const updatedStores = [...stores, windflowerStore];
+        localStorage.setItem('florist-dashboard-stores', JSON.stringify(updatedStores));
+        
+        toast.info(`Added ${windflowerStore.name} to store list`, {
+          description: 'Store has been automatically added and is ready for syncing'
+        });
+      }
+    }
+    
+    if (windflowerStore) {
+      fetchOrdersForSpecificStore(windflowerStore.id, windflowerStore.name);
+    } else {
+      toast.error('Windflower Florist 2 not found', {
+        description: 'Please ensure the store is configured in Settings → Store API & Webhook Configuration with the domain "windflowerflorist.myshopify.com"'
+      });
     }
   };
 
@@ -406,6 +542,41 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
             <p className={`text-gray-600 ${isMobileView ? 'text-sm' : 'text-base'}`}>
               Manage daily flower orders across all stores
             </p>
+          </div>
+
+          {/* Manual Sync Controls */}
+          <div className={`flex ${isMobileView ? 'flex-col gap-2' : 'items-center gap-4'}`}>
+            <Button
+              onClick={syncWindflowerFlorist2}
+              disabled={isLoadingOrders}
+              variant="outline"
+              className={`${isMobileView ? 'w-full h-9 text-sm' : 'h-10'} border-green-200 hover:bg-green-50 hover:border-green-300`}
+            >
+              {isLoadingOrders ? (
+                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              Sync Windflower Florist 2 Orders
+            </Button>
+            
+            <Button
+              onClick={fetchOrdersForAllStores}
+              disabled={isLoadingOrders}
+              variant="outline"
+              className={`${isMobileView ? 'w-full h-9 text-sm' : 'h-10'} border-blue-200 hover:bg-blue-50 hover:border-blue-300`}
+            >
+              {isLoadingOrders ? (
+                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              Sync All Configured Stores
+            </Button>
+            
+            <div className={`text-sm text-gray-500 ${isMobileView ? 'text-center' : ''}`}>
+              Last synced: {selectedDate} • Click to fetch latest orders from Shopify
+            </div>
           </div>
 
           {/* Filters Section */}
