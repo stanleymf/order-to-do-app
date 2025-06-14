@@ -31,11 +31,11 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
     const today = new Date();
     return today.toISOString().split('T')[0];
   });
-  const [calendarDate, setCalendarDate] = useState<Date | undefined>(new Date());
-  const [selectedStore] = useState<string>('all');
+  const [calendarDate, setCalendarDate] = useState<Date>(new Date());
+  const [selectedStore, setSelectedStore] = useState<string>('all');
   const [selectedDifficultyLabel] = useState<string>('all');
   const [selectedProductTypeLabel] = useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all'); // New status filter
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [orders, setOrders] = useState<Order[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
@@ -318,39 +318,44 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
 
   const unfilteredOrders = getUnfilteredOrders();
 
-  // Filter orders based on selected criteria
+  // Filter orders based on date, search query, and selected status
   const filteredOrders = useCallback(() => {
-    let filtered = orders;
-
-    // Filter by store
-    if (selectedStore !== 'all') {
-      filtered = filtered.filter(order => order.storeId === selectedStore);
-    }
-
-    // Filter by status
-    if (selectedStatus !== 'all') {
-      filtered = filtered.filter(order => order.status === selectedStatus);
-    }
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(order => 
-        order.id.toLowerCase().includes(query) ||
-        order.productName.toLowerCase().includes(query) ||
-        (order.productVariant && order.productVariant.toLowerCase().includes(query)) ||
-        (order.customerName && order.customerName.toLowerCase().includes(query)) ||
-        (order.customerEmail && order.customerEmail.toLowerCase().includes(query)) ||
-        (order.customerPhone && order.customerPhone.toLowerCase().includes(query)) ||
-        (order.remarks && order.remarks.toLowerCase().includes(query)) ||
-        (order.productCustomizations && order.productCustomizations.toLowerCase().includes(query)) ||
-        order.timeslot.toLowerCase().includes(query) ||
-        (order.deliveryType && order.deliveryType.toLowerCase().includes(query))
-      );
-    }
-
-    return filtered;
-  }, [orders, selectedStore, selectedStatus, searchQuery]);
+    const dateStr = calendarDate?.toISOString().split('T')[0];
+    return orders.filter(order => {
+      // Date filter
+      const orderDate = order.date;
+      if (orderDate !== dateStr) return false;
+      
+      // Store filter - NEW: Filter by selected store
+      if (selectedStore !== 'all' && order.storeId !== selectedStore) return false;
+      
+      // Status filter
+      if (selectedStatus !== 'all' && order.status !== selectedStatus) return false;
+      
+      // Search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        const searchableFields = [
+          order.id,
+          order.productName,
+          order.productVariant,
+          order.customerName,
+          order.customerEmail,
+          order.customerPhone,
+          order.remarks,
+          order.productCustomizations,
+          order.timeslot,
+          order.deliveryType
+        ].filter(field => field !== undefined && field !== null);
+        
+        return searchableFields.some(field => 
+          field.toString().toLowerCase().includes(query)
+        );
+      }
+      
+      return true;
+    });
+  }, [orders, calendarDate, selectedStatus, searchQuery, selectedStore]);
 
   // Group filtered orders by store
   const ordersByStore = useCallback(() => {
@@ -445,8 +450,36 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
                 </Popover>
               </div>
 
-              {/* Store Selector - Removed since store selection is now handled at Dashboard level */}
-              
+              {/* Store Selector */}
+              <div className={`${isMobileView ? 'w-full relative z-20' : ''}`}>
+                <Select value={selectedStore} onValueChange={setSelectedStore}>
+                  <SelectTrigger className={`${isMobileView ? 'w-full h-9 text-sm' : 'w-[200px]'}`}>
+                    <SelectValue placeholder="Filter by store" />
+                  </SelectTrigger>
+                  <SelectContent 
+                    className={`${isMobileView ? 'w-[calc(100vw-2rem)]' : ''}`}
+                    position={isMobileView ? "popper" : "item-aligned"}
+                    side="bottom"
+                    align="start"
+                    alignOffset={0}
+                    sideOffset={5}
+                  >
+                    <SelectItem value="all">All Stores</SelectItem>
+                    {stores.map(store => (
+                      <SelectItem key={store.id} value={store.id}>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-2.5 h-2.5 rounded-full" 
+                            style={{ backgroundColor: store.color }}
+                          />
+                          {store.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Status Filter */}
               <div className={`${isMobileView ? 'w-full relative z-10' : ''}`}>
                 <Select value={selectedStatus} onValueChange={setSelectedStatus}>
@@ -736,7 +769,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
               <CardContent className="text-center py-12">
                 <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
-                <p className="text-gray-500">No orders scheduled for {selectedDate}</p>
+                <p className="text-gray-500">No orders scheduled for {format(calendarDate || new Date(), 'PPP')}</p>
               </CardContent>
             </Card>
           )}
@@ -747,13 +780,20 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
           <CardHeader className={`${isMobileView ? 'pb-2 px-3' : 'pb-4'}`}>
             <div className={`flex ${isMobileView ? 'flex-col gap-2' : 'items-center justify-between'}`}>
               <div className={`flex ${isMobileView ? 'items-center gap-2' : 'items-center gap-4'}`}>
-                <div 
-                  className={`${isMobileView ? 'w-3 h-3' : 'w-4 h-4'} rounded-full`} 
-                  style={{ backgroundColor: selectedStore === 'all' ? '#gray' : '#gray' }}
-                />
-                <CardTitle className={`${isMobileView ? 'text-base' : ''}`}>
-                  {selectedStore === 'all' ? 'Unknown Store' : 'Unknown Store'}
-                </CardTitle>
+                {(() => {
+                  const currentSelectedStore = stores.find(s => s.id === selectedStore);
+                  return (
+                    <>
+                      <div 
+                        className={`${isMobileView ? 'w-3 h-3' : 'w-4 h-4'} rounded-full`} 
+                        style={{ backgroundColor: currentSelectedStore?.color || '#gray' }}
+                      />
+                      <CardTitle className={`${isMobileView ? 'text-base' : ''}`}>
+                        {currentSelectedStore?.name || 'Unknown Store'}
+                      </CardTitle>
+                    </>
+                  );
+                })()}
                 <Badge variant="secondary" className={`${isMobileView ? 'text-xs' : ''}`}>
                   {filteredOrders().length} orders
                 </Badge>
@@ -793,7 +833,7 @@ export function OrdersView({ currentUser }: OrdersViewProps) {
               </div>
             ) : (
               <div className={`text-center text-gray-500 ${isMobileView ? 'py-6 text-sm' : 'py-8'}`}>
-                {searchQuery ? `No orders matching "${searchQuery}" for this store on ${selectedDate}` : `No orders for this store on ${selectedDate}`}
+                {searchQuery ? `No orders matching "${searchQuery}" for this store on ${format(calendarDate || new Date(), 'PPP')}` : `No orders for this store on ${format(calendarDate || new Date(), 'PPP')}`}
               </div>
             )}
           </CardContent>

@@ -6,7 +6,6 @@ import { OrdersView } from './OrdersView';
 import { Analytics } from './Analytics';
 import { ProductManagement } from './ProductManagement';
 import { Settings as SettingsComponent } from './Settings';
-import StoreSelector from './StoreSelector';
 import StoreIndicator from './StoreIndicator';
 import type { User } from '../types';
 import { logout } from '../utils/storage';
@@ -71,7 +70,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               {/* Store Selector - only show on desktop */}
               {!isMobileView && (
                 <div className="flex items-center">
-                  <StoreSelector />
+                  {/* Store selector moved to OrdersView */}
                 </div>
               )}
               

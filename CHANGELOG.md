@@ -5,6 +5,41 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.5] - 2025-06-13
+
+### 🚀 **Enhanced Store Selection & Filtering UX**
+
+#### **Improved User Interface**
+- **Store Selector Repositioning**: Moved store dropdown from header to beside date picker
+- **Logical Filter Grouping**: All filtering controls now grouped together (date, store, status)
+- **Better Visual Hierarchy**: Store selection positioned with other filter controls for intuitive workflow
+
+#### **Enhanced Filtering Functionality**
+- **All Stores View**: New "All Stores" option shows orders from all stores simultaneously
+- **Store-Specific Filtering**: Select individual stores to view only their orders
+- **Multi-Store Display**: When "All Stores" selected, orders grouped by store with individual stats
+- **Single Store Display**: When specific store selected, clean single-store view with store branding
+
+#### **Improved Multi-Store Experience**
+- **Store Visual Indicators**: Color-coded store indicators in dropdowns and displays
+- **Per-Store Statistics**: Individual store stats (pending, assigned, completed) in multi-store view
+- **Store Branding**: Store colors and names prominently displayed
+- **Unified Interface**: Seamless switching between all stores and individual store views
+
+#### **Technical Improvements**
+- **Enhanced Filtering Logic**: Optimized order filtering to support both single and multi-store views
+- **State Management**: Proper store selection state management independent of global store context
+- **Performance**: Efficient filtering and grouping for large order sets
+- **Responsive Design**: Mobile-optimized store selector and multi-store display
+
+#### **User Experience Benefits**
+- **Intuitive Workflow**: Filter controls logically grouped beside date picker
+- **Flexible Viewing**: Easy switching between all stores and individual store focus
+- **Better Organization**: Clear visual separation of orders by store
+- **Consistent Design**: Store selector styling matches other filter controls
+
+---
+
 ## [2.0.0-alpha.4] - 2025-06-13
 
 ### 🚀 **Streamlined Configuration - Eliminated Redundancy**
