@@ -2,6 +2,90 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0-alpha.39] - 2024-12-19
+
+### 🎯 **MAJOR RESTRUCTURE: Store-Specific Order Data Mapping System**
+
+**RESTRUCTURED**: Complete overhaul of Order Data Mapping component to focus exclusively on store-specific order mapping with comprehensive Shopify field integration.
+
+#### ✨ **Key Transformation**
+- **Simplified Focus**: Removed complex advanced field mapping, focused purely on store-specific order mapping
+- **Zapier-Style Interface**: Implemented **Shopify Field → Formatting Method → Order Card Component** workflow
+- **Fixed Order Card Components**: 15 predefined Order Card components that require Shopify order data
+- **Comprehensive Shopify Fields**: 30+ available Shopify fields organized by categories
+- **Advanced Formatting Methods**: 11 powerful data transformation methods
+
+#### 🏗️ **New Architecture**
+
+##### **Fixed Order Card Components (15 Components)**
+- **Currently Shown**: Order ID, Product Name, Product Variant, Timeslot, Delivery Type, Special Instructions, Product Customizations
+- **Available**: Customer Name, Customer Email, Customer Phone, Delivery Date, Total Price, Currency, Fulfillment Status, Financial Status
+
+##### **Shopify Fields (30+ Fields)**
+- **Order Info**: ID, name, tags, prices, status, notes, created/updated dates
+- **Customer Info**: Name, email, phone details
+- **Line Items**: Product titles, variants, quantities, prices, SKUs
+- **Shipping Address**: Complete address information
+- **Line Item Properties**: Custom delivery dates, times, instructions, card messages
+
+##### **Formatting Methods (11 Methods)**
+- **Direct Copy**: Use field value as-is
+- **Extract with Regex**: Extract patterns using regex (e.g., `/2024-\\d{2}-\\d{2}/`)
+- **Split & Extract**: Split by delimiter and extract specific part
+- **Date Format**: Format dates (MM/DD/YYYY, DD/MM/YYYY, etc.)
+- **Currency Format**: Add currency symbols ($, €, £)
+- **Text Transform**: Change case (uppercase, lowercase, capitalize, title)
+- **Concatenate Fields**: Combine multiple fields with expressions
+- **Conditional Logic**: If/then logic based on conditions
+- **Mathematical Operations**: Perform calculations
+- **Lookup Table**: Map values using JSON lookup tables
+- **Filter Array Items**: Filter and extract from arrays
+
+#### 🎨 **Enhanced User Interface**
+- **Visual Flow Design**: Clear **Shopify Field → Formatting → Order Card Component** visualization
+- **Store Selection**: Dropdown with color-coded store indicators
+- **Configuration Management**: Copy between stores, reset, save functionality
+- **Priority Management**: Numbered priority system with active/inactive toggles
+- **Dynamic Configuration**: Formatting methods show relevant configuration fields
+- **Reference Guide**: Complete Order Card components reference with current status
+
+#### 🔧 **Technical Implementation**
+- **TypeScript Interfaces**: `StoreFieldMapping`, `StoreOrderMappingConfig`
+- **Local Storage**: Separate storage key `store-order-mapping-configs`
+- **State Management**: Comprehensive React state management for configurations
+- **Error Handling**: Robust error handling with toast notifications
+- **Mobile Responsive**: Optimized for all screen sizes
+
+#### 📊 **Configuration Features**
+- **Per-Store Configurations**: Each store maintains individual mapping rules
+- **Fallback Values**: Optional fallback values when mapping fails
+- **Active/Inactive Mappings**: Toggle mappings on/off without deletion
+- **Configuration Copying**: Copy successful configurations between stores
+- **Bulk Operations**: Reset all mappings or save all changes at once
+
+#### 🎯 **Business Impact**
+- **Simplified Workflow**: Focused approach eliminates complexity
+- **Store-Specific Accuracy**: Each store can have tailored order display rules
+- **Reduced User Confusion**: Clear mapping ensures correct information display
+- **Scalable Solution**: Easy to configure new stores with proven mapping patterns
+- **Maintenance Friendly**: Simple interface reduces configuration errors
+
+#### 🚀 **Example Mapping Flows**
+```
+tags → Extract Regex: /2024-\d{2}-\d{2}/ → Delivery Date
+customer.first_name + " " + customer.last_name → Concatenate → Customer Name
+tags contains "express" ? "Express" : "Standard" → Conditional → Delivery Type
+line_items[0].properties[special_instructions] → Direct Copy → Special Instructions
+```
+
+#### 🔄 **Migration from Previous Version**
+- **Removed**: Complex advanced field mapping interface
+- **Simplified**: Single-purpose store-specific mapping focus
+- **Enhanced**: More comprehensive Shopify field access
+- **Improved**: Better user experience with visual flow design
+
+---
+
 ## [2.0.0-alpha.38] - 2024-12-19
 
 ### 🎯 **MAJOR ENHANCEMENT: Unified Order Data Mapping System**
