@@ -5,6 +5,53 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.6] - 2025-06-13
+
+### 🚀 **Proper Multi-Store Architecture - Store Management Foundation**
+
+#### **New Features**
+- **Store Management Interface**: Complete store creation and management system
+  - **Create Stores**: Add new stores with name, domain, and color
+  - **Edit Stores**: Modify existing store details
+  - **Delete Stores**: Remove stores and associated data
+  - **Visual Store Cards**: Clean UI with store color indicators
+  - **Domain Validation**: Proper domain format validation
+  - **Shopify Admin Links**: Direct links to store admin panels
+
+#### **Architectural Improvements**
+- **Two-Phase Configuration**: Proper separation of concerns
+  - **Phase 1**: Store Management (create/edit stores)
+  - **Phase 2**: API Configuration (configure Shopify integration)
+- **Logical Workflow**: Users now create stores before configuring API integration
+- **Better UX**: Clear separation between store management and technical configuration
+- **Scalable Design**: Easy to add new stores without hardcoded limitations
+
+#### **Enhanced Settings Organization**
+- **Store Management Section**: Dedicated interface for store CRUD operations
+- **API Configuration Section**: Focused on technical Shopify integration
+- **Clear User Guidance**: Proper onboarding flow for multi-store setup
+- **Persistent Storage**: Stores saved to localStorage for persistence
+
+#### **UI/UX Improvements**
+- **Color-Coded Stores**: Visual distinction with customizable store colors
+- **Professional Dialogs**: Clean add/edit interfaces with proper validation
+- **Responsive Design**: Works on desktop and mobile devices
+- **Loading States**: Proper feedback during operations
+
+#### **Technical Enhancements**
+- **Store Type Safety**: Full TypeScript support for store operations
+- **Validation System**: Comprehensive form validation and error handling
+- **Storage Integration**: Seamless integration with existing storage system
+- **Icon System**: Consistent iconography throughout the interface
+
+#### **Developer Experience**
+- **Modular Components**: Clean separation of Store Management functionality
+- **Reusable Patterns**: Consistent patterns for future feature additions
+- **Type Safety**: Full TypeScript coverage for all store operations
+- **Error Handling**: Comprehensive error states and user feedback
+
+---
+
 ## [2.0.0-alpha.5] - 2025-06-13
 
 ### 🚀 **Enhanced Store Selection & Filtering UX**

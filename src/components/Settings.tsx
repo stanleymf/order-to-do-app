@@ -6,12 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { Settings as SettingsIcon, MapPin, Clock, Package, User, FileText, Tag, Save, RefreshCw, Calendar, Webhook, CheckCircle, Loader2 } from 'lucide-react';
+import { Settings as SettingsIcon, MapPin, Clock, Package, User, FileText, Tag, Save, RefreshCw, Calendar, Webhook, CheckCircle, Loader2, Store } from 'lucide-react';
 import { toast } from 'sonner';
 import { type User as UserType } from '../types';
 import { useMobileView } from './Dashboard';
 import { webhookManager } from '../utils/shopifyWebhooks';
 import { MultiStoreWebhookManager } from './MultiStoreWebhookManager';
+import { StoreManagement } from './StoreManagement';
 
 interface ShopifyAPIConfig {
   accessToken: string;
@@ -357,13 +358,31 @@ export function Settings({ currentUser }: SettingsProps) {
         </div>
       </div>
 
-      {/* Multi-Store Webhook Management Section */}
+      {/* Store Management Section */}
+      {isAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Store className="h-5 w-5 text-gray-500" />
+              Store Management
+            </CardTitle>
+            <p className="text-sm text-gray-600 mt-1">
+              Create and manage your stores before configuring API integration
+            </p>
+          </CardHeader>
+          <CardContent>
+            <StoreManagement />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Multi-Store API Configuration Section */}
       {isAdmin && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Webhook className="h-5 w-5 text-gray-500" />
-              Store & Webhook Management
+              Store API & Webhook Configuration
             </CardTitle>
             <p className="text-sm text-gray-600 mt-1">
               Configure Shopify API credentials and webhook settings for each store
