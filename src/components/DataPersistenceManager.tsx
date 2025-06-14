@@ -18,9 +18,7 @@ import { toast } from 'sonner';
 import { 
   createDataBackup, 
   restoreDataFromBackup, 
-  checkDataIntegrity,
-  getUserPreferences,
-  saveUserPreferences
+  checkDataIntegrity
 } from '../utils/storage';
 
 export function DataPersistenceManager() {

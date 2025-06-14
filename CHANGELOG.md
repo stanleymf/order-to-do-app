@@ -5,6 +5,14 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.18] - 2024-12-19
+
+### 🔧 Additional TypeScript Build Fixes
+- **Import Cleanup**: Removed unused imports from DataPersistenceManager component
+  - Fixed TypeScript errors for unused `getUserPreferences` and `saveUserPreferences` imports
+  - Cleaned up import statements to only include necessary functions
+  - Ensures successful TypeScript compilation and Railway deployment
+
 ## [2.0.0-alpha.17] - 2024-12-19
 
 ### 🔧 TypeScript Build Fix
