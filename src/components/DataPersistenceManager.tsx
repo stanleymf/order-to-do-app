@@ -160,13 +160,6 @@ export function DataPersistenceManager() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const enableAutoPersistence = () => {
-    const preferences = getUserPreferences();
-    preferences.autoPersistence = true;
-    saveUserPreferences(preferences);
-    toast.success('Auto-persistence enabled');
-  };
-
   return (
     <div className="space-y-6">
       {/* Data Integrity Status */}

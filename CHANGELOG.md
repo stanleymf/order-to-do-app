@@ -5,6 +5,13 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.17] - 2024-12-19
+
+### 🔧 TypeScript Build Fix
+- **Build Error Resolution**: Removed unused `enableAutoPersistence` function from DataPersistenceManager
+  - Fixed TypeScript error TS6133 that was preventing successful builds
+  - Cleaned up unused code to maintain code quality standards
+
 ## [2.0.0-alpha.16] - 2024-12-19
 
 ### 🔒 Enhanced Data Persistence System
