@@ -482,7 +482,7 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: '2.0.0-alpha.36',
+    version: '2.0.0-alpha.37',
     environment: process.env.NODE_ENV || 'development',
     uptime: process.uptime()
   });
@@ -492,7 +492,7 @@ app.get('/health', (req, res) => {
 app.get('/healthz', (req, res) => {
   res.json({ 
     status: 'ok', 
-          version: '2.0.0-alpha.36' 
+          version: '2.0.0-alpha.37' 
   });
 });
 
@@ -505,7 +505,7 @@ app.get('/api/status', (req, res) => {
       endpoint: '/api/webhooks/shopify',
       secretConfigured: !!process.env.SHOPIFY_WEBHOOK_SECRET
     },
-    version: '2.0.0-alpha.33'
+    version: '2.0.0-alpha.37'
   });
 });
 

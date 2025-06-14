@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { Trash2, Plus, Settings, Eye, EyeOff, ArrowUp, ArrowDown } from 'lucide-react';
-import type { OrderDataMapping, OrderCardProperty, ShopifyOrderSource, ShopifyOrderField } from '../types';
+import type { OrderDataMapping, OrderCardProperty, ShopifyOrderField } from '../types';
 
 // Define all Order Card properties that can be mapped
 const ORDER_CARD_PROPERTIES: OrderCardProperty[] = [
@@ -366,7 +366,6 @@ const SHOPIFY_ORDER_FIELDS: ShopifyOrderField[] = [
 export function OrderDataMapping() {
   const [mappings, setMappings] = useState<OrderDataMapping[]>([]);
   const [isAddingMapping, setIsAddingMapping] = useState(false);
-  const [editingMapping, setEditingMapping] = useState<OrderDataMapping | null>(null);
   const [newMapping, setNewMapping] = useState<Partial<OrderDataMapping>>({
     name: '',
     description: '',

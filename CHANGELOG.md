@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0-alpha.37] - 2024-12-19
+
+### 🐛 **Critical Bug Fix: TypeScript Compilation Errors**
+
+**FIXED**: TypeScript build errors preventing Railway deployment
+
+#### 🚨 Issues Resolved
+- **Unused Import**: Removed unused `React` import in OrderDataMapping component
+- **Unused Type**: Removed unused `ShopifyOrderSource` type import
+- **Unused Variables**: Removed unused `editingMapping` and `setEditingMapping` state variables
+- **Build Failure**: Fixed TypeScript compilation errors causing deployment failures
+
+#### 🔧 Technical Fixes
+- **OrderDataMapping.tsx**: 
+  - Changed `import React, { useState, useEffect }` to `import { useState, useEffect }`
+  - Removed `ShopifyOrderSource` from type imports (not used in component)
+  - Removed unused `editingMapping` state variables (reserved for future editing functionality)
+- **Version Updates**: Updated to v2.0.0-alpha.37 across all files
+
+#### 🚀 Deployment Status
+- **TypeScript Compilation**: ✅ All errors resolved
+- **Railway Deployment**: 🔄 Ready for successful deployment
+- **Functionality**: ✅ Order Data Mapping system fully functional
+
+---
+
 ## [2.0.0-alpha.36] - 2024-12-19
 
 ### 🎯 **Major Feature: Order Data Mapping System**
