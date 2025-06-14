@@ -7,6 +7,7 @@ interface StoreContextType {
   allStores: Store[];
   setCurrentStore: (store: Store | null) => void;
   setCurrentStoreById: (storeId: string) => void;
+  refreshStores: () => void;
   isLoading: boolean;
   error: string | null;
 }
@@ -27,17 +28,24 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load stores on component mount
-  useEffect(() => {
-    const loadStores = () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        const stores = DataService.getStores();
-        setAllStores(stores);
-        
-        // Set default store
+  // Load stores function
+  const loadStores = () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const stores = DataService.getStores();
+      setAllStores(stores);
+      
+      // Check if current store still exists
+      if (currentStore) {
+        const currentStoreExists = stores.find(store => store.id === currentStore.id);
+        if (!currentStoreExists) {
+          // Current store was deleted, fallback to first store
+          setCurrentStore(stores[0] || null);
+        }
+      } else {
+        // Set default store if none is set
         if (defaultStoreId) {
           const defaultStore = stores.find(store => store.id === defaultStoreId);
           if (defaultStore) {
@@ -50,14 +58,22 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
           // No default specified, use first store
           setCurrentStore(stores[0] || null);
         }
-      } catch (err) {
-        setError('Failed to load stores');
-        console.error('Error loading stores:', err);
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (err) {
+      setError('Failed to load stores');
+      console.error('Error loading stores:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  // Refresh stores function that can be called externally
+  const refreshStores = () => {
+    loadStores();
+  };
+
+  // Load stores on component mount
+  useEffect(() => {
     loadStores();
   }, [defaultStoreId]);
 
@@ -76,6 +92,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
     allStores,
     setCurrentStore,
     setCurrentStoreById,
+    refreshStores,
     isLoading,
     error
   };

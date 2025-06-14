@@ -21,6 +21,8 @@ import {
 import { toast } from 'sonner';
 import type { Store } from '../types';
 import { getStores, saveStores } from '../utils/storage';
+import { useStore } from '../contexts/StoreContext';
+import { multiStoreWebhookManager } from '../utils/multiStoreWebhooks';
 
 // Color options for stores
 const STORE_COLORS = [
@@ -37,6 +39,7 @@ const STORE_COLORS = [
 ];
 
 export function StoreManagement() {
+  const { refreshStores } = useStore();
   const [stores, setStores] = useState<Store[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -105,6 +108,9 @@ export function StoreManagement() {
     setStores(updatedStores);
     saveStores(updatedStores);
     
+    // Refresh the global store context
+    refreshStores();
+    
     toast.success(`Store "${newStore.name}" created successfully`);
     resetForm();
     setIsAddDialogOpen(false);
@@ -137,19 +143,38 @@ export function StoreManagement() {
     setStores(updatedStores);
     saveStores(updatedStores);
     
+    // Refresh the global store context
+    refreshStores();
+    
     toast.success(`Store "${updatedStore.name}" updated successfully`);
     resetForm();
     setIsEditDialogOpen(false);
     setEditingStore(null);
   };
 
-  const handleDeleteStore = (store: Store) => {
-    if (window.confirm(`Are you sure you want to delete "${store.name}"? This will remove all associated data.`)) {
-      const updatedStores = stores.filter(s => s.id !== store.id);
-      setStores(updatedStores);
-      saveStores(updatedStores);
-      
-      toast.success(`Store "${store.name}" deleted successfully`);
+  const handleDeleteStore = async (store: Store) => {
+    if (window.confirm(`Are you sure you want to delete "${store.name}"? This will remove all associated data and webhook configurations.`)) {
+      try {
+        // Remove webhook configuration for this store if it exists
+        const webhookConfig = multiStoreWebhookManager.getStoreConfig(store.id);
+        if (webhookConfig) {
+          multiStoreWebhookManager.removeStoreConfig(store.id);
+          console.log(`🧹 Removed webhook configuration for deleted store: ${store.name}`);
+        }
+
+        // Remove the store from local state and storage
+        const updatedStores = stores.filter(s => s.id !== store.id);
+        setStores(updatedStores);
+        saveStores(updatedStores);
+        
+        // Refresh the global store context
+        refreshStores();
+        
+        toast.success(`Store "${store.name}" deleted successfully`);
+      } catch (error) {
+        console.error('Error during store deletion:', error);
+        toast.error('Failed to delete store completely. Please try again.');
+      }
     }
   };
 

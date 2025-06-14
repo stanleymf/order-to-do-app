@@ -45,15 +45,37 @@ export function MultiStoreWebhookManager() {
     syncInterval: 60 // 1 minute default
   });
 
-  // Load store configurations on component mount
+  // Load store configurations on component mount and when stores change
   useEffect(() => {
     loadStoreConfigs();
     loadWebhookStatus();
   }, []);
 
+  // Clean up orphaned webhook configurations when stores change
+  useEffect(() => {
+    cleanupOrphanedConfigs();
+    loadStoreConfigs(); // Reload after cleanup
+  }, [allStores]);
+
   const loadStoreConfigs = () => {
     const configs = multiStoreWebhookManager.getAllStoreConfigs();
     setStoreConfigs(configs);
+  };
+
+  const cleanupOrphanedConfigs = () => {
+    const configs = multiStoreWebhookManager.getAllStoreConfigs();
+    const validStoreIds = allStores.map(store => store.id);
+    
+    // Find configurations for stores that no longer exist
+    const orphanedConfigs = configs.filter(config => !validStoreIds.includes(config.storeId));
+    
+    if (orphanedConfigs.length > 0) {
+      console.log(`🧹 Cleaning up ${orphanedConfigs.length} orphaned webhook configurations`);
+      orphanedConfigs.forEach(config => {
+        multiStoreWebhookManager.removeStoreConfig(config.storeId);
+        console.log(`🧹 Removed orphaned webhook config for: ${config.storeName} (${config.storeId})`);
+      });
+    }
   };
 
   const loadWebhookStatus = async () => {

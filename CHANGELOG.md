@@ -5,6 +5,21 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.10] - 2024-12-19
+
+### 🐛 Bug Fixes
+- **Store Management**: Fixed critical bug where deleted stores were still appearing in webhook management dropdown
+  - Added `refreshStores()` function to StoreContext for real-time updates
+  - StoreManagement now refreshes global context when stores are added/updated/deleted
+  - MultiStoreWebhookManager automatically cleans up orphaned webhook configurations
+  - Improved store deletion to properly clean associated webhook configs
+  - Enhanced confirmation dialog to mention webhook configuration removal
+
+### 🔧 Technical Improvements
+- StoreContext now properly handles store updates with automatic refresh mechanism
+- Added cleanup logic for orphaned webhook configurations when stores are removed
+- Improved error handling in store deletion process
+
 ## [2.0.0-alpha.9] - 2025-06-13
 
 ### 🔧 **Enhanced Multi-Store Webhook Management**
