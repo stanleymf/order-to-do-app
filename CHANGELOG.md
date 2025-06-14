@@ -5,6 +5,33 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.21] - 2024-12-19
+
+### 🔗 Enhanced Webhook Configuration - Additional Product Webhooks
+- **New Required Webhooks**: Added Product Update and Product Deleted webhooks to required webhook topics
+  - `products/updated`: Triggers when product information is modified in Shopify
+  - `products/deleted`: Triggers when products are removed from Shopify store
+  - Both webhooks now automatically registered for all store configurations
+
+### 🎯 Webhook Management Updates
+- **Required Topics Expanded**: Updated required webhook list to include all essential product lifecycle events
+  - Orders: Create, Update, Cancel (existing)
+  - Products: Create, Update, Delete (enhanced)
+- **Optional Topics Simplified**: Moved customer webhooks to optional category
+  - Customers: Create, Update (optional for future features)
+
+### 🔧 Server-Side Webhook Handling
+- **Enhanced Webhook Processing**: Added server-side handling for new webhook topics
+  - Product deletion events now properly logged and processed
+  - Improved webhook topic recognition and routing
+  - Better error handling and logging for all webhook types
+
+### 📊 Improved Webhook Status Tracking
+- **Comprehensive Status Display**: Updated webhook status calculations to include new required topics
+  - Store configuration cards now show accurate webhook completion status
+  - Missing webhook detection includes new product webhooks
+  - Enhanced webhook details view with all supported topics
+
 ## [2.0.0-alpha.20] - 2024-12-19
 
 ### 🔧 TypeScript Build Fixes

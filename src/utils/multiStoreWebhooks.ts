@@ -5,6 +5,7 @@ export type WebhookTopic =
   | 'orders/cancelled'
   | 'products/create'
   | 'products/updated'
+  | 'products/deleted'
   | 'customers/create'
   | 'customers/updated';
 
@@ -257,15 +258,16 @@ export class MultiStoreWebhookManager {
     return [
       'orders/create',
       'orders/updated',
-      'orders/cancelled'
+      'orders/cancelled',
+      'products/create',
+      'products/updated',
+      'products/deleted'
     ];
   }
 
   // Get optional webhook topics for the app
   getOptionalWebhookTopics(): WebhookTopic[] {
     return [
-      'products/create',
-      'products/updated',
       'customers/create',
       'customers/updated'
     ];
