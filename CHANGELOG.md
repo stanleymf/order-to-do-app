@@ -5,6 +5,24 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.32] - 14/06/2025
+
+### 🕐 Comprehensive Timezone Fix
+- **Shopify API Date Handling**: Extended timezone-safe date handling to Shopify API service
+  - **Additional Fix**: Found and fixed another `toISOString().split('T')[0]` instance in order mapping
+  - **Fallback Date**: Order creation date fallback now uses local timezone instead of UTC
+  - **Consistency**: All date operations throughout the system now use local timezone
+
+### 🔧 Technical Improvements
+- **ShopifyApiService Enhancement**: Added `formatDateLocal()` method to Shopify API service
+- **Order Date Mapping**: Fixed order date assignment when no delivery date is found in tags
+- **Comprehensive Coverage**: Ensured all date formatting uses timezone-safe methods
+
+### 📋 User Impact
+- **Complete Fix**: Date picker and order syncing now both respect local timezone
+- **Consistent Dates**: Orders synced from Shopify will have correct dates in user's timezone
+- **No More Offset**: Eliminates all timezone-related date offset issues
+
 ## [2.0.0-alpha.31] - 14/06/2025
 
 ### 🕐 Timezone-Safe Date Handling Fix

@@ -510,6 +510,14 @@ export class ShopifyApiService {
     return dateString;
   }
 
+  // Format date in local timezone (YYYY-MM-DD)
+  private formatDateLocal(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   // Format timeslot based on configuration
   private formatTimeslot(timeString: string, format: string): string {
     if (format === 'HH:MM-HH:MM') {
@@ -601,7 +609,7 @@ export class ShopifyApiService {
       assignedAt: undefined,
       completedAt: undefined,
       status: 'pending',
-      date: deliveryInfo.date || new Date(shopifyOrder.created_at).toISOString().split('T')[0],
+      date: deliveryInfo.date || this.formatDateLocal(new Date(shopifyOrder.created_at)),
       storeId: '', // Will be set by the calling function
       customerEmail: config.includeCustomerEmail ? shopifyOrder.email : undefined,
       customerPhone: config.includeCustomerPhone ? shopifyOrder.phone : undefined,

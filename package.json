@@ -2,7 +2,7 @@
   "name": "order-to-do-app",
   "type": "module",
   "private": true,
-  "version": "2.0.0-alpha.31",
+  "version": "2.0.0-alpha.32",
   "scripts": {
     "check": "tsc -b",
     "dev": "vite",
