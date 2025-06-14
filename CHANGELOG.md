@@ -2,6 +2,82 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0-alpha.38] - 2024-12-19
+
+### 🎯 **MAJOR ENHANCEMENT: Unified Order Data Mapping System**
+
+**MERGED**: Store-Specific Order Mapping from Settings with Order Data Mapping page to create a comprehensive, unified mapping system with access to 30+ Shopify fields.
+
+#### ✨ **Key Improvements**
+- **Unified Interface**: Combined two separate mapping systems into one comprehensive solution
+- **Enhanced Field Access**: Expanded from limited store-specific fields to 30+ Shopify order fields
+- **Tabbed Organization**: Clean separation between Advanced Field Mapping and Store-Specific Configuration
+- **Improved User Experience**: Single location for all order data mapping needs
+- **Mobile Responsive**: Optimized layout for all device sizes
+
+#### 🔧 **Technical Implementation**
+- **Enhanced OrderDataMapping Component**: 
+  - Added tabbed interface with two main sections
+  - Integrated StoreOrderMappingConfig interface and helper functions
+  - Implemented comprehensive state management for both mapping approaches
+  - Added store selection and configuration management
+- **Settings Component Updates**:
+  - Removed redundant StoreOrderMapping component
+  - Added informational card directing users to unified mapping page
+  - Updated page description to reflect changes
+- **Separate Storage Systems**: 
+  - `order-data-mappings` for advanced field mappings
+  - `store-order-mapping-configs` for store-specific configurations
+
+#### 📊 **Advanced Field Mapping Tab**
+- **25+ Order Card Properties**: Complete mapping for all order display properties
+- **30+ Shopify Fields**: Organized by categories (order, customer, line_items, shipping_address, tags, properties)
+- **Advanced Transformations**: Date formatting, currency formatting, text transforms, custom logic
+- **Priority Management**: Drag-and-drop functionality with visual priority indicators
+- **Fallback Values**: Configurable fallback values for failed mappings
+
+#### 🏪 **Store-Specific Configuration Tab**
+- **Store Management**: Selection, configuration copying, reset/save functionality
+- **Order ID Mapping**: Configurable field selection and formatting
+- **Product Name Mapping**: Main product and variant handling
+- **Date/Timeslot Mapping**: Regex pattern matching for delivery scheduling
+- **Delivery Type Mapping**: Keyword-based delivery type detection
+- **Customer Info Formatting**: Flexible customer information display options
+- **Additional Properties**: Toggle-based order property inclusion
+
+#### 🎨 **UI/UX Enhancements**
+- **Tabbed Interface**: Clean separation of functionality with intuitive navigation
+- **Conditional Layouts**: Mobile-responsive design with optimized spacing
+- **Visual Indicators**: Status badges, priority numbers, and transformation type displays
+- **Interactive Controls**: Enhanced drag-and-drop, toggle switches, and form controls
+- **Comprehensive Documentation**: Built-in field reference and mapping guidance
+
+#### 🔒 **Security & Access Control**
+- **Admin-Only Access**: Restricted to admin users for configuration security
+- **Route Protection**: Proper authentication checks for mapping access
+- **Data Validation**: Comprehensive input validation and error handling
+
+#### 🚀 **Performance & Scalability**
+- **Optimized State Management**: Efficient handling of complex mapping configurations
+- **Local Storage Optimization**: Separate storage keys for different mapping types
+- **Scalable Architecture**: Support for multiple stores with individual configurations
+- **Type Safety**: Complete TypeScript interfaces for all mapping structures
+
+#### 🐛 **Bug Fixes**
+- **TypeScript Compilation**: Resolved all compilation errors for clean deployment
+- **Unused Imports**: Removed FileText and other unused imports
+- **Function Cleanup**: Removed unused updateExcludeProperties and updateRemarksKeywords functions
+- **Build Process**: Ensured successful `npm run check` execution
+
+#### 📈 **Impact**
+- **Unified Experience**: Single comprehensive interface for all order mapping needs
+- **Enhanced Flexibility**: Access to significantly more Shopify fields for mapping
+- **Improved Efficiency**: Streamlined workflow for order data configuration
+- **Better Organization**: Clear separation of advanced and store-specific mapping approaches
+- **Future-Proof Architecture**: Scalable foundation for additional mapping features
+
+---
+
 ## [2.0.0-alpha.37] - 2024-12-19
 
 ### 🐛 **Critical Bug Fix: TypeScript Compilation Errors**

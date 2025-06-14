@@ -10,7 +10,6 @@ import { webhookManager } from '../utils/shopifyWebhooks';
 import { MultiStoreWebhookManager } from './MultiStoreWebhookManager';
 import { StoreManagement } from './StoreManagement';
 import { DataPersistenceManager } from './DataPersistenceManager';
-import { StoreOrderMapping } from './StoreOrderMapping';
 import { UserManagement } from './UserManagement';
 
 interface SettingsProps {
@@ -111,7 +110,7 @@ export function Settings({ currentUser }: SettingsProps) {
           <h1 className={`font-bold text-gray-900 ${isMobileView ? 'text-xl' : 'text-2xl'}`}>
             Settings
           </h1>
-          <p className="text-gray-600 mt-1">Configure app settings, user accounts, and store-specific order mapping</p>
+          <p className="text-gray-600 mt-1">Configure app settings, user accounts, and store management</p>
         </div>
       </div>
 
@@ -169,8 +168,19 @@ export function Settings({ currentUser }: SettingsProps) {
         </Card>
       )}
 
-      {/* Store-Specific Order Data Mapping */}
-      <StoreOrderMapping />
+      {/* Note about Order Data Mapping */}
+      <Card>
+        <CardContent className="text-center py-8">
+          <SettingsIcon className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Order Data Mapping</h3>
+          <p className="text-gray-600 mb-4">
+            Configure comprehensive order data mapping including store-specific configurations.
+          </p>
+          <p className="text-sm text-gray-500">
+            Visit the <strong>Order Data Mapping</strong> page to set up advanced field mappings and store-specific configurations.
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Legacy Single-Store Webhook Management Section */}
       {!isAdmin && (
