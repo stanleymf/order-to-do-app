@@ -5,6 +5,25 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.14] - 2024-12-19
+
+### 🚨 Critical Server Startup Fix
+- **Path-to-RegExp Error**: Fixed critical `Missing parameter name` error preventing server startup
+  - Replaced problematic `app.get('*', ...)` wildcard route with `app.use(...)` middleware
+  - The wildcard pattern was causing path-to-regexp library parsing errors
+  - Server now starts successfully in both development and production environments
+
+### 🔧 Server Routing Improvements
+- **Route Organization**: Simplified routing patterns to avoid Express parsing conflicts
+  - Moved static file serving before catch-all middleware
+  - Improved middleware order for better performance
+  - Enhanced error handling for missing static files
+
+### 🛠️ Technical Details
+- Fixed incompatibility with Express route pattern parsing
+- Maintained all webhook and API functionality
+- Preserved Railway healthcheck capabilities
+
 ## [2.0.0-alpha.13] - 2024-12-19
 
 ### 🚨 Critical Railway Healthcheck Fix

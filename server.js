@@ -13,10 +13,7 @@ console.log(`🚀 Starting server on port ${PORT}`);
 console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 console.log(`🔐 Webhook secret configured: ${process.env.SHOPIFY_WEBHOOK_SECRET ? 'YES' : 'NO (using default)'}`);
 
-// Middleware to get raw body for webhook verification
-app.use('/api/webhooks', express.raw({ type: 'application/json' }));
-
-// Parse JSON for other routes
+// Basic middleware
 app.use(express.json());
 
 // Root route for Railway healthcheck
@@ -25,7 +22,7 @@ app.get('/', (req, res) => {
     status: 'healthy', 
     service: 'order-to-do-app',
     timestamp: new Date().toISOString(),
-    version: '2.0.0-alpha.12'
+    version: '2.0.0-alpha.14'
   });
 });
 
@@ -39,7 +36,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Railway specific healthcheck (some deployments expect this)
+// Railway specific healthcheck
 app.get('/healthz', (req, res) => {
   res.status(200).send('OK');
 });
@@ -56,15 +53,8 @@ app.get('/api/status', (req, res) => {
   });
 });
 
-// Serve static files from dist directory with error handling
-try {
-  app.use(express.static(join(__dirname, 'dist'), {
-    fallthrough: true,
-    maxAge: '1d' // Cache static files for 1 day in production
-  }));
-} catch (error) {
-  console.warn('⚠️  Could not serve static files from dist directory:', error.message);
-}
+// Middleware to get raw body for webhook verification (specific route only)
+app.use('/api/webhooks', express.raw({ type: 'application/json' }));
 
 // Simple rate limiting for Shopify API calls
 const rateLimitMap = new Map();
@@ -119,7 +109,7 @@ app.post('/api/webhooks/shopify', (req, res) => {
     // Get webhook secret from environment or use default
     const webhookSecret = process.env.SHOPIFY_WEBHOOK_SECRET || 'default-webhook-secret';
     
-    // Fix: Use Buffer for HMAC calculation, and parse body only after verification
+    // Use Buffer for HMAC calculation, and parse body only after verification
     const rawBody = req.body;
     if (!verifyWebhook(rawBody, signature, webhookSecret)) {
       console.error('❌ Webhook verification failed');
@@ -133,27 +123,22 @@ app.post('/api/webhooks/shopify', (req, res) => {
     switch (topic) {
       case 'orders/create':
         console.log('🆕 New order created:', webhookData.id);
-        // Here you would trigger order sync or update local data
         break;
         
       case 'orders/updated':
         console.log('🔄 Order updated:', webhookData.id);
-        // Here you would trigger order sync or update local data
         break;
         
       case 'orders/cancelled':
         console.log('❌ Order cancelled:', webhookData.id);
-        // Here you would handle order cancellation
         break;
         
       case 'products/create':
         console.log('🆕 New product created:', webhookData.id);
-        // Here you would trigger product sync
         break;
         
       case 'products/updated':
         console.log('🔄 Product updated:', webhookData.id);
-        // Here you would trigger product sync
         break;
         
       default:
@@ -228,13 +213,24 @@ app.post('/api/shopify/proxy', async (req, res) => {
   }
 });
 
-// Catch-all handler for SPA (must be last)
-app.get('*', (req, res) => {
-  // Only serve index.html for non-API routes
+// Serve static files from dist directory with error handling
+try {
+  app.use(express.static(join(__dirname, 'dist'), {
+    fallthrough: true,
+    maxAge: '1d'
+  }));
+} catch (error) {
+  console.warn('⚠️  Could not serve static files from dist directory:', error.message);
+}
+
+// Simple catch-all for SPA - avoid complex patterns
+app.use((req, res) => {
+  // Handle API routes not found
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'API endpoint not found' });
   }
   
+  // Serve index.html for all other routes
   try {
     res.sendFile(join(__dirname, 'dist', 'index.html'));
   } catch (error) {
