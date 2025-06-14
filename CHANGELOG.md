@@ -5,6 +5,57 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.24] - 2024-12-19
+
+### 🏪 Store-Specific Order Data Mapping - Revolutionary Multi-Store Support
+- **Complete Store-Specific Configuration**: Replaced global order mapping with individual store configurations
+  - Each store can now have unique order data mapping rules
+  - Different stores can handle order data differently (tags vs properties vs custom fields)
+  - Supports varying date formats, timeslot patterns, and delivery keywords per store
+  - Eliminates one-size-fits-all limitations of previous global mapping
+
+### 🎯 Advanced Mapping Features
+- **Store Selection Interface**: Intuitive dropdown to select and configure individual stores
+  - Visual store indicators with color coding
+  - "Configured" badges for stores with existing mapping rules
+  - Auto-selection of first available store for seamless UX
+
+### 🔄 Configuration Management
+- **Copy Between Stores**: Quickly duplicate successful configurations across stores
+  - Copy mapping rules from any configured store to new stores
+  - Maintains store-specific metadata (IDs, names, timestamps)
+  - Accelerates multi-store setup process
+
+### 📊 Comprehensive Mapping Options (Per Store)
+- **Order ID Mapping**: Order name, Order ID, Line item ID, or custom fields
+- **Product Information**: Line item title, Product title, Handle, or custom fields  
+- **Date & Time Handling**: Tags, Created date, Processed date, or custom fields with regex patterns
+- **Delivery Type Detection**: Configurable keywords for delivery, collection, and express orders
+- **Product Customizations**: Line item properties, Order notes, or custom fields with exclusion filters
+- **Customer Information**: Flexible name formats and optional phone/email inclusion
+- **Additional Properties**: Total price, Currency, Fulfillment status, Financial status toggles
+
+### 🛠️ Technical Architecture
+- **New StoreOrderMapping Component**: Dedicated interface for store-specific configuration
+  - Replaces legacy global Shopify Order Data Mapping section
+  - Integrated with existing store management system
+  - Persistent storage with localStorage backup
+- **Enhanced Data Structure**: Store-specific mapping configurations with metadata
+  - Creation and modification timestamps
+  - Store name caching for performance
+  - Validation and error handling
+
+### 🎨 User Experience Improvements
+- **Logical Settings Flow**: Store Setup → API Configuration → Order Mapping → Data Management
+- **No Stores Fallback**: Clear guidance when no stores are configured
+- **Loading States**: Smooth loading indicators during configuration operations
+- **Responsive Design**: Optimized for both desktop and mobile interfaces
+
+### 🔧 Legacy Support
+- **Backward Compatibility**: Existing global configurations preserved
+- **Migration Path**: Users can gradually migrate to store-specific configurations
+- **Non-Admin Fallback**: Legacy single-store webhook management for non-admin users
+
 ## [2.0.0-alpha.23] - 2024-12-19
 
 ### 🎨 Enhanced Settings UI - Collapsible Data Persistence Section
