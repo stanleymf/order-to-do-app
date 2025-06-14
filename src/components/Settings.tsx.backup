@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { Settings as SettingsIcon, MapPin, Clock, Package, User, FileText, Tag, Save, RefreshCw, Calendar, Webhook, CheckCircle, Loader2 } from 'lucide-react';
+import { Settings as SettingsIcon, MapPin, Clock, Package, User, FileText, Tag, Save, RefreshCw, Calendar, Key, Webhook, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { type User as UserType } from '../types';
 import { useMobileView } from './Dashboard';
@@ -357,17 +357,242 @@ export function Settings({ currentUser }: SettingsProps) {
         </div>
       </div>
 
+      {/* Shopify API Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle className={`flex items-center gap-2 ${isMobileView ? 'text-lg' : ''}`}>
+            <Key className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
+            Shopify API Configuration
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          
+          {/* Access Token */}
+          <div className="space-y-2">
+            <Label htmlFor="accessToken">Access Token</Label>
+            <Input
+              id="accessToken"
+              type="password"
+              value={mappingConfig.api.accessToken}
+              onChange={(e) => updateMappingConfig('api', { ...mappingConfig.api, accessToken: e.target.value })}
+              placeholder="Enter your Shopify access token"
+              className="font-mono text-sm"
+            />
+            <p className="text-xs text-gray-500">
+              Your private access token for Shopify API authentication
+            </p>
+          </div>
+
+          {/* Shop Domain */}
+          <div className="space-y-2">
+            <Label htmlFor="shopDomain">Shop Domain</Label>
+            <Input
+              id="shopDomain"
+              value={mappingConfig.api.shopDomain}
+              onChange={(e) => updateMappingConfig('api', { ...mappingConfig.api, shopDomain: e.target.value })}
+              placeholder="your-shop.myshopify.com"
+            />
+            <p className="text-xs text-gray-500">
+              Your Shopify store domain (e.g., my-store.myshopify.com)
+            </p>
+          </div>
+
+          {/* API Version */}
+          <div className="space-y-2">
+            <Label htmlFor="apiVersion">API Version</Label>
+            <Select
+              value={mappingConfig.api.apiVersion}
+              onValueChange={(value) => updateMappingConfig('api', { ...mappingConfig.api, apiVersion: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select API version" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2024-10">2024-10 (Latest)</SelectItem>
+                <SelectItem value="2024-07">2024-07</SelectItem>
+                <SelectItem value="2024-04">2024-04</SelectItem>
+                <SelectItem value="2024-01">2024-01</SelectItem>
+                <SelectItem value="2023-10">2023-10</SelectItem>
+                <SelectItem value="2023-07">2023-07</SelectItem>
+                <SelectItem value="2023-04">2023-04</SelectItem>
+                <SelectItem value="2023-01">2023-01</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-gray-500">
+              Shopify API version to use for requests
+            </p>
+          </div>
+
+          {/* Webhook Secret (Optional) */}
+          <div className="space-y-2">
+            <Label htmlFor="webhookSecret">Webhook Secret (Optional)</Label>
+            <Input
+              id="webhookSecret"
+              type="password"
+              value={mappingConfig.api.webhookSecret || ''}
+              onChange={(e) => updateMappingConfig('api', { ...mappingConfig.api, webhookSecret: e.target.value })}
+              placeholder="Enter webhook secret for verification"
+              className="font-mono text-sm"
+            />
+            <p className="text-xs text-gray-500">
+              Secret key for webhook verification (optional)
+            </p>
+          </div>
+
+          <Separator />
+
+          {/* Auto Sync Settings */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="autoSync">Auto Sync Orders</Label>
+                <p className="text-xs text-gray-500">
+                  Automatically sync orders from Shopify at regular intervals
+                </p>
+              </div>
+              <Switch
+                id="autoSync"
+                checked={mappingConfig.api.autoSync}
+                onCheckedChange={(checked) => updateMappingConfig('api', { ...mappingConfig.api, autoSync: checked })}
+              />
+            </div>
+
+            {mappingConfig.api.autoSync && (
+              <div className="space-y-2">
+                <Label htmlFor="syncInterval">Sync Interval</Label>
+                <Select
+                  value={mappingConfig.api.syncInterval.toString()}
+                  onValueChange={(value) => updateMappingConfig('api', { ...mappingConfig.api, syncInterval: parseInt(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10 seconds (Very Fast)</SelectItem>
+                    <SelectItem value="30">30 seconds (Fast)</SelectItem>
+                    <SelectItem value="60">1 minute (Recommended)</SelectItem>
+                    <SelectItem value="300">5 minutes (Default)</SelectItem>
+                    <SelectItem value="600">10 minutes</SelectItem>
+                    <SelectItem value="1800">30 minutes</SelectItem>
+                    <SelectItem value="3600">1 hour</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="text-xs text-gray-500 space-y-1">
+                  <p>• <strong>10-30 seconds:</strong> Near real-time updates (uses ~2-6 API calls per minute)</p>
+                  <p>• <strong>1-5 minutes:</strong> Balanced performance (recommended for most businesses)</p>
+                  <p>• <strong>10+ minutes:</strong> Conservative approach (minimal API usage)</p>
+                  <p className="text-amber-600 font-medium">Note: Shopify allows 2 requests/second (120/minute) - choose based on your order volume</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Webhook Management Section */}
+          <Separator />
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Webhook className="h-4 w-4 text-gray-500" />
+              <h3 className="font-medium text-gray-900">Webhook Management</h3>
+            </div>
+            
+            <div className="space-y-3">
+              <Button
+                onClick={handleAutoRegisterWebhooks}
+                disabled={isWebhookLoading || !mappingConfig.api.accessToken}
+                variant="outline"
+                className="w-full"
+              >
+                {isWebhookLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Webhook className="mr-2 h-4 w-4" />
+                )}
+                Auto-Register Webhooks
+              </Button>
+
+              <Button
+                onClick={handleCleanupWebhooks}
+                disabled={isWebhookLoading || !mappingConfig.api.accessToken}
+                variant="outline"
+                className="w-full"
+              >
+                {isWebhookLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                )}
+                Cleanup Old Webhooks
+              </Button>
+
+              <Button
+                onClick={handleTestWebhookConnectivity}
+                disabled={isWebhookLoading}
+                variant="outline"
+                className="w-full"
+              >
+                {isWebhookLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                )}
+                Test Webhook Connectivity
+              </Button>
+            </div>
+
+            {/* Webhook Status Display */}
+            {webhookStatus && (
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <h4 className="font-medium text-sm mb-2">Webhook Status:</h4>
+                <div className="space-y-1 text-xs">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-3 w-3 text-green-600" />
+                    <span>Registered: {webhookStatus.registered.length}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-3 w-3 text-blue-600" />
+                    <span>Existing: {webhookStatus.existing.length}</span>
+                  </div>
+                  {webhookStatus.errors.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-3 w-3 text-red-600" />
+                      <span>Errors: {webhookStatus.errors.length}</span>
+                    </div>
+                  )}
+                </div>
+                
+                {webhookStatus.errors.length > 0 && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-xs text-red-600">View Errors</summary>
+                    <ul className="mt-1 text-xs text-red-600 space-y-1">
+                      {webhookStatus.errors.map((error, index) => (
+                        <li key={index}>• {error}</li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            )}
+
+            <div className="text-xs text-gray-500 space-y-1">
+              <p>• <strong>Auto-Register:</strong> Creates webhooks for orders and products</p>
+              <p>• <strong>Cleanup:</strong> Removes old webhooks pointing to different URLs</p>
+              <p>• <strong>Test:</strong> Verifies webhook endpoint is accessible</p>
+              <p className="text-amber-600 font-medium">Note: Webhooks will be registered for your current deployment URL</p>
+            </div>
+          </div>
+
+        </CardContent>
+      </Card>
+
       {/* Multi-Store Webhook Management Section */}
       {isAdmin && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Webhook className="h-5 w-5 text-gray-500" />
-              Store & Webhook Management
+              Multi-Store Webhook Management
             </CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
-              Configure Shopify API credentials and webhook settings for each store
-            </p>
           </CardHeader>
           <CardContent>
             <MultiStoreWebhookManager />
@@ -376,109 +601,107 @@ export function Settings({ currentUser }: SettingsProps) {
       )}
 
       {/* Legacy Single-Store Webhook Management Section */}
-      {!isAdmin && (
-        <Card>
-          <CardHeader>
-            <CardTitle className={`flex items-center gap-2 ${isMobileView ? 'text-lg' : ''}`}>
-              <Webhook className={`${isMobileView ? 'h-4 w-4' : 'h-5 w-5'}`} />
-              Single-Store Webhook Management
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> This is the legacy single-store webhook management. 
-                  Admin users have access to advanced multi-store webhook management.
-                </p>
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Webhook className="h-4 w-4 text-gray-500" />
+            Legacy Webhook Management (Single Store)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Webhook className="h-4 w-4 text-gray-500" />
+              <h3 className="font-medium text-gray-900">Webhook Management</h3>
+            </div>
+            
+            <div className="space-y-3">
+              <Button
+                onClick={handleAutoRegisterWebhooks}
+                disabled={isWebhookLoading || !mappingConfig.api.accessToken}
+                variant="outline"
+                className="w-full"
+              >
+                {isWebhookLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Webhook className="mr-2 h-4 w-4" />
+                )}
+                Auto-Register Webhooks
+              </Button>
 
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleAutoRegisterWebhooks}
-                  disabled={isWebhookLoading}
-                  className="flex-1"
-                >
-                  {isWebhookLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Webhook className="mr-2 h-4 w-4" />
-                  )}
-                  Auto-Register Webhooks
-                </Button>
+              <Button
+                onClick={handleCleanupWebhooks}
+                disabled={isWebhookLoading || !mappingConfig.api.accessToken}
+                variant="outline"
+                className="w-full"
+              >
+                {isWebhookLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                )}
+                Cleanup Old Webhooks
+              </Button>
 
-                <Button
-                  onClick={handleCleanupWebhooks}
-                  disabled={isWebhookLoading}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  {isWebhookLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                  )}
-                  Cleanup Old Webhooks
-                </Button>
+              <Button
+                onClick={handleTestWebhookConnectivity}
+                disabled={isWebhookLoading}
+                variant="outline"
+                className="w-full"
+              >
+                {isWebhookLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                )}
+                Test Webhook Connectivity
+              </Button>
+            </div>
 
-                <Button
-                  onClick={handleTestWebhookConnectivity}
-                  disabled={isWebhookLoading}
-                  variant="outline"
-                >
-                  {isWebhookLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <CheckCircle className="h-4 w-4" />
-                  )}
-                  Test
-                </Button>
-              </div>
-
-              {webhookStatus && (
-                <div className="bg-gray-50 border rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Webhook className="h-4 w-4 text-gray-500" />
-                    <span className="font-medium">Webhook Status</span>
+            {/* Webhook Status Display */}
+            {webhookStatus && (
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <h4 className="font-medium text-sm mb-2">Webhook Status:</h4>
+                <div className="space-y-1 text-xs">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-3 w-3 text-green-600" />
+                    <span>Registered: {webhookStatus.registered.length}</span>
                   </div>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div className="text-center">
-                      <div className="text-green-600 font-medium">{webhookStatus.registered.length}</div>
-                      <div className="text-gray-600">Registered</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-blue-600 font-medium">{webhookStatus.existing.length}</div>
-                      <div className="text-gray-600">Existing</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-red-600 font-medium">{webhookStatus.errors.length}</div>
-                      <div className="text-gray-600">Errors</div>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-3 w-3 text-blue-600" />
+                    <span>Existing: {webhookStatus.existing.length}</span>
                   </div>
-
                   {webhookStatus.errors.length > 0 && (
-                    <details className="mt-2">
-                      <summary className="cursor-pointer text-xs text-red-600">View Errors</summary>
-                      <ul className="mt-1 text-xs text-red-600 space-y-1">
-                        {webhookStatus.errors.map((error, index) => (
-                          <li key={index}>• {error}</li>
-                        ))}
-                      </ul>
-                    </details>
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-3 w-3 text-red-600" />
+                      <span>Errors: {webhookStatus.errors.length}</span>
+                    </div>
                   )}
                 </div>
-              )}
-
-              <div className="text-xs text-gray-500 space-y-1">
-                <p>• <strong>Auto-Register:</strong> Creates webhooks for orders and products</p>
-                <p>• <strong>Cleanup:</strong> Removes old webhooks pointing to different URLs</p>
-                <p>• <strong>Test:</strong> Verifies webhook endpoint is accessible</p>
-                <p className="text-amber-600 font-medium">Note: Webhooks will be registered for your current deployment URL</p>
+                
+                {webhookStatus.errors.length > 0 && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-xs text-red-600">View Errors</summary>
+                    <ul className="mt-1 text-xs text-red-600 space-y-1">
+                      {webhookStatus.errors.map((error, index) => (
+                        <li key={index}>• {error}</li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
               </div>
+            )}
+
+            <div className="text-xs text-gray-500 space-y-1">
+              <p>• <strong>Auto-Register:</strong> Creates webhooks for orders and products</p>
+              <p>• <strong>Cleanup:</strong> Removes old webhooks pointing to different URLs</p>
+              <p>• <strong>Test:</strong> Verifies webhook endpoint is accessible</p>
+              <p className="text-amber-600 font-medium">Note: Webhooks will be registered for your current deployment URL</p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Shopify Order Mapping Configuration */}
       <Card>

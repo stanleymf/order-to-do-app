@@ -2,11 +2,32 @@
 
 A modern, multi-store order management application designed for florist businesses to efficiently manage orders across multiple Shopify stores.
 
-## 🚀 **Version 2.0.0-alpha.2 - Phase 1 Complete**
+## 🚀 **Version 2.0.0-alpha.3 - Multi-Store Webhook Management**
+
+### **Multi-Store Webhook System - Phase 2 Implementation**
+
+The application now features **advanced multi-store webhook management** with store-specific configurations and bulk operations.
+
+#### **✅ Phase 2 Features (COMPLETE)**
+
+- **🎯 Multi-Store Webhook Manager**: Store-specific webhook configurations
+- **🏪 Individual Store Management**: Per-store webhook enable/disable
+- **🔄 Bulk Operations**: Register/cleanup webhooks for all stores
+- **📊 Status Monitoring**: Real-time webhook status with visual indicators
+- **👑 Admin Controls**: Multi-store webhook management for admin users
+- **💾 Persistent Storage**: Store configurations saved in localStorage
+
+#### **🔧 Technical Implementation**
+
+- **MultiStoreWebhookManager Class**: Store-specific webhook operations
+- **StoreWebhookConfig Interface**: Individual store configurations
+- **Bulk Operations**: Efficient multi-store webhook management
+- **Status Dashboard**: Visual webhook completion indicators
+- **Legacy Support**: Original single-store webhook system maintained
 
 ### **Multi-Store Architecture - Phase 1 Implementation**
 
-The application now supports **multi-store functionality** with a complete data structure migration and store management system.
+The application supports **multi-store functionality** with a complete data structure migration and store management system.
 
 #### **✅ Phase 1 Features (COMPLETE)**
 
@@ -27,6 +48,13 @@ The application now supports **multi-store functionality** with a complete data 
 
 ## 🏗️ **Architecture Overview**
 
+### **Multi-Store Webhook Management**
+- **Store-Specific Configurations**: Each store has independent webhook settings
+- **Individual API Credentials**: Separate access tokens and shop domains per store
+- **Bulk Operations**: Manage webhooks for all stores simultaneously
+- **Status Monitoring**: Real-time webhook status per store
+- **Admin-Only Access**: Multi-store webhook features for admin users
+
 ### **Multi-Store Support**
 - **Store Isolation**: Each store has independent data and settings
 - **Unified Interface**: Single application manages multiple stores
@@ -40,6 +68,16 @@ interface Store {
   name: string;
   domain: string;
   color: string;
+}
+
+interface StoreWebhookConfig {
+  storeId: string;
+  storeName: string;
+  accessToken: string;
+  shopDomain: string;
+  apiVersion: string;
+  webhookSecret?: string;
+  enabled: boolean;
 }
 
 interface Order {
@@ -56,6 +94,14 @@ const { orders, products, floristStats } = useStoreData();
 ```
 
 ## 🎯 **Core Features**
+
+### **Multi-Store Webhook Management**
+- **Store-Specific Webhooks**: Individual webhook configurations per store
+- **Bulk Operations**: Register/cleanup webhooks for all stores simultaneously
+- **Status Monitoring**: Real-time webhook status with visual indicators
+- **Admin Interface**: Multi-store webhook management for admin users
+- **Persistent Configs**: Store webhook settings saved in localStorage
+- **Legacy Support**: Original single-store webhook system maintained
 
 ### **Order Management**
 - **Multi-Store Orders**: View and manage orders from all stores
@@ -79,7 +125,8 @@ const { orders, products, floristStats } = useStoreData();
 ### **Settings & Configuration**
 - **Store Management**: Add, edit, and remove stores
 - **API Configuration**: Shopify API settings per store
-- **Webhook Management**: Automated webhook registration
+- **Multi-Store Webhook Management**: Advanced webhook management for multiple stores
+- **Legacy Webhook Management**: Original single-store webhook system
 - **User Management**: Role-based access control
 
 ## 🚀 **Getting Started**
@@ -105,8 +152,9 @@ pnpm dev
 ### **Configuration**
 1. **Shopify API Setup**: Configure API credentials in Settings
 2. **Store Management**: Add your Shopify stores
-3. **Webhook Registration**: Set up automated order sync
-4. **User Roles**: Configure admin and florist accounts
+3. **Multi-Store Webhook Setup**: Configure webhooks for each store
+4. **Bulk Webhook Registration**: Set up automated order sync for all stores
+5. **User Roles**: Configure admin and florist accounts
 
 ## 📱 **Mobile Support**
 
@@ -115,6 +163,7 @@ The application is fully responsive with:
 - **Touch-Friendly Interface**: Gesture-based interactions
 - **Compact Store Indicator**: Mobile-optimized store display
 - **Responsive Analytics**: Mobile-friendly dashboard
+- **Mobile Webhook Management**: Touch-friendly webhook interface
 
 ## 🔧 **Development**
 
@@ -132,6 +181,7 @@ src/
 │   ├── ui/             # Reusable UI components
 │   ├── StoreSelector.tsx
 │   ├── StoreIndicator.tsx
+│   ├── MultiStoreWebhookManager.tsx
 │   └── ...
 ├── contexts/           # React contexts
 │   └── StoreContext.tsx
@@ -140,10 +190,15 @@ src/
 │   └── mockData.ts    # Mock data
 ├── types/             # TypeScript definitions
 ├── utils/             # Utility functions
+│   ├── multiStoreWebhooks.ts
+│   └── shopifyWebhooks.ts
 └── App.tsx           # Main application
 ```
 
 ### **Key Components**
+
+#### **MultiStoreWebhookManager**
+Advanced webhook management component for multiple stores with bulk operations.
 
 #### **StoreSelector**
 Desktop component for switching between stores with dropdown interface.
@@ -158,6 +213,13 @@ Centralized data access layer with store-specific operations.
 Global state management for store selection and data.
 
 ## 🎨 **UI/UX Features**
+
+### **Multi-Store Webhook Interface**
+- **Store Configuration Form**: Add webhook settings for each store
+- **Individual Store Management**: Enable/disable webhooks per store
+- **Bulk Action Buttons**: Register all stores, cleanup all stores
+- **Status Badges**: Complete, Partial, None indicators
+- **Error Reporting**: Detailed error logs per store
 
 ### **Store Visualization**
 - **Color-Coded Stores**: Each store has a unique color
@@ -178,12 +240,15 @@ Global state management for store selection and data.
 - **Data Validation**: Input validation throughout
 - **Error Boundaries**: Graceful error handling
 - **Secure API**: Shopify API integration with validation
+- **Webhook Verification**: HMAC-SHA256 signature verification
+- **Store-Specific Credentials**: Individual API access per store
 
 ### **Performance Optimizations**
 - **Efficient Filtering**: Store-specific data operations
 - **Context Optimization**: Minimal re-renders
 - **Lazy Loading**: On-demand data loading
 - **Caching**: Optimized data caching strategies
+- **Bulk Operations**: Efficient multi-store webhook management
 
 ## 📊 **Analytics & Reporting**
 
@@ -192,6 +257,12 @@ Global state management for store selection and data.
 - **Performance Tracking**: Completion times and rates
 - **Florist Statistics**: Individual performance metrics
 - **Store Comparison**: Cross-store performance analysis
+
+### **Webhook Analytics**
+- **Webhook Status**: Real-time webhook completion status
+- **Store Coverage**: Webhook registration status per store
+- **Error Tracking**: Detailed webhook error reporting
+- **Performance Metrics**: Webhook operation efficiency
 
 ### **Data Visualization**
 - **Charts & Graphs**: Visual data representation

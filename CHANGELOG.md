@@ -5,6 +5,84 @@ All notable changes to the Order To-Do App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.4] - 2025-06-13
+
+### 🚀 **Streamlined Configuration - Eliminated Redundancy**
+
+#### **Removed**
+- **Redundant Shopify API Configuration Card**: Eliminated the separate global API configuration
+- **Duplicate Configuration Steps**: Removed extra configuration layer that duplicated store-specific settings
+
+#### **Enhanced**
+- **Consolidated Store Configuration**: All store settings now in one place
+  - **API Credentials**: Access token, shop domain, API version per store
+  - **Webhook Settings**: Webhook secret and webhook management per store
+  - **Auto-Sync Settings**: Auto-sync toggle and sync interval per store
+  - **Store Management**: Enable/disable webhooks per store
+
+#### **Improved User Experience**
+- **Single Configuration Point**: Configure all store settings in one unified interface
+- **No Redundant Steps**: Eliminated duplicate API credential entry
+- **Store-Specific Controls**: Each store has its own complete configuration
+- **Cleaner Settings Interface**: Simplified admin settings with clear organization
+
+#### **Technical Improvements**
+- **Enhanced StoreWebhookConfig**: Added autoSync and syncInterval fields
+- **Consolidated Data Structure**: Single source of truth for store configurations
+- **Improved Type Safety**: Complete TypeScript coverage for consolidated config
+- **Better Admin Experience**: Streamlined admin workflow with fewer steps
+
+#### **Benefits**
+- **Reduced Complexity**: Eliminated confusing configuration redundancy
+- **Better Workflow**: Single form for complete store setup
+- **Scalability**: Easier to add new stores with all settings in one place
+- **Consistency**: Uniform configuration approach across all stores
+- **Maintenance**: Simplified codebase with less configuration duplication
+
+---
+
+## [2.0.0-alpha.3] - 2025-06-13
+
+### 🚀 **Multi-Store Webhook Management System**
+
+#### **New Features**
+- **Multi-Store Webhook Manager**: Complete webhook management system for multiple stores
+- **Store-Specific Configurations**: Individual webhook settings per store
+- **Bulk Operations**: Register/cleanup webhooks for all stores simultaneously
+- **Status Monitoring**: Real-time webhook status with visual indicators
+- **Admin Controls**: Multi-store webhook management for admin users only
+- **Persistent Storage**: Store webhook configurations saved in localStorage
+
+#### **Technical Implementation**
+- **MultiStoreWebhookManager Class**: Store-specific webhook operations
+- **StoreWebhookConfig Interface**: Individual store webhook configurations
+- **Bulk Webhook Operations**: Efficient multi-store webhook management
+- **Status Dashboard**: Visual webhook completion indicators
+- **Legacy Support**: Original single-store webhook system maintained
+
+#### **UI/UX Enhancements**
+- **Multi-Store Webhook Interface**: Dedicated admin section in Settings
+- **Store Configuration Form**: Add webhook settings for each store
+- **Individual Store Management**: Enable/disable webhooks per store
+- **Bulk Action Buttons**: Register all stores, cleanup all stores
+- **Status Badges**: Complete, Partial, None indicators
+- **Error Reporting**: Detailed error logs per store
+
+#### **Security & Reliability**
+- **Store-Specific Credentials**: Individual API access per store
+- **Webhook Verification**: HMAC-SHA256 signature verification
+- **Rate Limiting**: Prevents API abuse across multiple stores
+- **Error Handling**: Comprehensive error reporting and recovery
+- **Persistent Configs**: Settings survive browser restarts
+
+#### **Developer Experience**
+- **Type Safety**: Complete TypeScript coverage for multi-store webhooks
+- **Modular Architecture**: Clean separation of concerns
+- **Extensible Design**: Easy to add new webhook topics
+- **Testing Support**: Comprehensive error handling and logging
+
+---
+
 ## [2.0.0-alpha.2] - 2025-06-13
 
 ### 🚀 **Phase 1: Multi-Store Data Structure Migration - COMPLETE**
